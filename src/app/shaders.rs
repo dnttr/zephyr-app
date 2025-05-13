@@ -4,8 +4,11 @@ use std::ptr;
 const VERTEX_SHADER_SOURCE: &str = r#"
 #version 330 core
 layout (location = 0) in vec3 aPos;
+
+uniform mat4 projection_matrix;
+
 void main() {
-    gl_Position = vec4(aPos, 1.0);
+    gl_Position = projection_matrix * vec4(aPos, 1.0);
 }
 "#;
 
