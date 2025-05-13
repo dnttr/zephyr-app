@@ -1,6 +1,22 @@
+use gl::types::{GLsizei, GLvoid};
 use glfw::{Context, GlfwReceiver};
 use std::{ffi::CString, ptr};
-use gl::types::GLsizei;
+
+const VERTEX_SHADER_SOURCE: &str = r#"
+#version 330 core
+layout (location = 0) in vec3 aPos;
+void main() {
+    gl_Position = vec4(aPos, 1.0);
+}
+"#;
+
+const FRAGMENT_SHADER_SOURCE: &str = r#"
+#version 330 core
+out vec4 FragColor;
+void main() {
+    FragColor = vec4(1.0, 0.5, 0.2, 1.0);
+}
+"#;
 
 fn main() {
     let mut glfw = glfw::init(glfw::fail_on_errors).unwrap();
@@ -27,6 +43,27 @@ fn main() {
     unsafe {
         gl::Viewport(0, 0, width as GLsizei, height as GLsizei);
         gl::ClearColor(0.2, 0.2, 0.2, 1.0);
+    }
+
+    let vertices: [f32; 9] = [
+        -0.5, -0.5, 0.0, // left
+        0.5, -0.5, 0.0, // right
+        0.0,  0.5, 0.0, // top
+    ];
+
+    let (mut vao, mut vbo) = (0, 0);
+
+    unsafe {
+        gl::GenVertexArrays(1, &mut vao);
+        gl::GenBuffers(1, &mut vbo);
+
+        gl::BindVertexArray(vao);
+        gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+
+        gl::BufferData(gl::ARRAY_BUFFER, (vertices.len() * size_of::<f32>()) as isize, vertices.as_ptr() as *const GLvoid, gl::STATIC_DRAW);
+
+        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, 3 * size_of::<f32>() as i32, ptr::null());
+        gl::EnableVertexAttribArray(0);
     }
 
     while !window.should_close() {
@@ -61,3 +98,4 @@ unsafe fn compile_shader(src: &str, shader_type: u32) -> u32 {
 
     shader
 }
+
