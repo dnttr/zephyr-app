@@ -17,7 +17,7 @@ pub fn exec() {
     glfw.window_hint(glfw::WindowHint::OpenGlForwardCompat(true));
 
     glfw.window_hint(glfw::WindowHint::Samples(Some(16)));
-    
+
 
     let (mut window, events): (glfw::PWindow, GlfwReceiver<(f64, glfw::WindowEvent)>) =
         glfw.create_window(800, 600, "Zephyr", glfw::WindowMode::Windowed)
@@ -69,28 +69,28 @@ pub fn exec() {
     let time = Instant::now();
 
     //unsafe { gl::Enable(gl::MULTISAMPLE) }
-    
+
     while !window.should_close() {
         let elapsed = time.elapsed().as_secs_f32();
         let hue = (elapsed * 10.0) % 360.0;
         let (r, g, b) = get_rainbow(hue);
-        
+
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
             gl::UseProgram(program);
 
             let (width, height) = window.get_size();
             gl::Viewport(0, 0, width as GLsizei, height as GLsizei);
-           
+
             let projection = get_projection_matrix(width as f32, height as f32);
-           
+
             gl::UniformMatrix4fv(
                 projection_location,
                 1,
                 gl::FALSE,
                 projection.as_ptr() as *const _,
             );
-            
+
             gl::Uniform3f(color_location, r, g, b);
             gl::BindVertexArray(vao);
             gl::DrawArrays(gl::TRIANGLES, 0, 3);
@@ -99,7 +99,7 @@ pub fn exec() {
         glfw.poll_events();
         window.swap_buffers();
     }
-
+    
     unsafe {
         gl::DeleteVertexArrays(1, &mut vao);
         gl::DeleteBuffers(1, &mut vbo);
