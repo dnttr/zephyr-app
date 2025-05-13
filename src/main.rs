@@ -1,5 +1,6 @@
 use gl::types::{GLsizei, GLvoid};
 use glfw::{Context, GlfwReceiver};
+use palette::{FromColor, Hsv, Srgb};
 use std::{ffi::CString, ptr};
 
 const VERTEX_SHADER_SOURCE: &str = r#"
@@ -14,7 +15,7 @@ const FRAGMENT_SHADER_SOURCE: &str = r#"
 #version 330 core
 out vec4 FragColor;
 void main() {
-    FragColor = vec4(1.0, 0.5, 0.2, 1.0);
+    FragColor = vec4(1.0, 1.0, 1.0, 1.0);
 }
 "#;
 
@@ -51,6 +52,8 @@ fn main() {
         0.0,  0.5, 0.0, // top
     ];
 
+    let program = unsafe { create_shaders() };
+
     let (mut vao, mut vbo) = (0, 0);
 
     unsafe {
@@ -71,9 +74,18 @@ fn main() {
 
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
+            gl::UseProgram(program);
+            gl::BindVertexArray(vao);
+            gl::DrawArrays(gl::TRIANGLES, 0, 3);
         }
 
         window.swap_buffers();
+    }
+
+    unsafe {
+        gl::DeleteVertexArrays(1, &mut vao);
+        gl::DeleteBuffers(1, &mut vbo);
+        gl::DeleteProgram(program);
     }
 }
 
@@ -89,13 +101,53 @@ unsafe fn compile_shader(src: &str, shader_type: u32) -> u32 {
     if success == 0 {
         let mut len = 0;
         gl::GetShaderiv(shader, gl::INFO_LOG_LENGTH, &mut len);
+
         let mut buffer: Vec<u8> = Vec::with_capacity(len as usize);
         buffer.set_len((len as usize) - 1);
 
         gl::GetShaderInfoLog(shader, len, ptr::null_mut(), buffer.as_mut_ptr() as *mut _);
+
         panic!("ERROR::SHADER::COMPILATION_FAILED\n{}", std::str::from_utf8(&buffer).unwrap());
     }
 
     shader
 }
 
+unsafe fn create_shaders() -> u32 {
+    let vertex_shader = compile_shader(VERTEX_SHADER_SOURCE, gl::VERTEX_SHADER);
+    let fragment_shader = compile_shader(FRAGMENT_SHADER_SOURCE, gl::FRAGMENT_SHADER);
+
+    let shader_program = gl::CreateProgram();
+
+    gl::AttachShader(shader_program, vertex_shader);
+    gl::AttachShader(shader_program, fragment_shader);
+
+    gl::LinkProgram(shader_program);
+
+    let mut success = 0;
+    gl::GetProgramiv(shader_program, gl::LINK_STATUS, &mut success);
+
+    if success == 0 {
+        let mut len = 0;
+        gl::GetProgramiv(shader_program, gl::INFO_LOG_LENGTH, &mut len);
+
+        let mut buffer: Vec<u8> = Vec::with_capacity(len as usize);
+        buffer.set_len((len as usize) - 1);
+
+        gl::GetProgramInfoLog(shader_program, len, ptr::null_mut(), buffer.as_mut_ptr() as *mut _);
+
+        panic!("ERROR::SHADER::PROGRAM::LINKING_FAILED\n{}", std::str::from_utf8(&buffer).unwrap());
+    }
+
+    gl::DeleteShader(vertex_shader);
+    gl::DeleteShader(fragment_shader);
+
+    shader_program
+}
+
+fn get_rainbow(hue: f32) -> (f32, f32, f32) {
+    let hsv = Hsv::new(hue, 1.0, 1.0);
+    let rgb = Srgb::from_color(hsv);
+    
+    (rgb.red, rgb.green, rgb.blue)
+}
