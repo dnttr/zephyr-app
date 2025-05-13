@@ -1,0 +1,38 @@
+name: Build and Package Rust App
+
+on:
+  push:
+    branches:
+      - main  # Run this action on every push to `main` branch
+
+jobs:
+  build:
+    runs-on: macos-latest  # macOS runner
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Install dependencies
+        run: |
+          brew install glfw  # or any other dependencies you need
+
+      - name: Build the app
+        run: cargo build --release  # Build the release version
+
+      - name: Install cargo-bundle
+        run: cargo install cargo-bundle  # Install cargo-bundle
+
+      - name: Bundle the app
+        run: cargo bundle --release  # Create the .app bundle
+
+      - name: Upload .app artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: zephyr-app
+          path: target/release/bundle/osx/*
