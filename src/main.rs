@@ -2,6 +2,7 @@ use gl::types::{GLsizei, GLvoid};
 use glfw::{Context, GlfwReceiver};
 use palette::{FromColor, Hsv, Srgb};
 use std::{ffi::CString, ptr};
+use std::time::Instant;
 
 const VERTEX_SHADER_SOURCE: &str = r#"
 #version 330 core
@@ -13,9 +14,12 @@ void main() {
 
 const FRAGMENT_SHADER_SOURCE: &str = r#"
 #version 330 core
+
+uniform vec3 color;
+
 out vec4 FragColor;
 void main() {
-    FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    FragColor = vec4(color, 1.0);
 }
 "#;
 
@@ -28,6 +32,8 @@ fn main() {
     #[cfg(target_os = "macos")]
     glfw.window_hint(glfw::WindowHint::OpenGlForwardCompat(true));
 
+    glfw.window_hint(glfw::WindowHint::Samples(Some(16)));
+    
     let width = 800;
     let height = 600;
 
@@ -53,6 +59,11 @@ fn main() {
     ];
 
     let program = unsafe { create_shaders() };
+    
+    let color_location = unsafe {
+        let c_str = CString::new("color").unwrap();
+        gl::GetUniformLocation(program, c_str.as_ptr())
+    };
 
     let (mut vao, mut vbo) = (0, 0);
 
@@ -69,12 +80,21 @@ fn main() {
         gl::EnableVertexAttribArray(0);
     }
 
+    let time = Instant::now();
+
+    unsafe { gl::Enable(gl::MULTISAMPLE) }
+    
     while !window.should_close() {
+        let elapsed = time.elapsed().as_secs_f32();
+        let hue = (elapsed * 10.0) % 360.0;
+        let (r, g, b) = get_rainbow(hue);
+        
         glfw.poll_events();
 
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT);
             gl::UseProgram(program);
+            gl::Uniform3f(color_location, r, g, b);
             gl::BindVertexArray(vao);
             gl::DrawArrays(gl::TRIANGLES, 0, 3);
         }
@@ -148,6 +168,6 @@ unsafe fn create_shaders() -> u32 {
 fn get_rainbow(hue: f32) -> (f32, f32, f32) {
     let hsv = Hsv::new(hue, 1.0, 1.0);
     let rgb = Srgb::from_color(hsv);
-    
+
     (rgb.red, rgb.green, rgb.blue)
 }
