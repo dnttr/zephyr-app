@@ -15,7 +15,7 @@ extern "C" {
 
     bool w_closing(void);
 
-    void w_on_close(void (*callback)(void));
+    void w_on_close(void (*callback)());
 
     void w_close(void);
 
