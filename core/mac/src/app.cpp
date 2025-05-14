@@ -2,7 +2,7 @@
 // Created by Damian Netter on 14/05/2025.
 //
 
-#include "libcoregraphics.h"
+#include "core_graphics.h"
 
 int main(int argc, char *argv[])
 {
