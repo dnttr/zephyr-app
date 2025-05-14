@@ -1,0 +1,42 @@
+cmake_minimum_required(VERSION 3.20)
+project(zephyr-app LANGUAGES C CXX)
+
+set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "" FORCE)
+
+set(RUST_DIR "${CMAKE_SOURCE_DIR}/graphics")
+set(RUST_TARGET_DIR "${RUST_DIR}/target")
+set(RUST_LIB "${RUST_TARGET_DIR}/release/libzg.a")
+
+add_custom_command(
+        OUTPUT ${RUST_LIB}
+        COMMAND cargo build --release
+        WORKING_DIRECTORY ${RUST_DIR}
+        COMMENT "Building Rust staticlib"
+)
+
+add_custom_target(RustLib ALL DEPENDS ${RUST_LIB})
+
+if(APPLE)
+    find_library(APPKIT_FRAMEWORK AppKit)
+    set(SOURCE_FILES
+            core/mac/src/app.cpp
+    )
+
+    set(COREGRAPHICS_LIB_PATH "${CMAKE_SOURCE_DIR}/external/libcoregraphics.a")
+
+    add_executable(ZephyrApp ${SOURCE_FILES})
+    target_link_libraries(ZephyrApp PRIVATE ${APPKIT_FRAMEWORK} ${COREGRAPHICS_LIB_PATH})
+elseif(UNIX)
+    set(FRONTEND_SRC src/linux/main.cpp)
+    set(PLATFORM_LIBS glfw GL X11 pthread dl)
+
+    add_executable(ZephyrApp ${FRONTEND_SRC})
+    target_link_libraries(ZephyrApp PRIVATE ${PLATFORM_LIBS})
+
+else()
+    message(FATAL_ERROR "Unsupported platform")
+endif()
+
+target_include_directories(ZephyrApp PRIVATE ${RUST_DIR}/include ${CMAKE_SOURCE_DIR}/core/mac/include ${CMAKE_SOURCE_DIR}/external/include ${CMAKE_BINARY_DIR})
+
+target_link_libraries(ZephyrApp PRIVATE ${RUST_LIB} ${PLATFORM_LIBS})

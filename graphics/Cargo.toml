@@ -1,7 +1,11 @@
 [package]
-name = "zephyr-app"
+name = "zg"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
+
+[lib]
+name = "zg"
+crate-type = ["staticlib"]
 
 [dependencies]
 gl = "0.14.0"
