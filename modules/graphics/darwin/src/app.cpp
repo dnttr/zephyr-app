@@ -2,7 +2,7 @@
 // Created by Damian Netter on 14/05/2025.
 //
 
-#include "core_graphics.h"
+#include "cg_interface.h"
 
 #include "OpenGL/gl3.h"
 

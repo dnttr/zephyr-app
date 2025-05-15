@@ -3,7 +3,7 @@ project(zephyr-app LANGUAGES C CXX)
 
 set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "" FORCE)
 
-set(RUST_DIR "${CMAKE_SOURCE_DIR}/graphics")
+set(RUST_DIR "${CMAKE_SOURCE_DIR}/modules/app")
 set(RUST_TARGET_DIR "${RUST_DIR}/target")
 set(RUST_LIB "${RUST_TARGET_DIR}/release/libzg.a")
 
@@ -19,7 +19,7 @@ add_custom_target(RustLib ALL DEPENDS ${RUST_LIB})
 if(APPLE)
     find_package(OpenGL REQUIRED)
     set(SOURCE_FILES
-            core/mac/src/app.cpp
+            modules/graphics/darwin/src/app.cpp
     )
 
     set(COREGRAPHICS_LIB_PATH "${CMAKE_SOURCE_DIR}/external/libcoregraphics.a")
@@ -37,6 +37,6 @@ else()
     message(FATAL_ERROR "Unsupported platform")
 endif()
 
-target_include_directories(ZephyrApp PRIVATE ${RUST_DIR}/include ${CMAKE_SOURCE_DIR}/core/mac/include ${CMAKE_SOURCE_DIR}/external/include ${CMAKE_BINARY_DIR})
+target_include_directories(ZephyrApp PRIVATE ${RUST_DIR}/include ${CMAKE_SOURCE_DIR}/modules/graphics/darwin/include ${CMAKE_SOURCE_DIR}/external/include ${CMAKE_BINARY_DIR})
 
 target_link_libraries(ZephyrApp PRIVATE ${RUST_LIB} ${PLATFORM_LIBS})

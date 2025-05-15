@@ -1,6 +1,5 @@
 //
-//  libcoregraphics.h
-//  libcoregraphics
+//  Part of ZCG (Zephyr-Core-Graphics Kit)
 //
 //  Created by Damian Netter on 14/05/2025.
 //
