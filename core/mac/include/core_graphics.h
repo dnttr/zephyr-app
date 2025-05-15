@@ -11,6 +11,8 @@
 extern "C" {
 #endif
 
+    typedef struct cg_renderer_t *cg_renderer;
+
     typedef struct
     {
         const char *title;
@@ -18,23 +20,27 @@ extern "C" {
         int x, y;
 
         int width, height;
-    } cg_window_args_t;
+    } zcg_window_args_t;
 
     typedef struct
     {
+        cg_renderer (*create)();
+
         void (*exit)();
 
         void (*resize)(int width, int height);
 
+        void (*initialize)(cg_renderer, int width, int height);
+
         bool (*loop)();
-    } cg_window_t;
+    } zcg_window_t;
 
     typedef struct
     {
         void (*on_exit_callback)();
-    } cg_callback_handle;
+    } zcg_callback_handle;
 
-    cg_window_t *cg_allocate(cg_window_args_t *args, cg_callback_handle *handle);
+    zcg_window_t *cg_allocate(zcg_window_args_t *args, zcg_callback_handle *handle);
 
 
 #ifdef __cplusplus
