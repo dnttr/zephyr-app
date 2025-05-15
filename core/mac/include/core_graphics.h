@@ -11,13 +11,31 @@
 extern "C" {
 #endif
 
-    void w_allocate(const char *title, int x, int y, int width, int height);
+    typedef struct
+    {
+        const char *title;
 
-    bool w_closing(void);
+        int x, y;
 
-    void w_on_close(void (*callback)());
+        int width, height;
+    } cg_window_args_t;
 
-    void w_close(void);
+    typedef struct
+    {
+        void (*exit)();
+
+        void (*resize)(int width, int height);
+
+        bool (*loop)();
+    } cg_window_t;
+
+    typedef struct
+    {
+        void (*on_exit_callback)();
+    } cg_callback_handle;
+
+    cg_window_t *cg_allocate(cg_window_args_t *args, cg_callback_handle *handle);
+
 
 #ifdef __cplusplus
 } // extern "C"
