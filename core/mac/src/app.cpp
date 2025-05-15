@@ -4,7 +4,26 @@
 
 #include "core_graphics.h"
 
+void cg_window_exit()
+{
+    // Handle window exit
+}
+
 int main(int argc, char *argv[])
 {
-    w_allocate("x", 0, 0, 800, 600);
+    cg_callback_handle handle = {
+        .on_exit_callback = cg_window_exit
+        // Handle exit callback
+    };
+    cg_window_args_t args = {
+        .title = "Core Graphics",
+        .x = 0,
+        .y = 0,
+        .width = 800,
+        .height = 600
+    };
+
+    cg_window_t *window = cg_allocate(&args, &handle);
+
+    return 0;
 }
