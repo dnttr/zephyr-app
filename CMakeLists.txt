@@ -17,7 +17,7 @@ add_custom_command(
 add_custom_target(RustLib ALL DEPENDS ${RUST_LIB})
 
 if(APPLE)
-    find_library(APPKIT_FRAMEWORK AppKit)
+    find_package(OpenGL REQUIRED)
     set(SOURCE_FILES
             core/mac/src/app.cpp
     )
@@ -25,7 +25,7 @@ if(APPLE)
     set(COREGRAPHICS_LIB_PATH "${CMAKE_SOURCE_DIR}/external/libcoregraphics.a")
 
     add_executable(ZephyrApp ${SOURCE_FILES})
-    target_link_libraries(ZephyrApp PRIVATE ${APPKIT_FRAMEWORK} ${COREGRAPHICS_LIB_PATH})
+    target_link_libraries(ZephyrApp PRIVATE "-framework Cocoa" "-framework OpenGL" ${COREGRAPHICS_LIB_PATH})
 elseif(UNIX)
     set(FRONTEND_SRC src/linux/main.cpp)
     set(PLATFORM_LIBS glfw GL X11 pthread dl)
