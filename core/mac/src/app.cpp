@@ -13,7 +13,6 @@ int main(int argc, char *argv[])
 {
     cg_callback_handle handle = {
         .on_exit_callback = cg_window_exit
-        // Handle exit callback
     };
     cg_window_args_t args = {
         .title = "Core Graphics",
