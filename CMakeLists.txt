@@ -25,7 +25,7 @@ if(APPLE)
     set(COREGRAPHICS_LIB_PATH "${CMAKE_SOURCE_DIR}/external/libcoregraphics.a")
 
     add_executable(ZephyrApp ${SOURCE_FILES})
-    target_link_libraries(ZephyrApp PRIVATE "-framework Cocoa" "-framework OpenGL" ${COREGRAPHICS_LIB_PATH})
+    target_link_libraries(ZephyrApp PRIVATE "-framework Cocoa" "-framework OpenGL" "-framework QuartzCore" ${COREGRAPHICS_LIB_PATH})
 elseif(UNIX)
     set(FRONTEND_SRC src/linux/main.cpp)
     set(PLATFORM_LIBS glfw GL X11 pthread dl)
