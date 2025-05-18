@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(zephyr-app LANGUAGES C CXX)
 
+set(CMAKE_CXX_STANDARD 23)
+
 set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "" FORCE)
 
 set(RUST_DIR "${CMAKE_SOURCE_DIR}/modules/app")
@@ -13,6 +15,8 @@ add_custom_command(
         WORKING_DIRECTORY ${RUST_DIR}
         COMMENT "Building Rust staticlib"
 )
+
+find_package(glm REQUIRED)
 
 add_custom_target(RustLib ALL DEPENDS ${RUST_LIB})
 
@@ -39,4 +43,4 @@ endif()
 
 target_include_directories(ZephyrApp PRIVATE ${RUST_DIR}/include ${CMAKE_SOURCE_DIR}/modules/graphics/darwin/include ${CMAKE_SOURCE_DIR}/external/include ${CMAKE_BINARY_DIR})
 
-target_link_libraries(ZephyrApp PRIVATE ${RUST_LIB} ${PLATFORM_LIBS})
+target_link_libraries(ZephyrApp PRIVATE ${RUST_LIB} ${PLATFORM_LIBS} glm::glm)

@@ -10,8 +10,6 @@
 extern "C" {
 #endif
 
-    typedef struct cg_renderer_t *cg_renderer;
-
     typedef struct
     {
         const char *title;
@@ -23,24 +21,29 @@ extern "C" {
 
     typedef struct
     {
-        cg_renderer (*create)();
-
         void (*exit)();
 
         void (*resize)(int width, int height);
 
-        void (*initialize)(cg_renderer, int width, int height);
+        bool (*is_retina)();
     } zcg_window_t;
 
     typedef struct
     {
         void (*on_exit_callback)();
 
-        void (*on_loop_callback)();
+        void (*on_render_callback)();
+
+        void (*on_reshape_callback)(int width, int height);
+
+        void (*on_init_callback)();
+
+        void (*on_update_callback)();
     } zcg_callback_handle;
 
-    zcg_window_t *cg_allocate(zcg_window_args_t *args, zcg_callback_handle *handle);
+    zcg_window_t *zcg_allocate(zcg_window_args_t *args, zcg_callback_handle *handle);
 
+    void zcg_run(const zcg_window_t *window);
 
 #ifdef __cplusplus
 } // extern "C"
