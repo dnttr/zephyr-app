@@ -12,7 +12,6 @@
 class shaders
 {
 
-    //TODO: add projection matrix
     const char *vertex = R"(
             #version 330 core
             layout (location = 0) in vec3 aPos;
@@ -39,7 +38,6 @@ class shaders
                 vec2 center = resolution * 0.5;
     vec2 pos = gl_FragCoord.xy - center;
 
-    // Random fixed rectangle size (e.g., 300x200 pixels)
     vec2 rectSize = vec2(300.0, 200.0);
     vec2 halfSize = rectSize * 0.5;
 
