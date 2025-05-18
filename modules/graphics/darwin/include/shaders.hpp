@@ -18,10 +18,12 @@ class shaders
             layout (location = 0) in vec3 aPos;
 
             uniform mat4 projection_matrix;
+            uniform vec2 scale;
 
             void main()
             {
-                gl_Position = projection_matrix * vec4(aPos, 1.0);
+                vec3 screenPos = vec3(aPos.x * scale.x, aPos.y * scale.y, aPos.z);
+                gl_Position = projection_matrix * vec4(screenPos, 1.0);
             }
         )";
 
@@ -34,17 +36,20 @@ class shaders
 
             void main()
             {
-                vec2 uv = gl_FragCoord.xy / resolution;
-                vec2 pos = uv * 2.0 - 1.0; // Convert to [-1,1]
+                vec2 center = resolution * 0.5;
+    vec2 pos = gl_FragCoord.xy - center;
 
-                vec2 rect = vec2(0.8, 0.5); // width/height
-                vec2 dist = abs(pos) - rect + vec2(radius);
-                float d = length(max(dist, 0.0)) - radius;
+    // Random fixed rectangle size (e.g., 300x200 pixels)
+    vec2 rectSize = vec2(300.0, 200.0);
+    vec2 halfSize = rectSize * 0.5;
 
-                if (d > 0.0)
-                    discard;
+    vec2 dist = abs(pos) - halfSize + vec2(radius);
+    float d = length(max(dist, 0.0)) - radius;
 
-                FragColor = vec4(1.0, 0.2, 0.2, 1.0);
+    if (d > 0.0)
+        discard;
+
+    FragColor = vec4(1.0, 0.2, 0.2, 1.0);
             }
         )";
 
