@@ -57,9 +57,9 @@ void init()
     glGenBuffers(1, &vbo);
 
     float width = 0.375f;
-    float height = 0.333f;  // 1/3 of window height
-    float x = 0.5 - width / 2;        // 1/8 of window width
-    float y = 0.5 - height / 2;       // 1/6 of window height
+    float height = 0.333f;
+    float x = 0.5 - width / 2;
+    float y = 0.5 - height / 2;
 
     glBindVertexArray(vao);
     const float vertices[] = {
