@@ -15,7 +15,7 @@
   </li>
 
   <li><strong>🟠 Application</strong><br>
-    <span style="font-weight:normal">Initial project setup is complete and integrated with ZGC. Shaders are being worked on, substantial functionality is yet to be developed. External resource management is compulsory.</span>
+    <span style="font-weight:normal">Initial project setup is complete and integrated with ZCG. Shaders are being worked on, substantial functionality is yet to be developed. External resource management is compulsory.</span>
   </li>
 
   <li><strong>⚪ Rich Presence</strong><br>
