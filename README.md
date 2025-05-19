@@ -10,12 +10,12 @@
     <span style="font-weight:normal">Core mechanisms are functional, but lack a clean, memory-safe API for external use.</span>
   </li>
 
-  <li><strong>🟠 Core Graphics</strong><br>
-    <span style="font-weight:normal">Basic window creation and context management are in place. Missing support for callbacks, advanced lifecycle handling, and taskbar integration.</span>
+  <li><strong>🟡 Core Graphics</strong><br>
+    <span style="font-weight:normal">Basic window creation and context management are in place. Missing support for advanced lifecycle handling, and taskbar integration.</span>
   </li>
 
   <li><strong>🟠 Application</strong><br>
-    <span style="font-weight:normal">Initial project setup is complete and integrated with ZGC. Substantial functionality is yet to be developed.</span>
+    <span style="font-weight:normal">Initial project setup is complete and integrated with ZGC. Shaders are being worked on, substantial functionality is yet to be developed. External resource management is compulsory.</span>
   </li>
 
   <li><strong>⚪ Rich Presence</strong><br>
