@@ -17,6 +17,7 @@ add_custom_command(
 )
 
 find_package(glm REQUIRED)
+find_package(Freetype REQUIRED)
 
 add_custom_target(RustLib ALL DEPENDS ${RUST_LIB})
 
@@ -43,4 +44,4 @@ endif()
 
 target_include_directories(ZephyrApp PRIVATE ${RUST_DIR}/include ${CMAKE_SOURCE_DIR}/modules/graphics/darwin/include ${CMAKE_SOURCE_DIR}/external/include ${CMAKE_BINARY_DIR})
 
-target_link_libraries(ZephyrApp PRIVATE ${RUST_LIB} ${PLATFORM_LIBS} glm::glm)
+target_link_libraries(ZephyrApp PRIVATE ${RUST_LIB} ${PLATFORM_LIBS} glm::glm Freetype::Freetype)

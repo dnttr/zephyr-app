@@ -7,23 +7,33 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "cg_interface.h"
-#include "OpenGL/gl3.h"
 #include "shaders.hpp"
+#include "OpenGL/gl3.h"
 
+#include "ft2build.h"
+#include FT_FREETYPE_H
 
 //TODO: rewrite it
+//TODO: enable MSAA
 const zcg_window_t *window;
 
+GLint projection, resolution, radius, pos, size;
 GLuint program;
-GLint resolution_location, radius_location, matrix_location, scale;
 GLuint vao, vbo;
 
 float w_width = 800 * 2, w_height = 600 * 2;
 
-glm::mat4 projection_matrix;
+glm::mat4 matrix;
 
 void destroy()
 {
+}
+
+glm::mat4 get_projection()
+{
+    glm::mat4 projection = glm::ortho(0.0f, (float)w_width, (float)w_height, 0.0f, -1.0f, 1.0f);
+
+    return projection;
 }
 
 void init()
@@ -31,8 +41,10 @@ void init()
     glClearColor(0.2, 0.2, 0.2, 1.0);
     glViewport(0, 0, w_width, w_height);
 
-    projection_matrix = glm::ortho(0.0f, w_width,
-                                   w_height, 0.0f);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    matrix = get_projection();
 
 
     unsigned int indices[] = {
@@ -43,10 +55,11 @@ void init()
     shaders shader;
     program = shader.compile();
 
-    radius_location = glGetUniformLocation(program, "radius");
-    resolution_location = glGetUniformLocation(program, "resolution");
-    matrix_location = glGetUniformLocation(program, "projection_matrix");
-    scale = glGetUniformLocation(program, "scale");
+    resolution = glGetUniformLocation(program, "resolution");
+    projection = glGetUniformLocation(program, "projection_matrix");
+    radius = glGetUniformLocation(program, "radius");
+    pos = glGetUniformLocation(program, "rectPos");
+    size = glGetUniformLocation(program, "rectSize");
 
     vao = 0;
     vbo = 0;
@@ -56,17 +69,12 @@ void init()
     glGenBuffers(1, &ebo);
     glGenBuffers(1, &vbo);
 
-    float width = 0.375f;
-    float height = 0.333f;
-    float x = 0.5 - width / 2;
-    float y = 0.5 - height / 2;
-
     glBindVertexArray(vao);
-    const float vertices[] = {
-        x, y, 0.0f, //bottom-left
-        x + width, y, 0.0f, //bottom-right
-        x + width, y + height,   0.0f, // top-right
-        x, y + height,   0.0f // top-left
+    float vertices[] = {
+        0.0f, 0.0f, 0.0f,
+        w_width, 0.0f, 0.0f,
+        w_width, w_height, 0.0f,
+        0.0f, w_height, 0.0f
     };
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -84,13 +92,14 @@ void render()
     glClear(GL_COLOR_BUFFER_BIT);
     glUseProgram(program);
 
-    glUniform1f(radius_location, 0.1f);
-    glUniform2f(resolution_location, w_width, w_height);
-    glUniform2f(scale, w_width, w_height);
+    glUniform2f(resolution, w_width, w_height);
+    glUniform1f(radius, 20.0f);
+    glUniform2f(pos, 20, 20);
+    glUniform2f(size, 200, 200);
 
-    glUniformMatrix4fv(matrix_location, 1, GL_FALSE, glm::value_ptr(projection_matrix));
+    glUniformMatrix4fv(projection, 1, GL_FALSE, glm::value_ptr(matrix));
     glBindVertexArray(vao);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 }
 
 
@@ -98,16 +107,47 @@ void update()
 {
 }
 
-void reshape(int width, int height)
+void reshape(const int width, const int height)
 {
-    w_width = width;
-    w_height = height;
-    projection_matrix = glm::ortho(0.0f, static_cast<float>(width),
-                                   static_cast<float>(height), 0.0f);
+    w_width = static_cast<float>(width);
+    w_height = static_cast<float>(height);
+
+    glViewport(0, 0, width, height);
+
+    matrix = get_projection();
 }
 
 int main(int argc, char *argv[])
 {
+    FT_Library ft;
+    if (FT_Init_FreeType(&ft))
+    {
+        std::cerr << "Could not init FreeType library" << std::endl;
+        return -1;
+    }
+    FT_Face face;
+    if (FT_New_Face(ft, "/System/Library/Fonts/Supplemental/Arial.ttf", 0, &face))
+    {
+        std::cerr << "Could not open font" << std::endl;
+        return -1;
+    }
+
+    FT_Set_Pixel_Sizes(face , 0 /* should it even be 0? */, 48);
+
+    FT_Load_Char(face, 'A', FT_LOAD_RENDER);
+
+    /*
+     * Get bitmap ptr
+     * Create and bind texture
+     * Upload data
+     * Set params
+     *
+     * and something else, idk
+     */
+
+    FT_Done_Face(face);
+    FT_Done_FreeType(ft);
+
     zcg_callback_handle handle = {
         .on_exit_callback = destroy,
         .on_render_callback = render,
