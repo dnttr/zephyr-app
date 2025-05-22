@@ -22,6 +22,10 @@
     <span style="font-weight:normal">Basic window creation and context management are in place. Missing support for advanced lifecycle handling, and taskbar integration.</span>
   </li>
 
+  <li><strong>🟡 Toolset</strong><br>
+    <span style="font-weight:normal">Work has begun and is in early stages.</span>
+  </li>
+
   <li><strong>🟠 Application</strong><br>
     <span style="font-weight:normal">Initial project setup is complete and integrated with ZCG. Shaders are being worked on, substantial functionality is yet to be developed. External resource management is compulsory.</span>
   </li>
@@ -36,10 +40,6 @@
 
   <li><strong>⚪ Authorization</strong><br>
     <span style="font-weight:normal">No development activity has begun.</span>
-  </li>
-
-  <li><strong>⚪ Toolset</strong><br>
-    <span style="font-weight:normal">Not yet started; pending planning and scope definition.</span>
   </li>
 
   <li><strong>⚪ Protocol</strong><br>
