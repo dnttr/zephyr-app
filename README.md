@@ -6,6 +6,10 @@
     <span style="font-weight:normal">Complete. Future enhancements may shift more responsibilities to the native layer.</span>
   </li>
 
+  <li><strong>✅ Encryption</strong><br>
+    <span style="font-weight:normal">Complete. All core encryption features are implemented and stable.</span>
+  </li>
+
   <li><strong>🟡 Native Bridge</strong><br>
     <span style="font-weight:normal">Core mechanisms are functional, but lack a clean, memory-safe API for external use.</span>
   </li>
