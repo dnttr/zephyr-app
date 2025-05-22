@@ -10,6 +10,10 @@
     <span style="font-weight:normal">Complete. All core encryption features are implemented and stable.</span>
   </li>
 
+  <li><strong>🟡 Serializer</strong><br>
+    <span style="font-weight:normal">Work has begun and is progressing steadily.</span>
+  </li>
+
   <li><strong>🟡 Native Bridge</strong><br>
     <span style="font-weight:normal">Core mechanisms are functional, but lack a clean, memory-safe API for external use.</span>
   </li>
@@ -36,10 +40,6 @@
 
   <li><strong>⚪ Toolset</strong><br>
     <span style="font-weight:normal">Not yet started; pending planning and scope definition.</span>
-  </li>
-
-  <li><strong>⚪ Serializer</strong><br>
-    <span style="font-weight:normal">Work has not commenced.</span>
   </li>
 
   <li><strong>⚪ Protocol</strong><br>
