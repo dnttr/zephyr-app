@@ -22,21 +22,50 @@ if(APPLE)
 
     set(COREGRAPHICS_LIB_PATH "${CMAKE_SOURCE_DIR}/external/libzcg.a")
     set(NATIVEBRIDGE_LIB_PATH "${CMAKE_SOURCE_DIR}/external/libznb.a")
-
-    add_executable(ZephyrApp ${SOURCE_FILES})
-    target_link_libraries(ZephyrApp PRIVATE "-framework Cocoa" "-framework OpenGL" "-framework QuartzCore" ${COREGRAPHICS_LIB_PATH} ${NATIVEBRIDGE_LIB_PATH} )
+    set(PLATFORM_LIBS "-framework Cocoa" "-framework OpenGL" "-framework QuartzCore" ${COREGRAPHICS_LIB_PATH} ${NATIVEBRIDGE_LIB_PATH})
 elseif(UNIX)
-    set(FRONTEND_SRC src/linux/main.cpp)
+    set(SOURCE_FILES src/linux/main.cpp)
     set(PLATFORM_LIBS glfw GL X11 pthread dl)
-
-    add_executable(ZephyrApp ${FRONTEND_SRC})
-    target_link_libraries(ZephyrApp PRIVATE ${PLATFORM_LIBS})
-
 else()
     message(FATAL_ERROR "Unsupported platform")
 endif()
 
-#temporary
-target_include_directories(ZephyrApp PRIVATE ${JNI_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/modules/graphics/darwin/include ${CMAKE_SOURCE_DIR}/external/include ${CMAKE_BINARY_DIR})
+if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Building executable for Debug configuration.")
+    add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+else()
+    message(STATUS "Building shared library for ${CMAKE_BUILD_TYPE} configuration.")
+    add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
 
-target_link_libraries(ZephyrApp PRIVATE ${PLATFORM_LIBS} ${JNI_LIBRARIES} glm::glm Freetype::Freetype)
+    if(APPLE)
+        set_target_properties(${PROJECT_NAME} PROPERTIES
+                LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+                OUTPUT_NAME "znb"
+                INSTALL_RPATH "@loader_path"
+        )
+
+        set(OLD_GLM_PATH "/opt/homebrew/opt/glm/lib/libglm.dylib")
+        set(OLD_FREETYPE_PATH "/opt/homebrew/opt/freetype/lib/libfreetype.6.dylib")
+
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_INSTALL_NAME_TOOL} -change ${OLD_GLM_PATH} "@rpath/libglm.dylib" $<TARGET_FILE:${PROJECT_NAME}>
+                COMMAND ${CMAKE_INSTALL_NAME_TOOL} -change ${OLD_FREETYPE_PATH} "@rpath/libfreetype.6.dylib" $<TARGET_FILE:${PROJECT_NAME}>
+                COMMENT "Fixing dylib dependency paths for relocatability"
+                VERBATIM
+        )
+    endif()
+endif()
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+        ${JNI_INCLUDE_DIRS}
+        ${CMAKE_SOURCE_DIR}/modules/graphics/darwin/include
+        ${CMAKE_SOURCE_DIR}/external/include
+        ${CMAKE_BINARY_DIR}
+)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+        ${PLATFORM_LIBS}
+        ${JNI_LIBRARIES}
+        glm::glm
+        Freetype::Freetype
+)

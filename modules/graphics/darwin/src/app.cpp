@@ -106,6 +106,8 @@ void render()
 
 void update()
 {
+
+
 }
 
 void reshape(const int width, const int height)
