@@ -12,6 +12,11 @@ namespace za_kit
     {
         static const std::unordered_multimap<std::string, znb_kit::jni_bridge_reference> methods;
 
+        static const std::string executor_class_name;
+        static const std::string executor_method_name;
+        static const std::string executor_method_signature;
+
+        static const std::string bridge_class_name;
     public:
         static void run(JNIEnv *jni, znb_kit::jvmti_object &jvmti);
     };

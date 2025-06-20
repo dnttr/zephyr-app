@@ -50,6 +50,7 @@ endfunction()
 set(SOURCE_FILES
         modules/graphics/darwin/src/app.cpp
         modules/bridge/src/bridge.cpp
+        modules/app/src/executor.cpp
         modules/app/src/loader.cpp
 )
 
