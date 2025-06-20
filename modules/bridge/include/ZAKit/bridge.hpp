@@ -10,5 +10,8 @@
 
 namespace za_kit
 {
-    jint push(DEFAULT, jstring name, jstring source);
+    class bridge {
+    public:
+        static jint push(DEFAULT, jstring name, jstring source);
+    };
 }
