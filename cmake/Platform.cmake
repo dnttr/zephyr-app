@@ -32,9 +32,6 @@ endfunction()
 _get_architecture(LOCAL_ARCH)
 _get_os(LOCAL_OS)
 
-_get_architecture(LOCAL_ARCH)
-_get_os(LOCAL_OS)
-
 set(ARCHITECTURE ${LOCAL_ARCH})
 set(OS ${LOCAL_OS})
 

@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-#include "ZAKit/app_runner.hpp"
+#include "../../../include/ZAKit/internal/app_runner.hpp"
 #include "ZAKit/util.hpp"
 #include "ZNBKit/vm_management.hpp"
 

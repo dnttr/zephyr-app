@@ -2,7 +2,7 @@
 // Created by Damian Netter on 20/06/2025.
 //
 
-#include "ZAKit/app_runner.hpp"
+#include "../../../../include/ZAKit/internal/app_runner.hpp"
 
 #include <ZNBKit/vm_management.hpp>
 #include <ZNBKit/jni/signatures/method/void_method.hpp>
