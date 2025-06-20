@@ -12,6 +12,7 @@ namespace za_kit
 {
     class bridge {
     public:
-        static jint push(DEFAULT, jstring name, jstring source);
+
+        static jint push_shader(DEFAULT, jstring name, jstring source);
     };
 }

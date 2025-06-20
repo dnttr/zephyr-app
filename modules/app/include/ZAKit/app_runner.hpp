@@ -3,21 +3,21 @@
 //
 
 #pragma once
-#include <jni.h>
+
 #include <ZNBKit/jvmti/jvmti_object.hpp>
 
 namespace za_kit
 {
-    class executor
+    class app_runner
     {
         static const std::unordered_multimap<std::string, znb_kit::jni_bridge_reference> methods;
 
-        static const std::string executor_class_name;
+        static const std::string executor_klass_name;
         static const std::string executor_method_name;
         static const std::string executor_method_signature;
 
-        static const std::string bridge_class_name;
+        static const std::string bridge_klass_name;
     public:
-        static void run(JNIEnv *jni, znb_kit::jvmti_object &jvmti);
+        static int run(const std::string& vm_path);
     };
 }

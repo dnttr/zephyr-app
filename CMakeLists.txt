@@ -50,8 +50,9 @@ endfunction()
 set(SOURCE_FILES
         modules/graphics/darwin/src/app.cpp
         modules/bridge/src/bridge.cpp
-        modules/app/src/executor.cpp
-        modules/app/src/loader.cpp
+        modules/app/src/app_runner.cpp
+        modules/app/src/app_launcher.cpp
+        modules/app/src/util.cpp
 )
 
 if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "Debug")
