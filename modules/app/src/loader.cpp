@@ -4,6 +4,8 @@
 
 #include <iostream>
 
+#include "ZAKit/bridge.hpp"
+#include "ZAKit/executor.hpp"
 #include "ZNBKit/vm_management.hpp"
 #include "ZNBKit/jni/signatures/method/void_method.hpp"
 
@@ -51,11 +53,7 @@ int main(const int argc, char* argv[])
     const auto jvmti_env = vm->get_jvmti()->get().get_owner();
 
     znb_kit::jvmti_object jvmti(jni_env, jvmti_env);
-
-    const znb_kit::klass_signature loader(
-        jni_env, "org/dnttr/zephyr/management/Loader");
-
-    znb_kit::void_method method(jni_env, loader, "load", "()V", std::nullopt, true);
+    za_kit::executor::run(jni_env, jvmti);
 
     return 0;
 }
