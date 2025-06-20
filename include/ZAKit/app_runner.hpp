@@ -18,6 +18,6 @@ namespace za_kit
 
         static const std::string bridge_klass_name;
     public:
-        static int run(const std::string& vm_path);
+        static void run(const std::string& vm_path);
     };
 }

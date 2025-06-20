@@ -21,7 +21,7 @@ namespace za_kit
         {"ffi_zm_push_shader", znb_kit::jni_bridge_reference(&bridge::push_shader, { znb_kit::STRING, znb_kit::STRING })}
     };
 
-    int app_runner::run(const std::string& vm_path)
+    void app_runner::run(const std::string& vm_path)
     {
         const auto vm_object = znb_kit::vm_management::create_and_wrap_vm(vm_path);
         const auto vm = vm_object.get();
@@ -29,7 +29,6 @@ namespace za_kit
         if (!vm)
         {
             std::cerr << "Failed to create VM object." << std::endl;
-            return 1;
         }
 
         const auto jni = vm->get_env();
@@ -47,7 +46,5 @@ namespace za_kit
 
         std::vector<jvalue> parameters;
         method.invoke(nullptr, parameters);
-
-        return 0;
     }
 }

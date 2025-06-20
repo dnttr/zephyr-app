@@ -29,7 +29,9 @@ int main(const int argc, char *argv[])
             throw std::invalid_argument("Invalid VM path provided.");
         }
 
-        return za_kit::app_runner::run(vm_path);
+        za_kit::app_runner::run(vm_path);
+
+        return 0;
     }
     catch (const std::exception& e)
     {
