@@ -1,0 +1,14 @@
+//
+// Created by Damian Netter on 20/06/2025.
+//
+
+#pragma once
+
+#include <jni.h>
+
+#define DEFAULT JNIEnv *jni, jobject object
+
+namespace za_kit
+{
+    jint push(DEFAULT, jstring name, jstring source);
+}

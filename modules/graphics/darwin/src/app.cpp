@@ -6,8 +6,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "cg_interface.h"
-#include "shaders.hpp"
+#include "ZAKit/cg_interface.h"
+#include "ZAKit/shaders.hpp"
 #include "OpenGL/gl3.h"
 
 #include "ft2build.h"

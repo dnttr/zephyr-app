@@ -59,6 +59,7 @@ endif()
 target_include_directories(${PROJECT_NAME} PRIVATE
         ${JNI_INCLUDE_DIRS}
         ${CMAKE_SOURCE_DIR}/modules/graphics/darwin/include
+        ${CMAKE_SOURCE_DIR}/modules/bridge/include
         ${CMAKE_SOURCE_DIR}/external/include
         ${CMAKE_BINARY_DIR}
 )
