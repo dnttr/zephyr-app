@@ -3,9 +3,6 @@ function(configure_zephyr_target target)
             ${target}
             PUBLIC
             ${COMMON_INCLUDE_DIRS}
-            ${CMAKE_SOURCE_DIR}/modules/graphics/include
-            ${CMAKE_SOURCE_DIR}/modules/bridge/include
-            ${CMAKE_SOURCE_DIR}/modules/app/include
             ${CMAKE_SOURCE_DIR}/extern/include
             ${CMAKE_SOURCE_DIR}/include
     )
