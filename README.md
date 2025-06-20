@@ -1,7 +1,5 @@
-<div style="text-align: center;">
-<h3>Project Development Roadmap</h3>
-<p><em>Last Updated: June 2025</em></p>
-</div>
+<h3 align="center">Project Development Roadmap</h3>
+<p align="center"><em>Last Updated: June 2025</em></p>
 
 ---
 
