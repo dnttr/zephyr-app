@@ -29,13 +29,14 @@ function(_get_os OS_VAR)
     set(${OS_VAR} "${OS_NAME}" PARENT_SCOPE)
 endfunction()
 
-function(define_platform)
-    _get_architecture(LOCAL_ARCH)
-    _get_os(LOCAL_OS)
+_get_architecture(LOCAL_ARCH)
+_get_os(LOCAL_OS)
 
-    set(ARCHITECTURE ${LOCAL_ARCH} PARENT_SCOPE)
-    set(OS ${LOCAL_OS} PARENT_SCOPE)
+_get_architecture(LOCAL_ARCH)
+_get_os(LOCAL_OS)
 
-    message(STATUS "Architecture: ${ARCHITECTURE}")
-    message(STATUS "Operating system: ${OS}")
-endfunction()
+set(ARCHITECTURE ${LOCAL_ARCH})
+set(OS ${LOCAL_OS})
+
+message(STATUS "Architecture: ${ARCHITECTURE}")
+message(STATUS "Operating system: ${OS}")

@@ -6,8 +6,8 @@ find_package(Freetype REQUIRED)
 
 function(configure_apple_platform)
     if(APPLE)
-        set(COREGRAPHICS_LIB_PATH "${CMAKE_SOURCE_DIR}/external/libzcg.a")
-        set(NATIVEBRIDGE_LIB_PATH "${CMAKE_SOURCE_DIR}/external/libznb.dylib")
+        set(COREGRAPHICS_LIB_PATH "${CMAKE_SOURCE_DIR}/extern/libzcg.a")
+        set(NATIVEBRIDGE_LIB_PATH "${CMAKE_SOURCE_DIR}/extern/libznb.dylib")
 
         set(PLATFORM_LIBS
                 "-framework Cocoa"
