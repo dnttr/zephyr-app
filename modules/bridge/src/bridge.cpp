@@ -6,4 +6,5 @@
 
 jint za_kit::push(JNIEnv* jni, jobject object, jstring name, jstring source)
 {
+    return 0; // Placeholder for actual implementation
 }

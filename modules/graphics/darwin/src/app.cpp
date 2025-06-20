@@ -3,6 +3,7 @@
 // Created by Damian Netter on 14/05/2025.
 //
 
+#include <map>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -53,8 +54,8 @@ void init()
         2, 3, 0
     };
 
-    shaders shader;
-    program = shader.compile();
+    //shaders shader;
+    //program = shader.compile();
 
     resolution = glGetUniformLocation(program, "resolution");
     projection = glGetUniformLocation(program, "projection_matrix");
@@ -120,7 +121,7 @@ void reshape(const int width, const int height)
     matrix = get_projection();
 }
 
-int main(int argc, char *argv[])
+int run(std::map<std::string, std::string> &shaders)
 {
     FT_Library ft;
     if (FT_Init_FreeType(&ft))

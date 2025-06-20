@@ -5,7 +5,6 @@
 #pragma once
 
 #include <iostream>
-#include <map>
 #include <ostream>
 
 #include "OpenGL/gl3.h"
@@ -42,7 +41,7 @@ namespace za_kit
         }
     public:
 
-        GLuint compile()
+        /*GLuint compile()
         {
             const GLuint vertex_shader = create(vertex, GL_VERTEX_SHADER);
             const GLuint fragment_shader = create(fragment, GL_FRAGMENT_SHADER);
@@ -80,6 +79,6 @@ namespace za_kit
             glDeleteShader(fragment_shader);
 
             return program;
-        }
+        }*/
     };
 }

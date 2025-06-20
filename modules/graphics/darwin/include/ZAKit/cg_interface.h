@@ -6,6 +6,8 @@
 
 #pragma once
 
+#define GL_SILENCE_DEPRECATION
+
 #ifdef __cplusplus
 extern "C" {
 #endif
