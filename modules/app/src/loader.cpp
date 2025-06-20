@@ -55,7 +55,7 @@ int main(const int argc, char* argv[])
     const znb_kit::klass_signature loader(
         jni_env, "org/dnttr/zephyr/management/Loader");
 
-    znb_kit::void_method method(jni_env, loader, "run", "()V", std::nullopt, true);
+    znb_kit::void_method method(jni_env, loader, "load", "()V", std::nullopt, true);
 
     return 0;
 }
