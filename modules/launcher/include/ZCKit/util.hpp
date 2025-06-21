@@ -6,7 +6,7 @@
 
 #include <string>
 
-namespace za_kit
+namespace zc_kit
 {
     class util {
     public:

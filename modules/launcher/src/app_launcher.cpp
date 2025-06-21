@@ -4,14 +4,14 @@
 
 #include <iostream>
 
-#include "ZAKit/util.hpp"
-#include "ZAKit/internal/app_runner.hpp"
+#include "ZCKit/util.hpp"
+#include "ZCKit/internal/app_runner.hpp"
 #include "ZNBKit/vm/vm_management.hpp"
 
 int main(const int argc, char *argv[])
 {
     try {
-        const auto args = za_kit::util::to_vector(argc, argv);
+        const auto args = zc_kit::util::to_vector(argc, argv);
 
         if (args.empty())
         {
@@ -20,16 +20,16 @@ int main(const int argc, char *argv[])
             throw std::invalid_argument("No VM path provided.");
         }
 
-        const auto vm_path = za_kit::util::parse_argument(args.at(0));
+        const auto vm_path = zc_kit::util::parse_argument(args.at(0));
 
-        if (!za_kit::util::is_path_valid(vm_path))
+        if (!zc_kit::util::is_path_valid(vm_path))
         {
             std::cerr << "VM path does not exist: " << vm_path << std::endl;
 
             throw std::invalid_argument("Invalid VM path provided.");
         }
 
-        za_kit::app_runner::run(vm_path);
+        zc_kit::app_runner::run(vm_path);
 
         return 0;
     }

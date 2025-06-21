@@ -6,7 +6,7 @@
 
 #include <ZNBKit/jvmti/jvmti_object.hpp>
 
-namespace za_kit
+namespace zc_kit
 {
     class app_runner
     {

@@ -8,7 +8,7 @@
 
 #define DEFAULT JNIEnv *jni, jobject object
 
-namespace za_kit
+namespace zc_kit
 {
     class bridge {
     public:

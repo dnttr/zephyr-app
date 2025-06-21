@@ -7,7 +7,7 @@
 #include <map>
 #include <string>
 
-namespace za_kit
+namespace zc_app
 {
     class shaders_manager
     {

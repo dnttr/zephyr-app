@@ -3,15 +3,15 @@
 // Created by Damian Netter on 14/05/2025.
 //
 
+#include <ft2build.h>
 #include <map>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "OpenGL/gl3.h"
-#include "ZAKit/cg_interface.h"
-#include "ZAKit/shaders.hpp"
+#include <OpenGL/gl3.h>
 
-#include "ft2build.h"
+#include "ZCApp/cg_interface.h"
+#include "ZCApp/shaders.hpp"
 
 #include FT_FREETYPE_H
 
@@ -33,7 +33,7 @@ void destroy()
 
 glm::mat4 get_projection()
 {
-    glm::mat4 projection = glm::ortho(0.0f, (float)w_width, (float)w_height, 0.0f, -1.0f, 1.0f);
+    const glm::mat4 projection = glm::ortho(0.0f, w_width, w_height, 0.0f, -1.0f, 1.0f);
 
     return projection;
 }

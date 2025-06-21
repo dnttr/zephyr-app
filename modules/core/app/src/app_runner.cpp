@@ -2,14 +2,14 @@
 // Created by Damian Netter on 20/06/2025.
 //
 
-#include "ZAKit/internal/app_runner.hpp"
+#include "ZCKit/internal/app_runner.hpp"
 
 #include <ZNBKit/jni/signatures/method/void_method.hpp>
 #include <ZNBKit/vm/vm_management.hpp>
 
-#include "ZAKit/bridge.hpp"
+#include "ZCKit/bridge.hpp"
 
-namespace za_kit
+namespace zc_kit
 {
     const std::string app_runner::bridge_klass_name = "org/dnttr/zephyr/bridge/internal/ZAKit";
     const std::string app_runner::executor_klass_name = "org/dnttr/zephyr/management/Loader";

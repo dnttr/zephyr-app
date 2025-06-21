@@ -6,10 +6,9 @@
 
 #include <iostream>
 #include <ostream>
+#include <OpenGL/gl3.h>
 
-#include "OpenGL/gl3.h"
-
-namespace za_kit
+namespace zc_app
 {
     class shaders
     {
