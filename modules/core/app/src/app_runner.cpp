@@ -2,10 +2,10 @@
 // Created by Damian Netter on 20/06/2025.
 //
 
-#include "../../../../include/ZAKit/internal/app_runner.hpp"
+#include "ZAKit/internal/app_runner.hpp"
 
-#include <ZNBKit/vm_management.hpp>
 #include <ZNBKit/jni/signatures/method/void_method.hpp>
+#include <ZNBKit/vm/vm_management.hpp>
 
 #include "ZAKit/bridge.hpp"
 

@@ -14,7 +14,7 @@ function(configure_zephyr_target target)
                 ${target}
                 PROPERTIES
                 LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
-                OUTPUT_NAME "znb"
+                OUTPUT_NAME "za"
                 INSTALL_RPATH "@loader_path"
         )
 

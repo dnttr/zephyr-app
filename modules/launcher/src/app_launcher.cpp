@@ -4,9 +4,9 @@
 
 #include <iostream>
 
-#include "../../../include/ZAKit/internal/app_runner.hpp"
 #include "ZAKit/util.hpp"
-#include "ZNBKit/vm_management.hpp"
+#include "ZAKit/internal/app_runner.hpp"
+#include "ZNBKit/vm/vm_management.hpp"
 
 int main(const int argc, char *argv[])
 {

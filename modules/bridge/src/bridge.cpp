@@ -3,7 +3,8 @@
 //
 
 #include "ZAKit/bridge.hpp"
-#include <ZNBKit/jni/utils/util.hpp>
+
+#include <ZNBKit/internal/util.hpp>
 #include <ZNBKit/jni/signatures/method_signature.hpp>
 
 #include "ZNBKit/debug.hpp"
