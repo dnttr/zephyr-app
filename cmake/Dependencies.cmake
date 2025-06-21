@@ -3,6 +3,7 @@ find_package(JNI REQUIRED)
 find_package(glm REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(Freetype REQUIRED)
+find_package(Catch2 REQUIRED)
 
 function(configure_apple_platform)
     if(APPLE)
@@ -17,9 +18,6 @@ function(configure_apple_platform)
                 ${NATIVEBRIDGE_LIB_PATH}
                 PARENT_SCOPE
         )
-
-        set(OLD_GLM_PATH "/opt/homebrew/opt/glm/lib/libglm.dylib" PARENT_SCOPE)
-        set(OLD_FREETYPE_PATH "/opt/homebrew/opt/freetype/lib/libfreetype.6.dylib" PARENT_SCOPE)
     endif()
 endfunction()
 
@@ -47,8 +45,20 @@ function(configure_jni_paths)
     )
 endfunction()
 
+function(configure_test)
+    if (NOT Catch2_FOUND)
+        message(FATAL_ERROR "Catch2 not found.")
+    endif ()
+
+    message(STATUS "Found Catch2.")
+
+    include(CTest)
+    include(Catch)
+endfunction()
+
 configure_apple_platform()
 configure_jni_paths()
+configure_test()
 
 set(COMMON_INCLUDE_DIRS
         ${JNI_SPECIFIC_INCLUDES}
@@ -60,5 +70,5 @@ set(COMMON_LIBS
         ${JNI_LIBRARIES}
         glm::glm
         Freetype::Freetype
-        ${JNI_LIBRARIES}
+        Catch2::Catch2
 )
