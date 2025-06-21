@@ -22,6 +22,10 @@ std::string zc_app::shaders_manager::get_source(const std::string& name)
 
 bool zc_app::shaders_manager::shader_exists(const std::string& name)
 {
+    if (name.empty())
+    {
+        return false;
+    }
     return shaders.contains(name);
 }
 

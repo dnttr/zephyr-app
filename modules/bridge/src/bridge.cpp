@@ -8,6 +8,10 @@
 
 #include "ZCApp/managers/shaders_manager.hpp"
 
+jint zc_kit::bridge::outbound::get_config()
+{
+}
+
 jint zc_kit::bridge::push_shader(JNIEnv* jni, [[maybe_unused]] jobject, const jstring name, const jstring source)
 {
     const auto name_str = znb_kit::get_string(jni, name, true);
