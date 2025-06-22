@@ -9,5 +9,5 @@ target_include_directories(zephyr-core-graphics
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(zephyr-core-graphics PUBLIC)
+target_link_libraries(zephyr-core-graphics PUBLIC zephyr-shared zephyr-core-shared)
 configure_zephyr_target(zephyr-core-graphics)

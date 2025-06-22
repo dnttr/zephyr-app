@@ -8,5 +8,5 @@ target_include_directories(zephyr-core-app
         PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-
+target_link_libraries(zephyr-core-app PUBLIC zephyr-shared zephyr-core-shared)
 configure_zephyr_target(zephyr-core-app)

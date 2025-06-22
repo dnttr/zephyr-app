@@ -13,6 +13,7 @@ target_link_libraries(zephyr-launcher
         PUBLIC
         zephyr-core
         zephyr-bridge
+        zephyr-shared
 )
 
 configure_zephyr_target(zephyr-launcher)

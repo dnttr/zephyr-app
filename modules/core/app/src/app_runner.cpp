@@ -2,7 +2,7 @@
 // Created by Damian Netter on 20/06/2025.
 //
 
-#include "ZCKit/internal/app_runner.hpp"
+#include "ZCApp/app_runner.hpp"
 
 #include <ZNBKit/jni/signatures/method/void_method.hpp>
 #include <ZNBKit/vm/vm_management.hpp>
@@ -17,7 +17,7 @@ namespace zc_kit
     const std::string app_runner::executor_method_name = "load";
     const std::string app_runner::executor_method_signature = "()V";
 
-    const std::unordered_multimap<std::string, znb_kit::jni_bridge_reference> app_runner::methods = {
+    const std::unordered_multimap<std::string, znb_kit::jni_bridge_reference> app_runner::mapped_methods = {
         {"ffi_zm_push_shader", znb_kit::jni_bridge_reference(&bridge::push_shader, { znb_kit::STRING, znb_kit::STRING })}
     };
 
@@ -26,25 +26,30 @@ namespace zc_kit
         const auto vm_object = znb_kit::vm_management::create_and_wrap_vm(vm_path);
         const auto vm = vm_object.get();
 
-        if (!vm)
-        {
-            std::cerr << "Failed to create VM object." << std::endl;
-        }
+        VAR_CHECK(vm);
 
         const auto jni = vm->get_env();
-
         znb_kit::jvmti_object jvmti(jni, vm->get_jvmti()->get().get_owner());
 
+        submit(jni,std::move(jvmti));
+        invoke(jni);
+    }
+
+    void app_runner::submit(JNIEnv *jni, znb_kit::jvmti_object jvmti)
+    {
         const znb_kit::klass_signature bridge_signature(jni, bridge_klass_name);
+        const auto [methods, size] = jvmti.try_mapping_methods<void>(bridge_signature, mapped_methods);
+
+        znb_kit::wrapper::register_natives(jni, bridge_klass_name,bridge_signature.get_owner(), methods);
+    }
+
+    void app_runner::invoke(JNIEnv *jni)
+    {
         const znb_kit::klass_signature loader_signature(jni, executor_klass_name);
 
-        znb_kit::void_method method(jni, loader_signature, executor_method_name, executor_method_signature, std::nullopt, true);
-
-        auto [native_methods, size] = jvmti.try_mapping_methods<void>(bridge_signature, methods);
-
-        znb_kit::wrapper::register_natives(jni, bridge_klass_name,bridge_signature.get_owner(), native_methods);
+        znb_kit::void_method loadMethod(jni, loader_signature, executor_method_name, executor_method_signature, std::nullopt, true);
 
         std::vector<jvalue> parameters;
-        method.invoke(nullptr, parameters);
+        loadMethod.invoke(nullptr, parameters);
     }
 }

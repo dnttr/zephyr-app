@@ -12,6 +12,7 @@ target_include_directories(zephyr-bridge
 target_link_libraries(zephyr-bridge
         PUBLIC
         zephyr-core
+        zephyr-shared
 )
 
 configure_zephyr_target(zephyr-bridge)

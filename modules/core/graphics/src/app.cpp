@@ -10,13 +10,11 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <OpenGL/gl3.h>
 
-#include "ZCApp/cg_interface.h"
+#include "ZCGKit/zcg_interface.h"
 #include "ZCApp/shaders.hpp"
 
 #include FT_FREETYPE_H
 
-//TODO: rewrite it
-//TODO: enable MSAA
 const zcg_window_t *window;
 
 GLint projection, resolution, radius, pos, size;
@@ -107,8 +105,6 @@ void render()
 
 void update()
 {
-
-
 }
 
 void reshape(const int width, const int height)
@@ -136,7 +132,7 @@ int run(std::map<std::string, std::string> &shaders)
         return -1;
     }
 
-    FT_Set_Pixel_Sizes(face , 0 /* should it even be 0? */, 48);
+    FT_Set_Pixel_Sizes(face, 0 /* should it even be 0? */, 48);
 
     FT_Load_Char(face, 'A', FT_LOAD_RENDER);
 

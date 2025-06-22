@@ -13,6 +13,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 add_subdirectory(modules/core)
 add_subdirectory(modules/bridge)
 add_subdirectory(modules/launcher)
+add_subdirectory(modules/shared)
 
 message(STATUS "Building executable.")
 
@@ -20,6 +21,8 @@ add_executable(${PROJECT_NAME} $<TARGET_OBJECTS:zephyr-launcher>)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
         zephyr-core
+        zephyr-launcher
+        zephyr-shared
         zephyr-bridge
 )
 

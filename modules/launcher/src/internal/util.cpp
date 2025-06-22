@@ -2,7 +2,7 @@
 // Created by Damian Netter on 20/06/2025.
 //
 
-#include "ZCKit/util.hpp"
+#include "ZCKit/internal/util.hpp"
 
 #include <filesystem>
 #include <vector>

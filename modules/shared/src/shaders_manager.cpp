@@ -28,5 +28,3 @@ bool zc_app::shaders_manager::shader_exists(const std::string& name)
     }
     return shaders.contains(name);
 }
-
-
