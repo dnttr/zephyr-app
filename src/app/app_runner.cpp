@@ -2,7 +2,7 @@
 // Created by Damian Netter on 20/06/2025.
 //
 
-#include "ZCApp/app_runner.hpp"
+#include "../../include/ZCApp/app/app_runner.hpp"
 
 #include <ZNBKit/jni/signatures/method/void_method.hpp>
 #include <ZNBKit/vm/vm_management.hpp>
@@ -33,6 +33,8 @@ namespace zc_kit
 
         submit(jni, std::move(jvmti));
         invoke(jni);
+
+        //launch the app
     }
 
     void app_runner::submit(JNIEnv *jni, znb_kit::jvmti_object jvmti)

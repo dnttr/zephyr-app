@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include "ZCKit/internal/util.hpp"
-#include "ZCApp/app_runner.hpp"
+#include "../../include/ZCApp/app/app_runner.hpp"
 #include <ZNBKit/vm/vm_management.hpp>
 
 int main(const int argc, char *argv[])
