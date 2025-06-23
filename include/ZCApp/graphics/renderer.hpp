@@ -11,24 +11,23 @@ namespace zc_app
 {
     class renderer
     {
-        int w_width = 800;
-        int w_height = 600;
+        float virtualWidth = 1920.0F;
+        float virtualHeight = 1080.0F;
 
-        inline static glm::mat4 matrix = glm_util::get_projection(1920.0F, 1080.0F);
-
+        int window_width = 0;
+        int window_height = 0;
     public:
         void destroy();
 
-        void initialize() const;
+        void initialize();
 
         void render() const;
+        glm::mat4 computeWH(int width, int height);
 
         void update();
 
         void reshape(int width, int height);
 
         void run();
-
-        static glm::mat4 get_projection() { return matrix; }
     };
 }

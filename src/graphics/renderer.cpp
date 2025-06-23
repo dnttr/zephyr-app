@@ -18,16 +18,21 @@
 
 #include FT_FREETYPE_H
 
-GLint projection, resolution, radius, pos, size, color, opacity;
+GLint projection, radius, pos, size, color, opacity;
 GLuint program;
 GLuint vao, vbo;
 
 namespace zc_app
 {
-    void renderer::initialize() const
+    int window_width = 0;
+    int window_height = 0;
+
+    void renderer::initialize()
     {
+        window_width = 1920;
+        window_height = 1080;
+
         glClearColor(0.2F, 0.2F, 0.2F, 1.0F);
-        glViewport(0.0F, 0.0F, w_width, w_height);
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -39,7 +44,6 @@ namespace zc_app
 
         program = shaders::create_program("rectangle_vert", "rectangle_frag");
 
-        resolution = glGetUniformLocation(program, "screen_resolution"); //which evaluates to the virtual screen resolution, is there a point in updating it in render?
         projection = glGetUniformLocation(program, "projection_matrix");
         radius = glGetUniformLocation(program, "rectangle_radius");
         pos = glGetUniformLocation(program, "rectangle_position");
@@ -57,11 +61,14 @@ namespace zc_app
 
         glBindVertexArray(vao);
 
-        const int vertices[] = {
-            0, 0, 0,
-            w_width, 0, 0,
-            w_width, w_height, 0,
-            0, w_height, 0
+        auto width = 1920.0F;
+        auto height = 1080.0F;
+
+        const float vertices[] = {
+            0.0F, 0.0F, 0.0F,
+            width, 0.0F, 0.0F,
+            width, height, 0.0F,
+            0.0F, height, 0.0F
         };
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -70,32 +77,46 @@ namespace zc_app
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-        glVertexAttribPointer(0, 3, GL_INT, GL_FALSE, 3 * sizeof(int), nullptr);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
         glEnableVertexAttribArray(0);
     }
 
     void renderer::render() const
     {
+        float scale = std::min((float)window_width / 1920.0f, (float)window_height / 1080.0f);
+
+        float scaled_width = 1920.0f * scale;
+        float scaled_height = 1080.0f * scale;
+        float left = (window_width - scaled_width) * 0.5f;
+        float bottom = (window_height - scaled_height) * 0.5f;
+
+        glm::mat4 projection_matrix = glm::ortho(0.0f, 1920.0f, 0.0f, 1080.0f, -1.0f, 1.0f);
+        glViewport(left, bottom, scaled_width, scaled_height);
+
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(program);
 
-        glUniform3f(color, 1.0F, 1.0F, 1.0F); // Set color to white
+        glUniform3f(color, 1.0F, 1.0F, 1.0F);
         glUniform1f(opacity, 0.5F);
-        glUniform2f(resolution, static_cast<float>(w_width), static_cast<float>(w_height));
         glUniform1f(radius, 20.0F);
         glUniform2f(pos, 100.0F, 100.0F);
         glUniform2f(size, 500.0F, 500.0F);
-        glUniformMatrix4fv(projection, 1, GL_FALSE, glm::value_ptr(matrix));
+        glUniformMatrix4fv(projection, 1, GL_FALSE, glm::value_ptr(projection_matrix));
 
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     }
 
+    void update_viewport()
+    {
+
+    }
+
 
     void renderer::reshape(const int width, const int height)
     {
-        w_width = width;
-        w_height = height;
+        window_width = width;
+        window_height = height;
 
         glViewport(0, 0, width, height);
     }

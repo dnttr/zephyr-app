@@ -39,7 +39,7 @@ namespace zc_kit
         zc_app::window window;
         window.build(render);
 
-        window.allocate("x", 0, 0, 800, 600);
+        window.allocate("x", 0, 0, 1920, 1080);
         window.run();
 
         delete render;
