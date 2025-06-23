@@ -9,12 +9,11 @@ include(${CMAKE_SOURCE_DIR}/cmake/Dependencies.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/TargetConfig.cmake)
 
 add_executable(zephyr-app
-        src/graphics/shader/shader_manager.cpp
         src/launcher/app_launcher.cpp
         src/launcher/app_runner.cpp
         src/bridge/bridge.cpp
         src/internal/util.cpp
-        src/graphics/shader/shader.cpp)
+        src/graphics/shader/shaders.cpp)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 

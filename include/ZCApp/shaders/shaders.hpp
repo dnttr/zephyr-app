@@ -4,16 +4,15 @@
 
 #pragma once
 
-#include <iostream>
+#include <map>
 #include <OpenGL/gl3.h>
 #include <ZNBKit/internal/wrapper.hpp>
 
 namespace zc_app
 {
-    class shader
+    class shaders
     {
     public:
-
         /**
          * It fetches the vertex and fragment shader source code from the shader manager.
          */
@@ -25,7 +24,19 @@ namespace zc_app
          * It is crucial to ensure that shaders are deleted when no longer needed, as this method does not delete them.
          */
         static GLuint compile(GLuint vertex_shader, GLuint fragment_shader);
-    };
 
-    static void delete_shader(GLuint shader);
+        static void delete_shader(GLuint shader);
+
+        class manager
+        {
+            static std::map<std::string, std::string> shaders;
+        public:
+
+            static void add_shader(const std::string &name, const std::string &source);
+
+            static std::string get_source(const std::string &name);
+
+            static bool shader_exists(const std::string &name);
+        };
+    };
 }
