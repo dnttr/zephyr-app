@@ -9,7 +9,7 @@
 
 namespace zc_app
 {
-    class shaders_manager
+    class shader_manager
     {
         static std::map<std::string, std::string> shaders;
 
