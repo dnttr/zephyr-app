@@ -11,8 +11,6 @@
 
 #include <ft2build.h>
 #include <iostream>
-#include <map>
-#include <glm/glm.hpp>
 #include <OpenGL/gl3.h>
 
 #include "ZCApp/graphics/shaders/shaders.hpp"
@@ -20,15 +18,13 @@
 
 #include FT_FREETYPE_H
 
-GLint projection, resolution, radius, pos, size;
+GLint projection, resolution, radius, pos, size, color, opacity;
 GLuint program;
 GLuint vao, vbo;
 
-glm::mat4 matrix;
-
 namespace zc_app
 {
-    void renderer::initialize()
+    void renderer::initialize() const
     {
         glClearColor(0.2F, 0.2F, 0.2F, 1.0F);
         glViewport(0.0F, 0.0F, w_width, w_height);
@@ -36,20 +32,20 @@ namespace zc_app
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        matrix = glm_util::get_projection(static_cast<float>(w_width), static_cast<float>(w_height));
-
         const unsigned int indices[] = {
             0, 1, 2,
             2, 3, 0
         };
 
-        program = shaders::create_program("rounded_rectangle_vert", "rounded_rect_frag");
+        program = shaders::create_program("rectangle_vert", "rectangle_frag");
 
-        resolution = glGetUniformLocation(program, "resolution");
+        resolution = glGetUniformLocation(program, "screen_resolution"); //which evaluates to the virtual screen resolution, is there a point in updating it in render?
         projection = glGetUniformLocation(program, "projection_matrix");
-        radius = glGetUniformLocation(program, "radius");
-        pos = glGetUniformLocation(program, "rectPos");
-        size = glGetUniformLocation(program, "rectSize");
+        radius = glGetUniformLocation(program, "rectangle_radius");
+        pos = glGetUniformLocation(program, "rectangle_position");
+        size = glGetUniformLocation(program, "rectangle_size");
+        color = glGetUniformLocation(program, "rectangle_color");
+        opacity = glGetUniformLocation(program, "rectangle_opacity");
 
         vao = 0;
         vbo = 0;
@@ -78,15 +74,17 @@ namespace zc_app
         glEnableVertexAttribArray(0);
     }
 
-    void renderer::render()
+    void renderer::render() const
     {
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(program);
 
+        glUniform3f(color, 1.0F, 1.0F, 1.0F); // Set color to white
+        glUniform1f(opacity, 0.5F);
         glUniform2f(resolution, static_cast<float>(w_width), static_cast<float>(w_height));
-        glUniform1f(radius, 20);
-        glUniform2f(pos, 100, 100);
-        glUniform2f(size, 200, 200);
+        glUniform1f(radius, 20.0F);
+        glUniform2f(pos, 100.0F, 100.0F);
+        glUniform2f(size, 500.0F, 500.0F);
         glUniformMatrix4fv(projection, 1, GL_FALSE, glm::value_ptr(matrix));
 
         glBindVertexArray(vao);
@@ -100,8 +98,6 @@ namespace zc_app
         w_height = height;
 
         glViewport(0, 0, width, height);
-
-        matrix = glm_util::get_projection(static_cast<float>(width), static_cast<float>(height));
     }
 
     void renderer::update()

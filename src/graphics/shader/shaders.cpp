@@ -22,7 +22,14 @@ namespace zc_app
         const GLuint vertex_shader = create(vertex_source.c_str(), GL_VERTEX_SHADER);
         const GLuint fragment_shader = create(fragment_source.c_str(), GL_FRAGMENT_SHADER);
 
-        return compile(vertex_shader, fragment_shader);
+        const GLuint program = compile(vertex_shader, fragment_shader);
+
+        if (program < 0)
+        {
+            throw std::runtime_error("Failed to compile shader program: " + vertex_name + " and " + fragment_name);
+        }
+
+        return program;
     }
 
     GLuint shaders::create(const char *source, const GLuint type)

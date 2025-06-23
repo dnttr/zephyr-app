@@ -8,7 +8,6 @@ include(${CMAKE_SOURCE_DIR}/cmake/Platform.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Dependencies.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/TargetConfig.cmake)
 
-
 add_executable(zephyr-app
         src/launcher/app_launcher.cpp
         src/app/app_runner.cpp
