@@ -22,7 +22,6 @@ namespace zc_app
         void initialize();
 
         void render() const;
-        glm::mat4 computeWH(int width, int height);
 
         void update();
 

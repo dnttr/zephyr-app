@@ -13,6 +13,7 @@
 #include <iostream>
 #include <OpenGL/gl3.h>
 
+#include "ZCApp/graphics/window.hpp"
 #include "ZCApp/graphics/shaders/shaders.hpp"
 #include "ZCApp/graphics/utils/glm_util.hpp"
 
@@ -27,10 +28,39 @@ namespace zc_app
     int window_width = 0;
     int window_height = 0;
 
+    window::display_config display_config = {};
+
+    void calculate()
+    {
+        if (display_config.maintain_aspect_ratio)
+        {
+            const auto f_w_width = static_cast<float>(display_config.window_width);
+            const auto f_w_height = static_cast<float>(display_config.window_height);
+
+            const float scale_x = f_w_width / display_config.virtual_width;
+            const float scale_y = f_w_height / display_config.virtual_height;
+
+            display_config.scale = std::min(scale_x, scale_y) * display_config.dpi_scale;
+
+            display_config.viewport_width = display_config.virtual_width * display_config.scale;
+            display_config.viewport_height = display_config.virtual_height * display_config.scale;
+
+            display_config.viewport_x = (f_w_width - display_config.viewport_width) * 0.5F;
+            display_config.viewport_y = (f_w_height - display_config.viewport_height) * 0.5F;
+        }
+        else
+        {
+            throw std::runtime_error("Aspect ratio maintenance is not implemented yet.");
+        }
+    }
+
     void renderer::initialize()
     {
-        window_width = 1920;
-        window_height = 1080;
+        display_config.window_width = 1920;
+        display_config.window_height = 1080;
+
+        display_config.virtual_width = 1920.0F;
+        display_config.virtual_height = 1080.0F;
 
         glClearColor(0.2F, 0.2F, 0.2F, 1.0F);
 
@@ -61,14 +91,11 @@ namespace zc_app
 
         glBindVertexArray(vao);
 
-        auto width = 1920.0F;
-        auto height = 1080.0F;
-
         const float vertices[] = {
             0.0F, 0.0F, 0.0F,
-            width, 0.0F, 0.0F,
-            width, height, 0.0F,
-            0.0F, height, 0.0F
+            display_config.virtual_width, 0.0F, 0.0F,
+            display_config.virtual_width, display_config.virtual_height, 0.0F,
+            0.0F, display_config.virtual_height, 0.0F
         };
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -79,19 +106,23 @@ namespace zc_app
 
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
         glEnableVertexAttribArray(0);
+
+        calculate();
     }
 
     void renderer::render() const
     {
-        float scale = std::min((float)window_width / 1920.0f, (float)window_height / 1080.0f);
+        glViewport(
+     (GLint)display_config.viewport_x,
+     (GLint)display_config.viewport_y,
+     (GLsizei)display_config.viewport_width,
+     (GLsizei)display_config.viewport_height);
 
-        float scaled_width = 1920.0f * scale;
-        float scaled_height = 1080.0f * scale;
-        float left = (window_width - scaled_width) * 0.5f;
-        float bottom = (window_height - scaled_height) * 0.5f;
-
-        glm::mat4 projection_matrix = glm::ortho(0.0f, 1920.0f, 0.0f, 1080.0f, -1.0f, 1.0f);
-        glViewport(left, bottom, scaled_width, scaled_height);
+        glm::mat4 projection_matrix = glm::ortho(
+            0.0f, display_config.virtual_width,
+            0.0f, display_config.virtual_height,
+            -1.0f, 1.0f
+        );
 
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(program);
@@ -118,7 +149,9 @@ namespace zc_app
         window_width = width;
         window_height = height;
 
-        glViewport(0, 0, width, height);
+        display_config.window_width = width;
+        display_config.window_height = height;
+        calculate();
     }
 
     void renderer::update()
