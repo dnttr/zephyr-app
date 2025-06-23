@@ -13,8 +13,8 @@ namespace zc_app
         VAR_CONTENT_CHECK(vertex_name);
         VAR_CONTENT_CHECK(fragment_name);
 
-        const auto vertex_source= manager::get_source(vertex_name);
-        const auto fragment_source= manager::get_source(fragment_name);
+        const auto vertex_source = manager::get_source(vertex_name);
+        const auto fragment_source = manager::get_source(fragment_name);
 
         VAR_CONTENT_CHECK(vertex_source);
         VAR_CONTENT_CHECK(fragment_source);

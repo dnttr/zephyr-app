@@ -9,7 +9,8 @@
 
 namespace zc_kit
 {
-    class util {
+    class util
+    {
     public:
         static std::string parse_argument(const std::string &argument);
 

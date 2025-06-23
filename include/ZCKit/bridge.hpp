@@ -10,9 +10,9 @@
 
 namespace zc_kit
 {
-    class bridge {
+    class bridge
+    {
     public:
-
         class outbound
         {
             //TODO: look into obtaining config (properties) via ZNBKit, so I can use it in the future, without making a mess here

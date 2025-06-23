@@ -9,43 +9,44 @@
 #define GL_SILENCE_DEPRECATION
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-    typedef struct
-    {
-        const char *title;
+typedef struct
+{
+    const char *title;
 
-        int x, y;
+    int x, y;
 
-        int width, height;
-    } zcg_window_args_t;
+    int width, height;
+} zcg_window_args_t;
 
-    typedef struct
-    {
-        void (*exit)();
+typedef struct
+{
+    void (* exit)();
 
-        void (*resize)(int width, int height);
+    void (* resize)(int width, int height);
 
-        bool (*is_retina)();
-    } zcg_window_t;
+    bool (* is_retina)();
+} zcg_window_t;
 
-    typedef struct
-    {
-        void (*on_exit_callback)();
+typedef struct
+{
+    void (* on_exit_callback)();
 
-        void (*on_render_callback)();
+    void (* on_render_callback)();
 
-        void (*on_reshape_callback)(int width, int height);
+    void (* on_reshape_callback)(int width, int height);
 
-        void (*on_init_callback)();
+    void (* on_init_callback)();
 
-        void (*on_update_callback)();
-    } zcg_callback_handle;
+    void (* on_update_callback)();
+} zcg_callback_handle;
 
-    zcg_window_t *zcg_allocate(zcg_window_args_t *args, zcg_callback_handle *handle);
+zcg_window_t *zcg_allocate(zcg_window_args_t *args, zcg_callback_handle *handle);
 
-    void zcg_run(const zcg_window_t *window);
+void zcg_run(const zcg_window_t *window);
 
 #ifdef __cplusplus
 } // extern "C"

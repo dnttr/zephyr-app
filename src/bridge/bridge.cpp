@@ -8,7 +8,7 @@
 
 #include "ZCApp/shaders/shaders.hpp"
 
-jint zc_kit::bridge::push_shader(JNIEnv* jni, [[maybe_unused]] jobject, const jstring name, const jstring source)
+jint zc_kit::bridge::push_shader(JNIEnv *jni, [[maybe_unused]] jobject, const jstring name, const jstring source)
 {
     const auto name_str = znb_kit::get_string(jni, name, true);
     const auto source_str = znb_kit::get_string(jni, source, true);

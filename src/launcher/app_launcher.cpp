@@ -10,7 +10,8 @@
 
 int main(const int argc, char *argv[])
 {
-    try {
+    try
+    {
         const auto args = zc_kit::util::to_vector(argc, argv);
 
         if (args.empty())
@@ -33,7 +34,7 @@ int main(const int argc, char *argv[])
 
         return 0;
     }
-    catch (const std::exception& e)
+    catch (const std::exception &e)
     {
         std::cerr << e.what() << std::endl;
         return 1;

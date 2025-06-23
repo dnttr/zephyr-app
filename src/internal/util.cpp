@@ -7,7 +7,7 @@
 #include <filesystem>
 #include <vector>
 
-std::string zc_kit::util::parse_argument(const std::string& argument)
+std::string zc_kit::util::parse_argument(const std::string &argument)
 {
     const size_t position = argument.find_last_of('=');
 
@@ -19,12 +19,12 @@ std::string zc_kit::util::parse_argument(const std::string& argument)
     return argument.substr(position + 1);
 }
 
-bool zc_kit::util::is_path_valid(const std::string& path)
+bool zc_kit::util::is_path_valid(const std::string &path)
 {
     return std::filesystem::exists(path);
 }
 
-std::vector<std::string> zc_kit::util::to_vector(const int argc, char* argv[])
+std::vector<std::string> zc_kit::util::to_vector(const int argc, char *argv[])
 {
     std::vector<std::string> args;
     args.reserve(argc - 1);

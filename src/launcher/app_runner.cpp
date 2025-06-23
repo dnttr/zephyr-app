@@ -18,10 +18,10 @@ namespace zc_kit
     const std::string app_runner::executor_method_signature = "()V";
 
     const std::unordered_multimap<std::string, znb_kit::jni_bridge_reference> app_runner::mapped_methods = {
-        {"ffi_zm_push_shader", znb_kit::jni_bridge_reference(&bridge::push_shader, { znb_kit::STRING, znb_kit::STRING })}
+        {"ffi_zm_push_shader", znb_kit::jni_bridge_reference(&bridge::push_shader, {znb_kit::STRING, znb_kit::STRING})}
     };
 
-    void app_runner::run(const std::string& vm_path)
+    void app_runner::run(const std::string &vm_path)
     {
         const auto vm_object = znb_kit::vm_management::create_and_wrap_vm(vm_path);
         const auto vm = vm_object.get();
@@ -31,7 +31,7 @@ namespace zc_kit
         const auto jni = vm->get_env();
         znb_kit::jvmti_object jvmti(jni, vm->get_jvmti()->get().get_owner());
 
-        submit(jni,std::move(jvmti));
+        submit(jni, std::move(jvmti));
         invoke(jni);
     }
 
@@ -40,14 +40,15 @@ namespace zc_kit
         const znb_kit::klass_signature bridge_signature(jni, bridge_klass_name);
         const auto [methods, size] = jvmti.try_mapping_methods<void>(bridge_signature, mapped_methods);
 
-        znb_kit::wrapper::register_natives(jni, bridge_klass_name,bridge_signature.get_owner(), methods);
+        znb_kit::wrapper::register_natives(jni, bridge_klass_name, bridge_signature.get_owner(), methods);
     }
 
     void app_runner::invoke(JNIEnv *jni)
     {
         const znb_kit::klass_signature loader_signature(jni, executor_klass_name);
 
-        znb_kit::void_method loadMethod(jni, loader_signature, executor_method_name, executor_method_signature, std::nullopt, true);
+        znb_kit::void_method loadMethod(jni, loader_signature, executor_method_name, executor_method_signature,
+                                        std::nullopt, true);
 
         std::vector<jvalue> parameters;
         loadMethod.invoke(nullptr, parameters);
