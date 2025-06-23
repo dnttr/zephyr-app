@@ -4,6 +4,8 @@
 
 #include "ZCApp/shaders/shader.hpp"
 
+#include "ZCApp/shaders/shader_manager.hpp"
+
 GLuint zc_app::shader::create_program(const std::string &vertex_name, const std::string &fragment_name)
 {
     VAR_CONTENT_CHECK(vertex_name);
@@ -76,4 +78,12 @@ GLuint zc_app::shader::compile(const GLuint vertex_shader, const GLuint fragment
     }
 
     return program;
+}
+
+void zc_app::delete_shader(const GLuint shader)
+{
+    if (shader != 0)
+    {
+        glDeleteShader(shader);
+    }
 }
