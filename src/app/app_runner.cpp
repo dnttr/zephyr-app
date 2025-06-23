@@ -35,14 +35,16 @@ namespace zc_kit
         submit(jni, std::move(jvmti));
         invoke(jni);
 
-        auto render = new zc_app::renderer();
+        zc_app::display_config config;
+        config.window_width = 1920;
+        config.window_height = 1080;
+        config.virtual_width = 1920.0F;
+        config.virtual_height = 1080.0F;
+
         zc_app::window window;
-        window.build(render);
 
-        window.allocate("x", 0, 0, 1920, 1080);
+        window.allocate("x", 0, 0, config);
         window.run();
-
-        delete render;
     }
 
     void app_runner::submit(JNIEnv *jni, znb_kit::jvmti_object jvmti)

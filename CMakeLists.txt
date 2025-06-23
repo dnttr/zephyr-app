@@ -15,7 +15,8 @@ add_executable(zephyr-app
         src/internal/util.cpp
         src/graphics/shader/shaders.cpp
         src/graphics/renderer.cpp
-        src/graphics/window.cpp)
+        src/graphics/window.cpp
+)
 
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)

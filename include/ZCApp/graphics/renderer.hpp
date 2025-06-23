@@ -3,9 +3,6 @@
 //
 
 #pragma once
-#include <glm/fwd.hpp>
-
-#include "utils/glm_util.hpp"
 
 namespace zc_app
 {
@@ -17,6 +14,7 @@ namespace zc_app
         int window_width = 0;
         int window_height = 0;
     public:
+
         void destroy();
 
         void initialize();
