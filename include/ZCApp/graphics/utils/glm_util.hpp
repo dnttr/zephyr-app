@@ -14,9 +14,9 @@ namespace zc_app
     {
     public:
 
-        static glm::mat4 get_projection(const int width, const int height)
+        static glm::mat4 get_projection(const float width, const float height)
         {
-            return glm::ortho(0, width, height, 0, -1, 1);
+            return glm::ortho(0.0f, width, height, 0.0f, -1.0f, 1.0f);
         }
     };
 }

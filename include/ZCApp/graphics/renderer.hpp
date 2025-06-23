@@ -8,12 +8,12 @@ namespace zc_app
 {
     class renderer
     {
-        int w_width = 0;
-        int w_height = 0;
+        int w_width = 800;
+        int w_height = 600;
     public:
         void destroy();
 
-        void initialize() const;
+        void initialize();
 
         void render();
 

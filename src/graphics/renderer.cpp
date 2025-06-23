@@ -15,6 +15,7 @@
 #include <glm/glm.hpp>
 #include <OpenGL/gl3.h>
 
+#include "ZCApp/graphics/shaders/shaders.hpp"
 #include "ZCApp/graphics/utils/glm_util.hpp"
 
 #include FT_FREETYPE_H
@@ -27,20 +28,22 @@ glm::mat4 matrix;
 
 namespace zc_app
 {
-    void renderer::initialize() const
+    void renderer::initialize()
     {
-        glClearColor(0.2, 0.2, 0.2, 1.0);
-        glViewport(0, 0, w_width, w_height);
+        glClearColor(0.2F, 0.2F, 0.2F, 1.0F);
+        glViewport(0.0F, 0.0F, w_width, w_height);
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        matrix = glm_util::get_projection(w_height, w_height);
+        matrix = glm_util::get_projection(static_cast<float>(w_width), static_cast<float>(w_height));
 
         const unsigned int indices[] = {
             0, 1, 2,
             2, 3, 0
         };
+
+        program = shaders::create_program("rounded_rectangle_vert", "rounded_rect_frag");
 
         resolution = glGetUniformLocation(program, "resolution");
         projection = glGetUniformLocation(program, "projection_matrix");
@@ -71,7 +74,7 @@ namespace zc_app
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+        glVertexAttribPointer(0, 3, GL_INT, GL_FALSE, 3 * sizeof(int), nullptr);
         glEnableVertexAttribArray(0);
     }
 
@@ -80,10 +83,10 @@ namespace zc_app
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(program);
 
-        glUniform2i(resolution, w_width, w_height);
-        glUniform1i(radius, 20);
-        glUniform2i(pos, 20, 20);
-        glUniform2i(size, 200, 200);
+        glUniform2f(resolution, static_cast<float>(w_width), static_cast<float>(w_height));
+        glUniform1f(radius, 20);
+        glUniform2f(pos, 100, 100);
+        glUniform2f(size, 200, 200);
         glUniformMatrix4fv(projection, 1, GL_FALSE, glm::value_ptr(matrix));
 
         glBindVertexArray(vao);
@@ -98,7 +101,7 @@ namespace zc_app
 
         glViewport(0, 0, width, height);
 
-        matrix = glm_util::get_projection(width, height);
+        matrix = glm_util::get_projection(static_cast<float>(width), static_cast<float>(height));
     }
 
     void renderer::update()
