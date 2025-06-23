@@ -7,37 +7,15 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <OpenGL/gl3.h>
 
 #include "ZCApp/graphics/renderer.hpp"
+#include "ZCApp/graphics/utils/perspective_util.hpp"
 
 namespace zc_app
 {
     static renderer *current_renderer = nullptr;
     static display_config current_config;
-
-    static void calculate_display()
-    {
-        if (current_config.maintain_aspect_ratio)
-        {
-            const auto f_w_width = static_cast<float>(current_config.window_width);
-            const auto f_w_height = static_cast<float>(current_config.window_height);
-
-            const float scale_x = f_w_width / current_config.virtual_width;
-            const float scale_y = f_w_height / current_config.virtual_height;
-
-            current_config.scale = std::min(scale_x, scale_y) * current_config.dpi_scale;
-
-            current_config.viewport_width = current_config.virtual_width * current_config.scale;
-            current_config.viewport_height = current_config.virtual_height * current_config.scale;
-
-            current_config.viewport_x = (f_w_width - current_config.viewport_width) * 0.5F;
-            current_config.viewport_y = (f_w_height - current_config.viewport_height) * 0.5F;
-        }
-        else
-        {
-            throw std::runtime_error("Aspect ratio maintenance is not implemented yet.");
-        }
-    }
 
     static void destroy_callback()
     {
@@ -53,6 +31,11 @@ namespace zc_app
     {
         if (current_renderer)
         {
+            glViewport(static_cast<GLint>(current_config.viewport_x),
+                static_cast<GLint>(current_config.viewport_y),
+                static_cast<GLsizei>(current_config.viewport_width),
+                static_cast<GLsizei>(current_config.viewport_height));
+
             current_renderer->render();
         }
     }
@@ -63,7 +46,7 @@ namespace zc_app
         {
             current_renderer->initialize();
 
-            calculate_display();
+            perspective_util::calculate_viewport(current_config);
         }
     }
 
@@ -74,7 +57,7 @@ namespace zc_app
             current_config.window_width = width;
             current_config.window_height = height;
 
-            calculate_display();
+            perspective_util::calculate_viewport(current_config);
 
             current_renderer->reshape(width, height);
         }
@@ -121,7 +104,7 @@ namespace zc_app
 
         m_window = zcg_allocate(&args, &m_callback_handle);
 
-        calculate_display();
+        perspective_util::calculate_viewport(current_config);
     }
 
     void window::run() const

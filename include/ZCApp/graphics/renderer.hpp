@@ -8,11 +8,6 @@ namespace zc_app
 {
     class renderer
     {
-        float virtualWidth = 1920.0F;
-        float virtualHeight = 1080.0F;
-
-        int window_width = 0;
-        int window_height = 0;
     public:
 
         void destroy();

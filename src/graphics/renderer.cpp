@@ -15,7 +15,7 @@
 
 #include "ZCApp/graphics/window.hpp"
 #include "ZCApp/graphics/shaders/shaders.hpp"
-#include "ZCApp/graphics/utils/glm_util.hpp"
+#include "ZCApp/graphics/utils/perspective_util.hpp"
 
 #include FT_FREETYPE_H
 
@@ -78,11 +78,6 @@ namespace zc_app
     void renderer::render() const
     {
         const auto& current_config = window::get_current_display_config();
-
-        glViewport((GLint)current_config.viewport_x,
-     (GLint)current_config.viewport_y,
-     (GLsizei)current_config.viewport_width,
-     (GLsizei)current_config.viewport_height);
 
         glm::mat4 projection_matrix = glm::ortho(
             0.0f, current_config.virtual_width,
