@@ -14,6 +14,8 @@ namespace zc_app
     {
         zcg_window_t *m_window = nullptr;
         renderer *m_renderer = nullptr;
+        zcg_callback_handle m_callback_handle = {};
+
     public:
 
         void allocate(const std::string &title, int x, int y, int width, int height);

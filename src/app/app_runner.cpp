@@ -7,6 +7,7 @@
 #include <ZNBKit/jni/signatures/method/void_method.hpp>
 #include <ZNBKit/vm/vm_management.hpp>
 
+#include "ZCApp/graphics/window.hpp"
 #include "ZCKit/bridge.hpp"
 
 namespace zc_kit
@@ -34,7 +35,14 @@ namespace zc_kit
         submit(jni, std::move(jvmti));
         invoke(jni);
 
-        //launch the app
+        auto render = new zc_app::renderer();
+        zc_app::window window;
+        window.build(render);
+
+        window.allocate("x", 0, 0, 800, 600);
+        window.run();
+
+        delete render;
     }
 
     void app_runner::submit(JNIEnv *jni, znb_kit::jvmti_object jvmti)

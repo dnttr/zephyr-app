@@ -65,7 +65,7 @@ namespace zc_app
             throw std::runtime_error("Renderer is not set. Please build the renderer first.");
         }
 
-        zcg_callback_handle handle = {
+        m_callback_handle = {
             .on_exit_callback = destroy_callback,
             .on_render_callback = render_callback,
             .on_reshape_callback = reshape_callback,
@@ -83,17 +83,21 @@ namespace zc_app
 
         current_renderer = m_renderer;
 
-        m_window = zcg_allocate(&args, &handle);
+        m_window = zcg_allocate(&args, &m_callback_handle);
     }
 
     void window::run() const
     {
-        if (!(m_renderer || m_window))
+        if (!m_renderer || !m_window)
         {
             throw std::runtime_error("Renderer is not initialized.");
         }
 
-
+        if (m_callback_handle.on_init_callback == nullptr || m_callback_handle.on_render_callback == nullptr ||
+            m_callback_handle.on_reshape_callback == nullptr || m_callback_handle.on_update_callback == nullptr || m_callback_handle.on_exit_callback == nullptr)
+        {
+            throw std::runtime_error("Initialization callback is not set.");
+        }
 
         zcg_run(m_window);
     }

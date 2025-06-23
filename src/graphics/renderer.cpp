@@ -91,10 +91,6 @@ namespace zc_app
     }
 
 
-    void renderer::update()
-    {
-    }
-
     void renderer::reshape(const int width, const int height)
     {
         w_width = width;
@@ -103,6 +99,10 @@ namespace zc_app
         glViewport(0, 0, width, height);
 
         matrix = glm_util::get_projection(width, height);
+    }
+
+    void renderer::update()
+    {
     }
 
     void renderer::destroy()
