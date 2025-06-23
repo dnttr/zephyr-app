@@ -6,6 +6,8 @@
 
 namespace zc_app
 {
+    std::map<std::string, std::string> shaders::manager::sources;
+
     GLuint shaders::create_program(const std::string &vertex_name, const std::string &fragment_name)
     {
         VAR_CONTENT_CHECK(vertex_name);
@@ -90,14 +92,14 @@ namespace zc_app
 
     void shaders::manager::add_shader(const std::string &name, const std::string &source)
     {
-        shaders[name] = source;
+        sources[name] = source;
     }
 
     std::string shaders::manager::get_source(const std::string &name)
     {
-        if (shaders.contains(name))
+        if (sources.contains(name))
         {
-            return shaders.find(name)->second;
+            return sources.find(name)->second;
         }
 
         return {};
@@ -105,6 +107,6 @@ namespace zc_app
 
     bool shaders::manager::shader_exists(const std::string &name)
     {
-        return shaders.contains(name);
+        return sources.contains(name);
     }
 }

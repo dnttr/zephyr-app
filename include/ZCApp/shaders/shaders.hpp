@@ -29,7 +29,7 @@ namespace zc_app
 
         class manager
         {
-            static std::map<std::string, std::string> shaders;
+            static std::map<std::string, std::string> sources;
         public:
 
             static void add_shader(const std::string &name, const std::string &source);
