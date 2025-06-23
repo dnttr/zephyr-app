@@ -6,7 +6,7 @@
 
 #include <ZNBKit/internal/util.hpp>
 
-#include "ZCApp/shaders/shaders.hpp"
+#include "ZCApp/graphics/shaders/shaders.hpp"
 
 jint zc_kit::bridge::push_shader(JNIEnv *jni, [[maybe_unused]] jobject, const jstring name, const jstring source)
 {

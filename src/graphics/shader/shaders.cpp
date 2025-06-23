@@ -2,7 +2,7 @@
 // Created by Damian Netter on 23/06/2025.
 //
 
-#include "ZCApp/shaders/shaders.hpp"
+#include "ZCApp/graphics/shaders/shaders.hpp"
 
 namespace zc_app
 {

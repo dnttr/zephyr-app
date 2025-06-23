@@ -17,7 +17,8 @@ add_executable(zephyr-app
         src/graphics/renderer.cpp
         include/ZCApp/graphics/renderer.hpp
         include/ZCApp/graphics/window.hpp
-        src/graphics/window.cpp)
+        src/graphics/window.cpp
+        include/ZCApp/graphics/utils/glm_util.hpp)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
