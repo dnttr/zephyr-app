@@ -14,11 +14,15 @@ namespace zc_app
     class shape
     {
     protected:
+        GLint color, opacity;
         GLint projection;
         GLint position;
-        GLint color, opacity;
 
         GLuint program;
+
+        virtual void setup_uniforms() = 0;
+
+        virtual void setup_shape() = 0;
 
     public:
         virtual ~shape() = default;
