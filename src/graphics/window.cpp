@@ -6,8 +6,7 @@
 
 #include <iostream>
 #include <stdexcept>
-#include <string>
-#include <OpenGL/gl3.h>
+#include "string"
 
 #include "ZCApp/graphics/renderer.hpp"
 #include "ZCApp/graphics/utils/perspective_util.hpp"
@@ -30,13 +29,6 @@ namespace zc_app
     {
         if (current_renderer)
         {
-            const auto &cfg = perspective_util::get_current_display_config();
-
-            glViewport(static_cast<GLint>(cfg.viewport_x),
-                static_cast<GLint>(cfg.viewport_y),
-                static_cast<GLsizei>(cfg.viewport_width),
-                static_cast<GLsizei>(cfg.viewport_height));
-
             current_renderer->render();
         }
     }

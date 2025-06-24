@@ -14,12 +14,14 @@
 #include <OpenGL/gl3.h>
 
 #include "ZCApp/graphics/shapes/rectangle.hpp"
+#include "ZCApp/graphics/utils/perspective_util.hpp"
 
 #include FT_FREETYPE_H
 
 namespace zc_app
 {
     rectangle *rect;
+    //GLuint framebuffer;
 
     void renderer::initialize()
     {
@@ -28,12 +30,20 @@ namespace zc_app
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+      //  glGenBuffers(1, &framebuffer);
+
         rect = new rectangle(container(0, 0, 100.0F, 100.0F), colour(255, 0, 0, 255), 20.0F);
     }
 
     void renderer::render() const
     {
         glClear(GL_COLOR_BUFFER_BIT);
+
+        const auto &cfg = perspective_util::get_current_display_config();
+        glViewport(static_cast<GLint>(cfg.viewport_x),
+            static_cast<GLint>(cfg.viewport_y),
+            static_cast<GLsizei>(cfg.viewport_width),
+            static_cast<GLsizei>(cfg.viewport_height));
 
         if (rect)
         {

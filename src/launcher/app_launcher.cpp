@@ -4,9 +4,9 @@
 
 #include <iostream>
 
-#include "ZCKit/internal/util.hpp"
-#include "../../include/ZCApp/app/app_runner.hpp"
 #include <ZNBKit/vm/vm_management.hpp>
+#include "ZCApp/app/app_runner.hpp"
+#include "ZCKit/internal/util.hpp"
 
 int main(const int argc, char *argv[])
 {

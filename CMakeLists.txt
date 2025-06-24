@@ -18,7 +18,6 @@ add_executable(zephyr-app
         src/graphics/window.cpp
         src/graphics/utils/perspective_util.cpp
         src/graphics/shapes/rectangle.cpp
-        include/ZCApp/graphics/shapes/container.hpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE include)

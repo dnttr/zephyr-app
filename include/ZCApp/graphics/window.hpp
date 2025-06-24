@@ -6,7 +6,7 @@
 
 #include <string>
 
-#include "../../ZCGKit/display.hpp"
+#include "ZCGKit/display.hpp"
 #include "ZCGKit/zcg_interface.h"
 
 namespace zc_app
