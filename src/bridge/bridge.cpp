@@ -21,8 +21,9 @@ jint zc_kit::bridge::push_shader(JNIEnv *jni, [[maybe_unused]] jobject, const js
 
 jint zc_kit::bridge::finish_loading([[maybe_unused]] JNIEnv *, [[maybe_unused]] jobject)
 {
-    std::cout << "Finished loading" << std::endl;
     std::lock_guard lock(app_runner::mtx);
     app_runner::ready = true;
     app_runner::cv.notify_all();
+
+    return 0;
 }

@@ -6,13 +6,14 @@
 
 #include "shape.hpp"
 #include "ZCApp/graphics/window.hpp"
+#include "ZCApp/graphics/utils/perspective_util.hpp"
 
 namespace zc_app
 {
     class rectangle final : public shape
     {
-        GLuint size;
-        GLuint radius;
+        GLint size;
+        GLint radius;
 
         GLuint vao, vbo, ebo;
 
@@ -34,7 +35,7 @@ namespace zc_app
 
             glBindVertexArray(vao);
 
-            const auto& current_config = window::get_current_display_config();
+            const auto& current_config = perspective_util::get_current_display_config();
 
             const float vertices[] = {
                 0.0F, 0.0F, 0.0F,
@@ -66,7 +67,7 @@ namespace zc_app
         {
             glUseProgram(program);
 
-            glUniformMatrix4fv(projection, 1, GL_FALSE, window::get_projection_matrix());
+            glUniformMatrix4fv(projection, 1, GL_FALSE, perspective_util::get_projection_matrix());
             glUniform2f(position, x, y);
             glUniform2f(size, width, height);
             glUniform1f(this->radius, radius);

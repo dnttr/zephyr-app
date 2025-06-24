@@ -30,12 +30,12 @@ namespace zc_app
     {
         if (current_renderer)
         {
-            const auto &current_config = perspective_util::get_current_display_config();
+            const auto &cfg = perspective_util::get_current_display_config();
 
-            glViewport(static_cast<GLint>(current_config.viewport_x),
-                static_cast<GLint>(current_config.viewport_y),
-                static_cast<GLsizei>(current_config.viewport_width),
-                static_cast<GLsizei>(current_config.viewport_height));
+            glViewport(static_cast<GLint>(cfg.viewport_x),
+                static_cast<GLint>(cfg.viewport_y),
+                static_cast<GLsizei>(cfg.viewport_width),
+                static_cast<GLsizei>(cfg.viewport_height));
 
             current_renderer->render();
         }
@@ -55,10 +55,10 @@ namespace zc_app
     {
         if (current_renderer)
         {
-            auto &current_config = perspective_util::get_current_display_config();
+            auto &cfg = perspective_util::get_current_display_config();
 
-            current_config.window_width = width;
-            current_config.window_height = height;
+            cfg.window_width = width;
+            cfg.window_height = height;
 
             perspective_util::calculate_viewport();
 
@@ -74,7 +74,7 @@ namespace zc_app
         }
     }
 
-    void window::allocate(const std::string &title, const int x, const int y, const display_config &config)
+    void window::allocate(const std::string &title, const int x, const int y, const zc_kit::display::config &cfg)
     {
         current_renderer = new renderer();
 
@@ -86,7 +86,7 @@ namespace zc_app
             .on_update_callback = update_callback
         };
 
-        if (config.window_width == 0 || config.window_height == 0)
+        if (cfg.window_width == 0 || cfg.window_height == 0)
         {
             throw std::invalid_argument("Window width and height must be greater than zero.");
         }
@@ -95,11 +95,11 @@ namespace zc_app
             .title = title.c_str(),
             .x = x,
             .y = y,
-            .width = static_cast<int>(config.window_width),
-            .height = static_cast<int>(config.window_height),
+            .width = static_cast<int>(cfg.window_width),
+            .height = static_cast<int>(cfg.window_height),
         };
 
-        perspective_util::set_current_display_config(config);
+        perspective_util::set_current_display_config(cfg);
 
         m_window = zcg_allocate(&args, &m_callback_handle);
 

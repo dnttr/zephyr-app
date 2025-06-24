@@ -16,6 +16,7 @@ add_executable(zephyr-app
         src/graphics/shader/shaders.cpp
         src/graphics/renderer.cpp
         src/graphics/window.cpp
+        src/graphics/utils/perspective_util.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE include)

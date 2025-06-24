@@ -14,9 +14,9 @@ namespace zc_app
     class shape
     {
     protected:
-        GLuint projection;
-        GLuint position;
-        GLuint color, opacity;
+        GLint projection;
+        GLint position;
+        GLint color, opacity;
 
         GLuint program;
 

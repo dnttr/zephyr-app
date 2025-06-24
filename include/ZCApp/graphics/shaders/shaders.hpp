@@ -21,7 +21,7 @@ namespace zc_app
         static GLuint create(const char *source, GLuint type);
 
         /**
-         * It is crucial to ensure that shaders are deleted when no longer needed, as this method does not delete them.
+         * It is crucial to ensure that shaders are deleted when no longer needed, as this method does not delete them. IT DOES FOR NOW
          */
         static GLuint compile(GLuint vertex_shader, GLuint fragment_shader);
 
