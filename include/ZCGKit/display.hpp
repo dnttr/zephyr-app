@@ -3,7 +3,7 @@
 //
 #pragma once
 
-namespace zc_kit
+namespace zcg_kit
 {
     class display
     {

@@ -42,7 +42,7 @@ namespace zc_kit
         submit(jni, std::move(jvmti));
         invoke(jni);
 
-        display::config display_cfg;
+        zcg_kit::display::config display_cfg;
 
         display_cfg.window_width = 1920;
         display_cfg.window_height = 1080;

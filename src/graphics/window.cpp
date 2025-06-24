@@ -66,7 +66,7 @@ namespace zc_app
         }
     }
 
-    void window::allocate(const std::string &title, const int x, const int y, const zc_kit::display::config &cfg)
+    void window::allocate(const std::string &title, const int x, const int y, const zcg_kit::display::config &cfg)
     {
         current_renderer = new renderer();
 

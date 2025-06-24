@@ -9,15 +9,15 @@
 
 namespace zc_app
 {
-    zc_kit::display::config perspective_util::current_config;
+    zcg_kit::display::config perspective_util::current_config;
     glm::mat4 perspective_util::projection_matrix = glm::mat4(1.0f);
 
-    zc_kit::display::config &perspective_util::get_current_display_config()
+    zcg_kit::display::config &perspective_util::get_current_display_config()
     {
         return current_config;
     }
 
-    void perspective_util::set_current_display_config(const zc_kit::display::config &config)
+    void perspective_util::set_current_display_config(const zcg_kit::display::config &config)
     {
         current_config = config;
     }

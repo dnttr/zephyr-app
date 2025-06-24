@@ -15,12 +15,12 @@ namespace zc_app
     class perspective_util
     {
         static glm::mat4 projection_matrix;
-        static zc_kit::display::config current_config;
+        static zcg_kit::display::config current_config;
 
     public:
-        static zc_kit::display::config &get_current_display_config();
+        static zcg_kit::display::config &get_current_display_config();
 
-        static void set_current_display_config(const zc_kit::display::config &config);
+        static void set_current_display_config(const zcg_kit::display::config &config);
 
         static glm::mat4 get_projection();
 

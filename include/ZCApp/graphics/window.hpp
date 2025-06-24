@@ -17,7 +17,7 @@ namespace zc_app
 
         zcg_callback_handle m_callback_handle = {};
     public:
-        void allocate(const std::string &title, int x, int y, const zc_kit::display::config &cfg);
+        void allocate(const std::string &title, int x, int y, const zcg_kit::display::config &cfg);
 
         void run() const;
     };

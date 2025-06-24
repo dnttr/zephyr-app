@@ -3,3 +3,13 @@
 //
 
 #pragma once
+
+#include <OpenGL/gl3.h>
+
+namespace zc_app
+{
+    class texture_loader
+    {
+        static GLuint load(const void *pixels, int width, int height);
+    };
+}
