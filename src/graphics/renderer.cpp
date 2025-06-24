@@ -28,7 +28,7 @@ namespace zc_app
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        rect = new rectangle();
+        rect = new rectangle(container(0, 0, 100.0F, 100.0F), colour(255, 0, 0, 255), 20.0F);
     }
 
     void renderer::render() const
@@ -37,7 +37,7 @@ namespace zc_app
 
         if (rect)
         {
-            rect->draw(0.0F, 0.0F, 100.0F, 100.0F, 1.0F, 0.0F, 0.0F, 1.0F, 20.0F);
+            rect->draw();
         }
     }
 
@@ -56,6 +56,7 @@ namespace zc_app
 
     void renderer::destroy()
     {
+        delete rect;
     }
 
     void renderer::run()

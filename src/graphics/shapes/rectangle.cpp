@@ -15,17 +15,16 @@ namespace zc_app
         glDeleteBuffers(1, &ebo);
     }
 
-    void rectangle::draw(float x, float y, float width, float height, float alpha, float red, float green, float blue,
-        const float radius) const
+    void rectangle::draw() const
     {
         glUseProgram(program);
 
         glUniformMatrix4fv(projection, 1, GL_FALSE, perspective_util::get_projection_matrix());
-        glUniform2f(position, x, y);
-        glUniform2f(size, width, height);
-        glUniform1f(this->radius, radius);
-        glUniform3f(color, red, green, blue);
-        glUniform1f(opacity, alpha);
+        glUniform2f(position, m_container.get_x(), m_container.get_y());
+        glUniform2f(size, m_container.get_width(), m_container.get_height());
+        glUniform1f(this->radius, m_radius);
+        glUniform3f(color, m_colour.get_red_direct(), m_colour.get_green_direct(), m_colour.get_blue_direct());
+        glUniform1f(opacity, m_colour.get_alpha_direct());
 
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
@@ -53,7 +52,7 @@ namespace zc_app
 
         glBindVertexArray(vao);
 
-        const auto& current_config = perspective_util::get_current_display_config();
+        const auto &current_config = perspective_util::get_current_display_config();
 
         const float vertices[] = {
             0.0F, 0.0F, 0.0F,
@@ -72,5 +71,35 @@ namespace zc_app
         glEnableVertexAttribArray(0);
 
         glBindVertexArray(0);
+    }
+
+    container &rectangle::get_container()
+    {
+        return m_container;
+    }
+
+    void rectangle::set_container(const container &new_container)
+    {
+        m_container = new_container;
+    }
+
+    colour & rectangle::get_colour()
+    {
+        return m_colour;
+    }
+
+    void rectangle::set_colour(const colour &new_colour)
+    {
+        m_colour = new_colour;
+    }
+
+    float rectangle::get_radius() const
+    {
+        return m_radius;
+    }
+
+    void rectangle::set_radius(const float new_radius)
+    {
+        m_radius = new_radius;
     }
 }
