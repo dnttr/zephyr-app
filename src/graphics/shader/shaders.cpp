@@ -86,6 +86,11 @@ namespace zc_app
             return 0;
         }
 
+        delete_shader(vertex_shader);
+        delete_shader(fragment_shader);
+
+        //for now we delete em, look into it in the future
+
         return program;
     }
 

@@ -17,6 +17,8 @@ namespace zc_app
     static renderer *current_renderer = nullptr;
     static display_config current_config;
 
+    glm::mat4 window::projection_matrix = glm::mat4(1.0f);
+
     static void destroy_callback()
     {
         if (current_renderer)
@@ -70,6 +72,7 @@ namespace zc_app
             current_renderer->update();
         }
     }
+
     display_config &window::get_current_display_config()
     {
         return current_config;

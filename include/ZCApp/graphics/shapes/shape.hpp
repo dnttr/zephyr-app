@@ -7,16 +7,20 @@
 #include <string>
 #include <OpenGL/gl3.h>
 
+#include "ZCApp/graphics/window.hpp"
 #include "ZCApp/graphics/shaders/shaders.hpp"
 
 namespace zc_app
 {
     class shape
     {
-        GLuint resolution;
+    protected:
         GLuint projection;
+        GLuint position;
+        GLuint color, opacity;
 
         GLuint program;
+
     public:
         virtual ~shape() = default;
 
@@ -24,10 +28,11 @@ namespace zc_app
         {
             program = shaders::create_program(vertex, fragment);
 
-            resolution = glGetUniformLocation(program, "resolution");
             projection = glGetUniformLocation(program, "projection_matrix");
-        }
 
-        virtual void draw() const = 0;
+            color = glGetUniformLocation(program, "shape_color");
+            opacity = glGetUniformLocation(program, "shape_opacity");
+            position = glGetUniformLocation(program, "shape_position");
+        }
     };
 }
