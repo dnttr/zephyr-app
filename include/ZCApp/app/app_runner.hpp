@@ -21,6 +21,10 @@ namespace zc_kit
         static void submit(JNIEnv *jni, znb_kit::jvmti_object jvmti);
         static void invoke(JNIEnv *jni);
     public:
+        static std::mutex mtx;
+        static std::condition_variable cv;
+
+        static bool ready;
 
         static void run(const std::string& vm_path);
     };

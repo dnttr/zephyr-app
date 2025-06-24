@@ -89,7 +89,7 @@ namespace zc_app
         delete_shader(vertex_shader);
         delete_shader(fragment_shader);
 
-        //for now we delete em, look into it in the future
+        //for now, we delete em, look into it in the future
 
         return program;
     }

@@ -15,9 +15,6 @@
 namespace zc_app
 {
     static renderer *current_renderer = nullptr;
-    static display_config current_config;
-
-    glm::mat4 window::projection_matrix = glm::mat4(1.0f);
 
     static void destroy_callback()
     {
@@ -33,6 +30,8 @@ namespace zc_app
     {
         if (current_renderer)
         {
+            const auto &current_config = perspective_util::get_current_display_config();
+
             glViewport(static_cast<GLint>(current_config.viewport_x),
                 static_cast<GLint>(current_config.viewport_y),
                 static_cast<GLsizei>(current_config.viewport_width),
@@ -48,7 +47,7 @@ namespace zc_app
         {
             current_renderer->initialize();
 
-            perspective_util::calculate_viewport(current_config);
+            perspective_util::calculate_viewport();
         }
     }
 
@@ -56,10 +55,12 @@ namespace zc_app
     {
         if (current_renderer)
         {
+            auto &current_config = perspective_util::get_current_display_config();
+
             current_config.window_width = width;
             current_config.window_height = height;
 
-            perspective_util::calculate_viewport(current_config);
+            perspective_util::calculate_viewport();
 
             current_renderer->reshape(width, height);
         }
@@ -71,11 +72,6 @@ namespace zc_app
         {
             current_renderer->update();
         }
-    }
-
-    display_config &window::get_current_display_config()
-    {
-        return current_config;
     }
 
     void window::allocate(const std::string &title, const int x, const int y, const display_config &config)
@@ -103,11 +99,11 @@ namespace zc_app
             .height = static_cast<int>(config.window_height),
         };
 
-        current_config = config;
+        perspective_util::set_current_display_config(config);
 
         m_window = zcg_allocate(&args, &m_callback_handle);
 
-        perspective_util::calculate_viewport(current_config);
+        perspective_util::calculate_viewport();
     }
 
     void window::run() const

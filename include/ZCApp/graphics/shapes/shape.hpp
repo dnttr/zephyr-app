@@ -7,7 +7,6 @@
 #include <string>
 #include <OpenGL/gl3.h>
 
-#include "ZCApp/graphics/window.hpp"
 #include "ZCApp/graphics/shaders/shaders.hpp"
 
 namespace zc_app

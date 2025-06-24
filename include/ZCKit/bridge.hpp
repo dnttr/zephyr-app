@@ -21,5 +21,7 @@ namespace zc_kit
         };
 
         static jint push_shader(DEFAULT, jstring name, jstring source);
+
+        static jint finish_loading(DEFAULT); //btw, DEFAULT isn't needed at this point; after all, no JNI parameters are needed, therefore, it's not a requirement, however, for now I'd like to keep it for consistency and future-proofing
     };
 }

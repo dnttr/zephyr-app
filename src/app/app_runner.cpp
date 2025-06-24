@@ -2,7 +2,7 @@
 // Created by Damian Netter on 20/06/2025.
 //
 
-#include "../../include/ZCApp/app/app_runner.hpp"
+#include "ZCApp/app/app_runner.hpp"
 
 #include <ZNBKit/jni/signatures/method/void_method.hpp>
 #include <ZNBKit/vm/vm_management.hpp>
@@ -12,6 +12,11 @@
 
 namespace zc_kit
 {
+    bool app_runner::ready = false;
+
+    std::mutex app_runner::mtx;
+    std::condition_variable app_runner::cv;
+
     const std::string app_runner::bridge_klass_name = "org/dnttr/zephyr/bridge/internal/ZAKit";
     const std::string app_runner::executor_klass_name = "org/dnttr/zephyr/management/Loader";
 
@@ -19,7 +24,8 @@ namespace zc_kit
     const std::string app_runner::executor_method_signature = "()V";
 
     const std::unordered_multimap<std::string, znb_kit::jni_bridge_reference> app_runner::mapped_methods = {
-        {"ffi_zm_push_shader", znb_kit::jni_bridge_reference(&bridge::push_shader, {znb_kit::STRING, znb_kit::STRING})}
+        {"ffi_zm_push_shader", znb_kit::jni_bridge_reference(&bridge::push_shader, {znb_kit::STRING, znb_kit::STRING})},
+        {"ffi_zm_finish_loading", znb_kit::jni_bridge_reference(&bridge::finish_loading)}
     };
 
     void app_runner::run(const std::string &vm_path)
@@ -35,15 +41,21 @@ namespace zc_kit
         submit(jni, std::move(jvmti));
         invoke(jni);
 
-        zc_app::display_config config;
-        config.window_width = 1920;
-        config.window_height = 1080;
-        config.virtual_width = 1920.0F;
-        config.virtual_height = 1080.0F;
+        zc_app::display_config display_cfg;
+
+        display_cfg.window_width = 1920;
+        display_cfg.window_height = 1080;
+        display_cfg.virtual_width = 1920.0F;
+        display_cfg.virtual_height = 1080.0F;
 
         zc_app::window window;
 
-        window.allocate("x", 0, 0, config);
+        window.allocate("Core Graphics", 0, 0, display_cfg);
+
+        std::unique_lock lock(mtx);
+
+        cv.wait(lock, [] { return ready; });
+
         window.run();
     }
 

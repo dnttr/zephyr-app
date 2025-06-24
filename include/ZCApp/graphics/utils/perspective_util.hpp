@@ -12,14 +12,26 @@ namespace zc_app
 {
     class perspective_util
     {
+        static glm::mat4 projection_matrix; //    glm::mat4 window::projection_matrix = glm::mat4(1.0f);
+        static display_config current_config;
     public:
+
+        static display_config &get_current_display_config()
+        {
+            return current_config;
+        }
+
+        static void set_current_display_config(const display_config &config)
+        {
+            current_config = config;
+        }
 
         static glm::mat4 get_projection(const float width, const float height)
         {
             return glm::ortho(0.0f, width, height, 0.0f, -1.0f, 1.0f);
         }
 
-        static void calculate_viewport(display_config &current_config)
+        static void calculate_viewport()
         {
             if (current_config.maintain_aspect_ratio)
             {
@@ -41,6 +53,13 @@ namespace zc_app
             {
                 throw std::runtime_error("Aspect ratio maintenance is not implemented yet.");
             }
+        }
+
+        static const float *get_projection_matrix()
+        {
+            const auto &config = get_current_display_config();
+            projection_matrix = perspective_util::get_projection(config.virtual_width, config.virtual_height);
+            return glm::value_ptr(projection_matrix);
         }
     };
 }
