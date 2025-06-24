@@ -10,6 +10,7 @@ namespace zc_app
 {
     class texture_loader
     {
+    public:
         static GLuint load(const void *pixels, int width, int height);
     };
 }

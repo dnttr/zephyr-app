@@ -8,6 +8,8 @@
 
 #include "ZCApp/app/app_runner.hpp"
 #include "ZCApp/graphics/shaders/shaders.hpp"
+#include "ZCApp/graphics/textures/texture_loader.hpp"
+#include "ZCApp/graphics/textures/texture_manager.hpp"
 
 jint zc_kit::bridge::push_shader(JNIEnv *jni, [[maybe_unused]] jobject, const jstring name, const jstring source)
 {
@@ -28,8 +30,11 @@ jint zc_kit::bridge::finish_loading([[maybe_unused]] JNIEnv *, [[maybe_unused]] 
     return 0;
 }
 
-jint zc_kit::bridge::push_texture(JNIEnv *jni, jobject object, jstring name, jobject buffer, jint width, jint height)
+jint zc_kit::bridge::push_texture(JNIEnv *jni, [[maybe_unused]] jobject, jstring name, jobject direct_buffer, jint width, jint height)
 {
-    std::cout << "Pushing texture: " << znb_kit::get_string(jni, name, true) << std::endl;
+    const auto buffer = znb_kit::wrapper::get_direct_buffer(jni, direct_buffer);
+
+    //queue em here, and load in initialization phase.
+
     return 0;
 }
