@@ -25,7 +25,8 @@ namespace zc_kit
 
     const std::unordered_multimap<std::string, znb_kit::jni_bridge_reference> app_runner::mapped_methods = {
         {"ffi_zm_push_shader", znb_kit::jni_bridge_reference(&bridge::push_shader, {znb_kit::STRING, znb_kit::STRING})},
-        {"ffi_zm_finish_loading", znb_kit::jni_bridge_reference(&bridge::finish_loading)}
+        {"ffi_zm_finish_loading", znb_kit::jni_bridge_reference(&bridge::finish_loading)},
+        {"ffi_zm_push_texture", znb_kit::jni_bridge_reference(&bridge::push_texture, {"java.lang.String", "java.nio.ByteBuffer", "int", "int"})} //its deprecated however for now has to do, since i would have to refactor ZNB, which would be a waste of time for now
     };
 
     void app_runner::run(const std::string &vm_path)

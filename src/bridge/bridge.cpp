@@ -27,3 +27,9 @@ jint zc_kit::bridge::finish_loading([[maybe_unused]] JNIEnv *, [[maybe_unused]] 
 
     return 0;
 }
+
+jint zc_kit::bridge::push_texture(JNIEnv *jni, jobject object, jstring name, jobject buffer, jint width, jint height)
+{
+    std::cout << "Pushing texture: " << znb_kit::get_string(jni, name, true) << std::endl;
+    return 0;
+}

@@ -18,6 +18,8 @@ add_executable(zephyr-app
         src/graphics/window.cpp
         src/graphics/utils/perspective_util.cpp
         src/graphics/shapes/rectangle.cpp
+        src/graphics/textures/texture_loader.cpp
+        src/graphics/textures/texture_manager.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE include)
