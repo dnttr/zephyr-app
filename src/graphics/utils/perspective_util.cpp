@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <cmath>
 
 namespace zc_app
 {
@@ -24,8 +25,8 @@ namespace zc_app
 
     std::pair<float, float> perspective_util::get_effective_virtual_dimensions()
     {
-        const float effective_virtual_width = current_config.virtual_width / current_config.dpi_scale;
-        const float effective_virtual_height = current_config.virtual_height / current_config.dpi_scale;
+        const float effective_virtual_width = std::round(current_config.virtual_width / current_config.dpi_scale);
+        const float effective_virtual_height = std::round(current_config.virtual_height / current_config.dpi_scale);
 
         return {effective_virtual_width, effective_virtual_height};
     }
@@ -45,19 +46,18 @@ namespace zc_app
             const auto f_w_width = static_cast<float>(current_config.window_width);
             const auto f_w_height = static_cast<float>(current_config.window_height);
 
-            const float effective_virtual_width = current_config.virtual_width / current_config.dpi_scale;
-            const float effective_virtual_height = current_config.virtual_height / current_config.dpi_scale;
+            const auto [effective_virtual_width, effective_virtual_height] = get_effective_virtual_dimensions();
 
             const float scale_x = f_w_width / effective_virtual_width;
             const float scale_y = f_w_height / effective_virtual_height;
 
-            current_config.scale = std::min(scale_x, scale_y);
+            current_config.scale = std::max(1.0f, std::min(scale_x, scale_y));
 
-            current_config.viewport_width = effective_virtual_width * current_config.scale;
-            current_config.viewport_height = effective_virtual_height * current_config.scale;
+            current_config.viewport_width = std::round(effective_virtual_width * current_config.scale);
+            current_config.viewport_height = std::round(effective_virtual_height * current_config.scale);
 
-            current_config.viewport_x = (f_w_width - current_config.viewport_width) * 0.5F;
-            current_config.viewport_y = (f_w_height - current_config.viewport_height) * 0.5F;
+            current_config.viewport_x = std::round((f_w_width - current_config.viewport_width) * 0.5F);
+            current_config.viewport_y = std::round((f_w_height - current_config.viewport_height) * 0.5F);
 
             projection_matrix = get_projection();
         }

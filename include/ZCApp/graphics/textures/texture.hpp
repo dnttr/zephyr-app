@@ -40,7 +40,6 @@ namespace zc_app
 
             glBindVertexArray(vao);
 
-            const auto &current_config = perspective_util::get_current_display_config();
             const float vertices[] = {
                 0.0F, 0.0F, 0.0F,  0.0f, 0.0f,
                 1.0F, 0.0F, 0.0F,  1.0f, 0.0f,
@@ -76,18 +75,16 @@ namespace zc_app
 
             glUseProgram(program);
 
-            auto [scale_x, scale_y] = perspective_util::get_effective_virtual_dimensions();
-
             glUniformMatrix4fv(glGetUniformLocation(program, "projection_matrix"), 1, GL_FALSE, perspective_util::get_projection_matrix());
             glUniform1i(glGetUniformLocation(program, "ourTexture"), 0);
-            glUniform2f(glGetUniformLocation(program, "position"), 200, 200);
-            glUniform2f(glGetUniformLocation(program, "size"), 256 / 4, 256 / 4);
             const auto &current_config = perspective_util::get_current_display_config();
+            glUniform2f(glGetUniformLocation(program, "position"), 200, 200);
+            glUniform2f(glGetUniformLocation(program, "size"), 256 / (2 * perspective_util::get_current_display_config().dpi_scale * perspective_util::get_current_display_config().scale), 256 / (2 * perspective_util::get_current_display_config().dpi_scale * perspective_util::get_current_display_config().scale));
 
             glBindVertexArray(vao);
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, m_texture);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+            glDrawElements(GL_TRIANGLE_FAN, 6, GL_UNSIGNED_INT, nullptr);
             glBindVertexArray(0);
         }
     };
