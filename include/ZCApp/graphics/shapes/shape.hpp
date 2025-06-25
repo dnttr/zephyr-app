@@ -5,6 +5,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 #include <OpenGL/gl3.h>
 
 #include "ZCApp/graphics/shaders/shaders.hpp"
@@ -14,28 +15,45 @@ namespace zc_app
     class shape
     {
     protected:
-        GLint color, opacity;
-        GLint projection;
-        GLint position;
+        GLint color{};
+        GLint opacity{};
+        GLint projection{};
+        GLint position{};
 
-        GLuint program;
+        GLuint program = -1;
+
+        std::string vertex_shader, fragment_shader;
 
         virtual void setup_uniforms() = 0;
 
         virtual void setup_shape() = 0;
 
+        virtual void render() = 0;
     public:
         virtual ~shape() = default;
 
-        shape(const std::string &vertex, const std::string &fragment)
+        shape(std::string vertex, std::string fragment) : vertex_shader(std::move(vertex)),
+                                                          fragment_shader(std::move(fragment))
         {
-            program = shaders::create_program(vertex, fragment);
+        }
 
-            projection = glGetUniformLocation(program, "projection_matrix");
+        void draw()
+        {
+            if (program == -1)
+            {
+                program = shaders::create_program(vertex_shader, fragment_shader);
 
-            color = glGetUniformLocation(program, "shape_color");
-            opacity = glGetUniformLocation(program, "shape_opacity");
-            position = glGetUniformLocation(program, "shape_position");
+                projection = glGetUniformLocation(program, "projection_matrix");
+
+                color = glGetUniformLocation(program, "shape_color");
+                opacity = glGetUniformLocation(program, "shape_opacity");
+                position = glGetUniformLocation(program, "shape_position");
+
+                setup_uniforms();
+                setup_shape();
+            }
+
+            render();
         }
     };
 }

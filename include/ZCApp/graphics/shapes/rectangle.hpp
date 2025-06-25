@@ -22,20 +22,12 @@ namespace zc_app
         float m_radius;
 
     public:
-
-        rectangle(const container container, const colour shape_colour, const float radius = 0.0F) : shape("rectangle_vert", "rectangle_frag"), m_container(container), m_colour(shape_colour), m_radius(radius)
+        rectangle(const container container, const colour shape_colour, const float radius = 0.0F) :
+            shape("rectangle_vert", "rectangle_frag"), m_container(container), m_colour(shape_colour), m_radius(radius)
         {
-            setup_uniforms();
-            setup_shape();
         }
 
         ~rectangle() override;
-
-        void draw() const;
-
-        void setup_uniforms() override;
-
-        void setup_shape() override;
 
         [[nodiscard]] container &get_container();
 
@@ -48,5 +40,12 @@ namespace zc_app
         [[nodiscard]] float get_radius() const;
 
         void set_radius(float new_radius);
+
+    protected:
+        void setup_uniforms() override;
+
+        void setup_shape() override;
+
+        void render() override;
     };
 }

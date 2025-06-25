@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <utility>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -21,6 +22,7 @@ namespace zc_app
         static zcg_kit::display::config &get_current_display_config();
 
         static void set_current_display_config(const zcg_kit::display::config &config);
+        static std::pair<float, float> get_effective_virtual_dimensions();
 
         static glm::mat4 get_projection();
 
