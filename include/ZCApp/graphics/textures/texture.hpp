@@ -35,7 +35,7 @@ namespace zc_app
 
             glBindVertexArray(vao);
 
-            const auto circle_vertices = generate_circle_vertices(0.5F, 128);
+            const auto circle_vertices = generate_circle_vertices(0.5F,128);
 
             glBindBuffer(GL_ARRAY_BUFFER, vbo);
             glBufferData(GL_ARRAY_BUFFER, circle_vertices.size() * sizeof(float), circle_vertices.data(), GL_STATIC_DRAW);
@@ -60,12 +60,15 @@ namespace zc_app
             }
 
             glUseProgram(program);
+            const auto &current_config = perspective_util::get_current_display_config();
+            float size_x = 256.0f;
+            float size_y = 256.0f;
+
+            glUniform2f(glGetUniformLocation(program, "size"), size_x, size_y);
 
             glUniformMatrix4fv(glGetUniformLocation(program, "projection_matrix"), 1, GL_FALSE, perspective_util::get_projection_matrix());
             glUniform1i(glGetUniformLocation(program, "ourTexture"), 0);
-            const auto &current_config = perspective_util::get_current_display_config();
             glUniform2f(glGetUniformLocation(program, "position"), 200, 200);
-            glUniform2f(glGetUniformLocation(program, "size"), 256 / (2 * perspective_util::get_current_display_config().dpi_scale * perspective_util::get_current_display_config().scale), 256 / (2 * perspective_util::get_current_display_config().dpi_scale * perspective_util::get_current_display_config().scale));
 
             glBindVertexArray(vao);
             glActiveTexture(GL_TEXTURE0);

@@ -7,7 +7,7 @@ find_package(Catch2 REQUIRED)
 
 function(configure_apple_platform)
     if(APPLE)
-        set(COREGRAPHICS_LIB_PATH "${CMAKE_SOURCE_DIR}/extern/libzcg.a")
+        set(COREGRAPHICS_LIB_PATH "${CMAKE_SOURCE_DIR}/extern/libcoregraphics.a")
         set(NATIVEBRIDGE_LIB_PATH "${CMAKE_SOURCE_DIR}/extern/libznb.dylib")
 
         set(PLATFORM_LIBS
