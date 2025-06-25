@@ -15,6 +15,14 @@ namespace zc_app
         {
         }
 
+        container (const float x, const float y) : x(x), y(y), width(0.0f), height(0.0f)
+        {
+        }
+
+        container() : x(0.0f), y(0.0f), width(0.0f), height(0.0f)
+        {
+        }
+
         void set_x(const float new_x)
         {
             x = new_x;

@@ -14,7 +14,7 @@
 #include <OpenGL/gl3.h>
 
 #include "ZCApp/graphics/shapes/rectangle.hpp"
-#include "ZCApp/graphics/textures/texture.hpp"
+#include "ZCApp/graphics/textures/fan_texture.hpp"
 #include "ZCApp/graphics/utils/perspective_util.hpp"
 
 #include FT_FREETYPE_H
@@ -22,7 +22,7 @@
 namespace zc_app
 {
     rectangle rect(container(0, 0, 100.0F, 100.0F), colour(255, 0, 0, 255), 20.0F);
-    texture texture("test.png");
+    fan_texture fan("test.png", container(200.0f, 200.0f), 0.5F, 128);
 
     void renderer::initialize()
     {
@@ -47,7 +47,7 @@ namespace zc_app
             static_cast<GLsizei>(cfg.viewport_height));
 
         rect.draw();
-        texture.draw();
+       // fan.draw();
 
     }
 
@@ -58,6 +58,7 @@ namespace zc_app
 
     void renderer::reshape(const int width, const int height)
     {
+
     }
 
     void renderer::update()

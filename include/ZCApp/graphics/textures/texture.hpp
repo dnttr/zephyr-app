@@ -5,78 +5,101 @@
 #pragma once
 
 #include <string>
+#include <utility>
 #include <OpenGL/gl3.h>
 
 #include "texture_loader.hpp"
-#include "ZCApp/graphics/shaders/shaders.hpp"
-#include "ZCApp/graphics/utils/circle_util.hpp"
 #include "ZCApp/graphics/utils/perspective_util.hpp"
 
 namespace zc_app
 {
     class texture
     {
+        void fetch_uniforms()
+        {
+            m_projection_uniform = glGetUniformLocation(m_program, "m_projection_matrix");
+            m_texture_uniform = glGetUniformLocation(m_program, "m_texture");
+            m_position_uniform = glGetUniformLocation(m_program, "m_texture_position");
+            m_size_uniform = glGetUniformLocation(m_program, "m_texture_size");
+        }
+
+        bool update = false;
+
+    protected:
         GLuint vao{}, vbo{}, ebo{};
 
-        GLuint m_texture = 0;
-        GLuint program = 0;
+        inline static int m_scale = 4;
+
+        GLuint m_texture{};
+        GLuint m_program{};
+
+        container m_container;
 
         std::string m_name;
 
-    public:
-        explicit texture(const std::string &name) : m_name(name)
+        GLint m_projection_uniform{};
+        GLint m_texture_uniform{};
+        GLint m_position_uniform{};
+        GLint m_size_uniform{};
+
+        virtual void setup_uniforms(const float x, const float y, const float width, const float height)
         {
+            glUniformMatrix4fv(m_projection_uniform, 1, GL_FALSE, perspective_util::get_projection_matrix());
+
+            glUniform1i(m_texture_uniform, 0);
+            glUniform2f(m_position_uniform, x, y);
+            glUniform2f(m_size_uniform, width, height);
         }
 
-        void setup()
+        virtual void render() = 0;
+
+        virtual void setup() = 0;
+
+    public:
+        virtual ~texture() = default;
+
+        texture(std::string name, const container &container) : m_container(container), m_name(std::move(name))
         {
-            glGenVertexArrays(1, &vao);
-            glGenBuffers(1, &vbo);
-
-            glBindVertexArray(vao);
-
-            const auto circle_vertices = generate_circle_vertices(0.5F,128);
-
-            glBindBuffer(GL_ARRAY_BUFFER, vbo);
-            glBufferData(GL_ARRAY_BUFFER, circle_vertices.size() * sizeof(float), circle_vertices.data(), GL_STATIC_DRAW);
-
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
-            glEnableVertexAttribArray(0);
-
-            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void *>(3 * sizeof(float)));
-            glEnableVertexAttribArray(1);
-
-            glBindVertexArray(0);
         }
 
         void draw()
         {
-            if (m_texture == 0)
+            if (m_texture == 0 || m_program == 0)
             {
                 setup();
 
-                m_texture = texture_loader::get(m_name);
-                program = shaders::create_program("texture_vert", "texture_frag");
+                auto [tex_id, tex_info] = texture_loader::get(m_name, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_TRUE, MAX_ANISOTROPIC);
+
+                const int scaled_width = tex_info.width / m_scale;
+                const int scaled_height = tex_info.height / m_scale;
+
+                m_container.set_width(static_cast<float>(scaled_width));
+                m_container.set_height(static_cast<float>(scaled_height));
+
+                m_texture = tex_id;
+                m_program = shaders::create_program("texture_vert", "texture_frag");
+                fetch_uniforms();
+
+                update = true;
             }
 
-            glUseProgram(program);
-            const auto &current_config = perspective_util::get_current_display_config();
-            float size_x = 256.0f;
-            float size_y = 256.0f;
+            glUseProgram(m_program);
 
-            glUniform2f(glGetUniformLocation(program, "size"), size_x, size_y);
+            if (update)
+            {
+                setup_uniforms(m_container.get_x(), m_container.get_y(), m_container.get_width(), m_container.get_height());
 
-            glUniformMatrix4fv(glGetUniformLocation(program, "projection_matrix"), 1, GL_FALSE, perspective_util::get_projection_matrix());
-            glUniform1i(glGetUniformLocation(program, "ourTexture"), 0);
-            glUniform2f(glGetUniformLocation(program, "position"), 200, 200);
+                update = false;
+            }
 
-            glBindVertexArray(vao);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, m_texture);
+            render();
 
-            const GLsizei vertexCount = 1 + (128 + 1);
-            glDrawArrays(GL_TRIANGLE_FAN, 0, vertexCount);
-            glBindVertexArray(0);
+            glUseProgram(0);
+        }
+
+        void reshape()
+        {
+            update = true;
         }
     };
 }
