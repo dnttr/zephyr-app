@@ -9,6 +9,7 @@
 
 #include "texture_loader.hpp"
 #include "ZCApp/graphics/shaders/shaders.hpp"
+#include "ZCApp/graphics/utils/circle_util.hpp"
 #include "ZCApp/graphics/utils/perspective_util.hpp"
 
 namespace zc_app
@@ -29,30 +30,15 @@ namespace zc_app
 
         void setup()
         {
-            const unsigned int indices[] = {
-                0, 1, 2,
-                2, 3, 0
-            };
-
             glGenVertexArrays(1, &vao);
-            glGenBuffers(1, &ebo);
             glGenBuffers(1, &vbo);
 
             glBindVertexArray(vao);
 
-            const float vertices[] = {
-                0.0F, 0.0F, 0.0F,  0.0f, 0.0f,
-                1.0F, 0.0F, 0.0F,  1.0f, 0.0f,
-                1.0F, 1.0F, 0.0F,  1.0f, 1.0f,
-                0.0F, 1.0F, 0.0F,  0.0f, 1.0f
-            };
-
+            const auto circle_vertices = generate_circle_vertices(0.5F, 128);
 
             glBindBuffer(GL_ARRAY_BUFFER, vbo);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, circle_vertices.size() * sizeof(float), circle_vertices.data(), GL_STATIC_DRAW);
 
             glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
             glEnableVertexAttribArray(0);
@@ -84,7 +70,9 @@ namespace zc_app
             glBindVertexArray(vao);
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, m_texture);
-            glDrawElements(GL_TRIANGLE_FAN, 6, GL_UNSIGNED_INT, nullptr);
+
+            const GLsizei vertexCount = 1 + (128 + 1);
+            glDrawArrays(GL_TRIANGLE_FAN, 0, vertexCount);
             glBindVertexArray(0);
         }
     };
