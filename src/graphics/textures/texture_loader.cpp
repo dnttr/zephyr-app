@@ -51,7 +51,7 @@ namespace zc_app
             glGenerateMipmap(GL_TEXTURE_2D);
         }
 
-        if (const GLint level = zcg_kit::external::hasAnisotropicFiltering(); level > 1)
+        if (const GLint level = zcg_kit::external::has_anisotropic_filtering(); level > 1)
         {
             if (anisotropic >= 0) {
                 if (anisotropic == 0)

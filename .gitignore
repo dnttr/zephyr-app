@@ -1,4 +1,5 @@
 /.idea
+/extern
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles

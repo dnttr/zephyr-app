@@ -17,12 +17,20 @@ namespace zcg_kit
     {
     public:
 
-        static GLint hasAnisotropicFiltering()
+        static GLint has_anisotropic_filtering()
         {
-            GLint maxAnisotropy = 0;
-            glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
+            GLint max_anisotropy = 0;
+            glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_anisotropy);
 
-            return maxAnisotropy;
+            return max_anisotropy;
+        }
+
+        static bool is_context_valid()
+        {
+            GLint context = 0;
+            glGetIntegerv(GL_CURRENT_PROGRAM, &context);
+
+            return glGetError() == GL_NO_ERROR && context >= 0;
         }
     };
 }
