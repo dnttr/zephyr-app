@@ -9,7 +9,7 @@
 
 namespace zc_app
 {
-    void font_loader::load_font(const std::string &name, const unsigned char *buffer, const size_t size)
+    void font_loader::load_font(const std::string& name, const unsigned char* buffer, const size_t size)
     {
         if (buffer != nullptr && size > 0)
         {
@@ -91,8 +91,11 @@ namespace zc_app
                 }
 
                 new_font.characters_map[value] = font_manager::character({current_x, current_y}, {width, height},
-                                                           {face->glyph->bitmap_left, face->glyph->bitmap_top},
-                                                           face->glyph->advance.x);
+                                                                         {
+                                                                             face->glyph->bitmap_left,
+                                                                             face->glyph->bitmap_top
+                                                                         },
+                                                                         face->glyph->advance.x);
             }
 
             glBindTexture(GL_TEXTURE_2D, 0);

@@ -8,7 +8,6 @@ namespace zc_app
 {
     class font_loader
     {
-
         static constexpr int ATLAS_WIDTH = 1024;
         static constexpr int ATLAS_HEIGHT = 1024;
 
@@ -21,8 +20,8 @@ namespace zc_app
             'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y',
             'z', '{', '|', '}', '~'
         };
-    public:
 
-        static void load_font(const std::string &name, const unsigned char *buffer, size_t size);
+    public:
+        static void load_font(const std::string& name, const unsigned char* buffer, size_t size);
     };
 }

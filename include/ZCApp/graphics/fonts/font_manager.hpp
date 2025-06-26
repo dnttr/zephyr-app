@@ -28,7 +28,6 @@ namespace zc_app
             glm::ivec2 size;
             glm::ivec2 bearing;
             GLuint advance;
-
         };
 
         struct font
@@ -41,7 +40,6 @@ namespace zc_app
         static FT_Library ft;
 
     public:
-
         static void initialize();
     };
 }
