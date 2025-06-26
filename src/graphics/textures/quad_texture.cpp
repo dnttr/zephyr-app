@@ -18,10 +18,10 @@ void zc_app::quad_texture::setup()
     glBindVertexArray(vao);
 
     constexpr float vertices[] = {
-        0.0F, 0.0F, 0.0F,  0.0f, 0.0f,
-        1.0F, 0.0F, 0.0F,  1.0f, 0.0f,
-        1.0F, 1.0F, 0.0F,  1.0f, 1.0f,
-        0.0F, 1.0F, 0.0F,  0.0f, 1.0f
+        0.0F, 0.0F, 0.0F, 0.0f, 0.0f,
+        1.0F, 0.0F, 0.0F, 1.0f, 0.0f,
+        1.0F, 1.0F, 0.0F, 1.0f, 1.0f,
+        0.0F, 1.0F, 0.0F, 0.0f, 1.0f
     };
 
 
@@ -34,7 +34,7 @@ void zc_app::quad_texture::setup()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void *>(3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
     glBindVertexArray(0);

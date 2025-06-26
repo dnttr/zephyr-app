@@ -9,15 +9,12 @@
 
 #include "ZCApp/graphics/renderer.hpp"
 
-#include <ft2build.h>
 #include <iostream>
 #include <OpenGL/gl3.h>
 
 #include "ZCApp/graphics/shapes/rectangle.hpp"
 #include "ZCApp/graphics/textures/fan_texture.hpp"
 #include "ZCApp/graphics/utils/perspective_util.hpp"
-
-#include FT_FREETYPE_H
 
 namespace zc_app
 {

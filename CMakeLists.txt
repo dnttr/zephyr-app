@@ -22,6 +22,8 @@ add_executable(zephyr-app
         src/graphics/textures/texture_manager.cpp
         src/graphics/textures/quad_texture.cpp
         src/graphics/textures/fan_texture.cpp
+        src/graphics/fonts/font_manager.cpp
+        src/graphics/fonts/font_loader.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE include)
