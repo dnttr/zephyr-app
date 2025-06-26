@@ -6,6 +6,8 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <ZNBKit/debug.hpp>
+
 #include "string"
 
 #include "ZCApp/graphics/renderer.hpp"
@@ -83,19 +85,24 @@ namespace zc_app
             throw std::invalid_argument("Window width and height must be greater than zero.");
         }
 
+        perspective_util::calculate_viewport();
+
+        const auto min_width_factor = static_cast<unsigned int>(2 * cfg.scale * cfg.dpi_scale);
+        const auto min_height_factor = static_cast<unsigned int>(2 * cfg.scale * cfg.dpi_scale);
+
         zcg_window_args_t args = {
             .title = title.c_str(),
             .x = x,
             .y = y,
             .width = static_cast<int>(cfg.window_width),
             .height = static_cast<int>(cfg.window_height),
+            .min_width = static_cast<int>(cfg.window_width / min_width_factor),
+            .min_height = static_cast<int>(cfg.window_height / min_height_factor),
         };
 
         perspective_util::set_current_display_config(cfg);
 
         m_window = zcg_allocate(&args, &m_callback_handle);
-
-        perspective_util::calculate_viewport();
     }
 
     void window::run() const

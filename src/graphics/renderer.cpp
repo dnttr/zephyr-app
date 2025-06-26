@@ -47,18 +47,12 @@ namespace zc_app
             static_cast<GLsizei>(cfg.viewport_height));
 
         rect.draw();
-       // fan.draw();
-
-    }
-
-    void update_viewport()
-    {
+        fan.draw();
     }
 
 
     void renderer::reshape(const int width, const int height)
     {
-
     }
 
     void renderer::update()

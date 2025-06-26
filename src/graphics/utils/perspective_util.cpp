@@ -7,11 +7,20 @@
 #include <algorithm>
 #include <stdexcept>
 #include <cmath>
+#include <iostream>
+#include <ostream>
 
 namespace zc_app
 {
     zcg_kit::display::config perspective_util::current_config;
     glm::mat4 perspective_util::projection_matrix = glm::mat4(1.0f);
+
+    int perspective_util::cached_min_x = 0;
+    int perspective_util::cached_min_y = 0;
+
+    //todo: implement this properly, for now just a placeholder
+    int perspective_util::cached_max_x = 0;
+    int perspective_util::cached_max_y = 0;
 
     zcg_kit::display::config &perspective_util::get_current_display_config()
     {

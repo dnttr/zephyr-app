@@ -18,6 +18,12 @@ namespace zc_app
         static glm::mat4 projection_matrix;
         static zcg_kit::display::config current_config;
 
+        static int cached_min_x;
+        static int cached_min_y;
+
+        static int cached_max_x;
+        static int cached_max_y;
+
     public:
         static zcg_kit::display::config &get_current_display_config();
 

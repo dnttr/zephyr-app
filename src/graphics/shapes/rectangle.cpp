@@ -34,7 +34,7 @@ namespace zc_app
 
         glBindVertexArray(vao);
 
-        const auto &current_config = perspective_util::get_current_display_config();
+        const auto& current_config = perspective_util::get_current_display_config();
 
         const float vertices[] = {
             0.0F, 0.0F, 0.0F,
@@ -73,22 +73,22 @@ namespace zc_app
         glUseProgram(0);
     }
 
-    container &rectangle::get_container()
+    container& rectangle::get_container()
     {
         return m_container;
     }
 
-    void rectangle::set_container(const container &new_container)
+    void rectangle::set_container(const container& new_container)
     {
         m_container = new_container;
     }
 
-    colour & rectangle::get_colour()
+    colour& rectangle::get_colour()
     {
         return m_colour;
     }
 
-    void rectangle::set_colour(const colour &new_colour)
+    void rectangle::set_colour(const colour& new_colour)
     {
         m_colour = new_colour;
     }

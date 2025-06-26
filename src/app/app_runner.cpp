@@ -54,7 +54,6 @@ namespace zc_kit
         window.allocate("Core Graphics", 0, 0, display_cfg);
 
         std::unique_lock lock(mtx);
-
         cv.wait(lock, [] { return ready; });
 
         window.run();
@@ -64,6 +63,11 @@ namespace zc_kit
     {
         const znb_kit::klass_signature bridge_signature(jni, bridge_klass_name);
         const auto [methods, size] = jvmti.try_mapping_methods<void>(bridge_signature, mapped_methods);
+
+        if (size == 0)
+        {
+            throw std::runtime_error("No methods found for the bridge class: " + bridge_klass_name);
+        }
 
         znb_kit::wrapper::register_natives(jni, bridge_klass_name, bridge_signature.get_owner(), methods);
     }
