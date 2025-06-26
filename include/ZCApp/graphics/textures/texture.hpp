@@ -8,6 +8,7 @@
 #include <utility>
 #include <OpenGL/gl3.h>
 
+#include "ZCApp/graphics/shaders/shaders.hpp"
 #include "ZCApp/graphics/shapes/container.hpp"
 #include "ZCApp/graphics/textures/texture_loader.hpp"
 #include "ZCApp/graphics/utils/perspective_util.hpp"
