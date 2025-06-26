@@ -4,8 +4,7 @@
 
 #pragma once
 
-#include "texture.hpp"
-#include "ZCApp/graphics/shapes/container.hpp"
+#include "ZCApp/graphics/textures/texture.hpp"
 #include "ZCApp/graphics/utils/circle_util.hpp"
 #include "ZCApp/graphics/utils/perspective_util.hpp"
 

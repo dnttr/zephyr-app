@@ -3,13 +3,12 @@
 //
 
 #pragma once
+
 #include <algorithm>
 #include <string>
 
 #include "texture.hpp"
 #include "ZCApp/graphics/shaders/shaders.hpp"
-#include "ZCApp/graphics/shapes/container.hpp"
-#include "ZCApp/graphics/utils/perspective_util.hpp"
 
 namespace zc_app
 {
