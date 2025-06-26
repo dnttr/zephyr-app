@@ -10,8 +10,6 @@ namespace zc_kit
 {
     class app_runner
     {
-        static const std::unordered_multimap<std::string, znb_kit::jni_bridge_reference> mapped_methods;
-
         static const std::string executor_klass_name;
         static const std::string executor_method_name;
         static const std::string executor_method_signature;

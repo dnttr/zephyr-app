@@ -59,7 +59,7 @@ namespace zc_app
     public:
         virtual ~texture() = default;
 
-        texture(std::string name, const container &container) : m_container(container), m_name(std::move(name))
+        texture(std::string name, const container& container) : m_container(container), m_name(std::move(name))
         {
         }
 
@@ -69,7 +69,8 @@ namespace zc_app
             {
                 setup();
 
-                auto [tex_id, tex_info] = texture_loader::get(m_name, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_TRUE, MAX_ANISOTROPIC);
+                auto [tex_id, tex_info] = texture_loader::get(m_name, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_TRUE,
+                                                              MAX_ANISOTROPIC);
 
                 const int scaled_width = tex_info.width / m_scale;
                 const int scaled_height = tex_info.height / m_scale;
@@ -88,7 +89,8 @@ namespace zc_app
 
             if (update)
             {
-                setup_uniforms(m_container.get_x(), m_container.get_y(), m_container.get_width(), m_container.get_height());
+                setup_uniforms(m_container.get_x(), m_container.get_y(), m_container.get_width(),
+                               m_container.get_height());
 
                 update = false;
             }

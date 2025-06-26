@@ -23,12 +23,6 @@ namespace zc_kit
     const std::string app_runner::executor_method_name = "load";
     const std::string app_runner::executor_method_signature = "()V";
 
-    const std::unordered_multimap<std::string, znb_kit::jni_bridge_reference> app_runner::mapped_methods = {
-        {"ffi_zm_push_shader", znb_kit::jni_bridge_reference(&bridge::push_shader, {znb_kit::STRING, znb_kit::STRING})},
-        {"ffi_zm_finish_loading", znb_kit::jni_bridge_reference(&bridge::finish_loading)},
-        {"ffi_zm_push_texture", znb_kit::jni_bridge_reference(&bridge::push_texture, {"java.lang.String", "java.nio.ByteBuffer", "int", "int"})} //its deprecated however for now has to do, since i would have to refactor ZNB, which would be a waste of time for now
-    };
-
     void app_runner::run(const std::string &vm_path)
     {
         const auto vm_object = znb_kit::vm_management::create_and_wrap_vm(vm_path);
@@ -62,7 +56,7 @@ namespace zc_kit
     void app_runner::submit(JNIEnv *jni, znb_kit::jvmti_object jvmti)
     {
         const znb_kit::klass_signature bridge_signature(jni, bridge_klass_name);
-        const auto [methods, size] = jvmti.try_mapping_methods<void>(bridge_signature, mapped_methods);
+        const auto [methods, size] = jvmti.try_mapping_methods<void>(bridge_signature, bridge::mapped_methods);
 
         if (size == 0)
         {
