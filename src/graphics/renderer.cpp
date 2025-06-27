@@ -51,11 +51,8 @@ namespace zc_app
             static_cast<GLsizei>(cfg.viewport_height));
 
         auto font = font_manager::get_font("Roboto_Condensed-Medium");
-       // font_renderer::render(font, "TEST", 0, 0, 5, c);     // Top-left, large
-        font_renderer::render(font, "TEST", 200, 200, 1, c); // Center-ish, medium
-       // font_renderer::render(font, "TEST", -100, -100, 3, c);
+        font_renderer::render(font, "E", 200, 200, 1, c);
 
-        //font_manager::get_font("");
      //   rect.draw();
        // fan.draw();
     }
