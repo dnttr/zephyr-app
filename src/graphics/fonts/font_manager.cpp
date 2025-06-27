@@ -7,6 +7,7 @@
 namespace zc_app
 {
     std::unordered_map<std::string, font_manager::font> font_manager::fonts_map;
+
     FT_Library font_manager::ft;
 
     void font_manager::initialize()

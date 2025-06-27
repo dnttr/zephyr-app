@@ -9,13 +9,22 @@
 #include "ZCApp/app/app_runner.hpp"
 #include "ZCApp/graphics/shaders/shaders.hpp"
 #include "ZCApp/graphics/textures/texture_loader.hpp"
+#include <ZNBKit/jni/buffer.hpp>
+
+#include "ZCApp/graphics/fonts/font_loader.hpp"
 
 namespace zc_kit
 {
     const std::unordered_multimap<std::string, znb_kit::jni_bridge_reference> bridge::mapped_methods = {
         {"ffi_zm_push_shader", znb_kit::jni_bridge_reference(&bridge::push_shader, {znb_kit::STRING, znb_kit::STRING})},
         {"ffi_zm_finish_loading", znb_kit::jni_bridge_reference(&bridge::finish_loading)},
-        {"ffi_zm_push_texture", znb_kit::jni_bridge_reference(&bridge::push_texture, {"java.lang.String", "java.nio.ByteBuffer", "int", "int"})}, //its deprecated however for now has to do, since i would have to refactor ZNB, which would be a waste of time for now
+        {
+            "ffi_zm_push_texture",
+            znb_kit::jni_bridge_reference(&bridge::push_texture, {
+                                              "java.lang.String", "java.nio.ByteBuffer", "int", "int"
+                                          })
+        },
+        //its deprecated however for now has to do, since i would have to refactor ZNB, which would be a waste of time for now
         {"ffi_zm_push_font", znb_kit::jni_bridge_reference(&bridge::push_font, {znb_kit::STRING, znb_kit::BYTE_ARRAY})}
     };
 
@@ -38,7 +47,8 @@ namespace zc_kit
         return 0;
     }
 
-    jint bridge::push_texture(JNIEnv *jni, [[maybe_unused]] jobject, const jstring name, const jobject direct_buffer, const jint width, const jint height)
+    jint bridge::push_texture(JNIEnv *jni, [[maybe_unused]] jobject, const jstring name, const jobject direct_buffer,
+                              const jint width, const jint height)
     {
         const auto buffer = znb_kit::wrapper::get_direct_buffer(jni, direct_buffer);
         const zc_app::texture_loader::texture_info info{buffer, width, height};
@@ -48,8 +58,16 @@ namespace zc_kit
         return 0;
     }
 
-    jint bridge::push_font(JNIEnv* jni, jobject object, jstring name, jbyteArray bytes)
+    jint bridge::push_font(JNIEnv *jni, [[maybe_unused]] jobject, const jstring name, const jbyteArray bytes)
     {
+        const auto name_str = znb_kit::get_string(jni, name, true);
+        const int size = jni->GetArrayLength(bytes);
 
+        std::vector<int8_t> buffer(size);
+        znb_kit::buffer::get_ptr_byte(jni, bytes, buffer.data(), size, 0);
+
+        zc_app::font_loader::push_font(name_str, buffer);
+
+        return 0;
     }
 }

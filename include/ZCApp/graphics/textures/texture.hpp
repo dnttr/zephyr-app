@@ -15,7 +15,7 @@
 
 namespace zc_app
 {
-    class texture
+     class texture
     {
         void fetch_uniforms()
         {

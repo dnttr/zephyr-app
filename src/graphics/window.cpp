@@ -6,7 +6,6 @@
 
 #include <iostream>
 #include <stdexcept>
-#include <ZNBKit/debug.hpp>
 
 #include "string"
 
@@ -98,6 +97,8 @@ namespace zc_app
             .height = static_cast<int>(cfg.window_height),
             .min_width = static_cast<int>(cfg.window_width / min_width_factor),
             .min_height = static_cast<int>(cfg.window_height / min_height_factor),
+            .max_width = 0,
+            .max_height =  0,
         };
 
         perspective_util::set_current_display_config(cfg);

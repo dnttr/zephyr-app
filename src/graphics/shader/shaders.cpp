@@ -4,6 +4,8 @@
 
 #include "ZCApp/graphics/shaders/shaders.hpp"
 
+#include <iostream>
+
 namespace zc_app
 {
     std::map<std::string, std::string> shaders::manager::sources;
@@ -24,7 +26,7 @@ namespace zc_app
 
         const GLuint program = compile(vertex_shader, fragment_shader);
 
-        if (program < 0)
+        if (program <= 0)
         {
             throw std::runtime_error("Failed to compile shader program: " + vertex_name + " and " + fragment_name);
         }
@@ -48,6 +50,8 @@ namespace zc_app
             std::vector<char> infoLog(length);
 
             glGetShaderInfoLog(shader, length, nullptr, infoLog.data());
+
+            std::cout << "Shader compilation failed: " << infoLog.data() << std::endl;
 
             glDeleteShader(shader);
 

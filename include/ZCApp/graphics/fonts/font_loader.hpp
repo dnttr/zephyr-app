@@ -4,12 +4,13 @@
 
 #pragma once
 
+#include <array>
+#include <vector>
+
 namespace zc_app
 {
     class font_loader
     {
-        static constexpr int ATLAS_WIDTH = 1024;
-        static constexpr int ATLAS_HEIGHT = 1024;
 
         static constexpr std::array<char, 95> ascii = {
             ' ', '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.',
@@ -22,6 +23,11 @@ namespace zc_app
         };
 
     public:
-        static void load_font(const std::string& name, const unsigned char* buffer, size_t size);
+        static constexpr int ATLAS_WIDTH = 1024;
+        static constexpr int ATLAS_HEIGHT = 1024;
+
+        static void push_font(const std::string &name, std::vector<int8_t> provided_data);
+
+        static void load_font(const std::string &name);
     };
 }

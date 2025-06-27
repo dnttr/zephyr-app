@@ -5,14 +5,18 @@
 #include "ZCApp/graphics/shapes/rectangle.hpp"
 
 #include "ZCApp/graphics/utils/perspective_util.hpp"
+#include "ZCGKit/external.hpp"
 
 namespace zc_app
 {
     rectangle::~rectangle()
     {
-        glDeleteVertexArrays(1, &vao);
-        glDeleteBuffers(1, &vbo);
-        glDeleteBuffers(1, &ebo);
+        if (zcg_kit::external::is_context_valid())
+        {
+            glDeleteVertexArrays(1, &vao);
+            glDeleteBuffers(1, &vbo);
+            glDeleteBuffers(1, &ebo);
+        }
     }
 
     void rectangle::setup_uniforms()
