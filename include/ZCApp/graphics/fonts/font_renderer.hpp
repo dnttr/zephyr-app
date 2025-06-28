@@ -7,8 +7,6 @@
 #include "font_manager.hpp"
 #include "ZCApp/graphics/shaders/shaders.hpp"
 #include "ZCApp/graphics/utils/colour.hpp"
-#include "ZCApp/graphics/utils/perspective_util.hpp"
-#include <hb.h>
 
 namespace zc_app
 {
@@ -30,10 +28,22 @@ namespace zc_app
         inline static GLint smoothing;
         inline static GLint outlineWidth;
         inline static GLint shadowOffset;
+        inline static GLint useEffects;
+        inline static GLint totalChars;
+        inline static GLint charIndex;
+        inline static GLint variation;
+        inline static GLint position;
+        inline static GLint saturation;
+        inline static GLint time_u;
+        inline static GLint speed;
+        inline static GLint glowRadius;
+        inline static GLint glowIntensity;
+        inline static GLint glowColor;
+        inline static GLint useGlow;
 
         inline static bool setup_x;
 
-        static void setup();
+        static void setup(const std::string &name);
     public:
 
         static void render(font_manager::font &font, const std::string &text, float x, float y, float f_scale, const colour &color);

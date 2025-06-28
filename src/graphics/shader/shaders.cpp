@@ -5,6 +5,7 @@
 #include "ZCApp/graphics/shaders/shaders.hpp"
 
 #include <iostream>
+#include <ZNBKit/debug.hpp>
 
 namespace zc_app
 {
@@ -84,6 +85,7 @@ namespace zc_app
             std::vector<char> infoLog(length);
 
             glGetProgramInfoLog(program, length, nullptr, infoLog.data());
+            debug_print(infoLog.data());
 
             glDeleteProgram(program);
 
