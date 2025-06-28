@@ -43,7 +43,7 @@ namespace zc_app
             smoothing = glGetUniformLocation(program, "smoothing");
             outlineWidth = glGetUniformLocation(program, "outlineWidth");
             shadowOffset = glGetUniformLocation(program, "shadowOffset");
-            
+
             glGenVertexArrays(1, &vao);
             glGenBuffers(1, &ebo);
             glGenBuffers(1, &vbo);
@@ -84,7 +84,7 @@ namespace zc_app
 
             glUniformMatrix4fv(projection, 1, GL_FALSE, proj);
 
-            glUniform1f(smoothing, 0.1f);
+            glUniform1f(smoothing, 0.01f);
             glUniform1f(outlineWidth, 0.0f);
             glUniform2f(shadowOffset, 0.0f, 0.0f);
             glUniform4f(outlineColor, 0.0f, 0.0f, 0.0f, 0.5f);

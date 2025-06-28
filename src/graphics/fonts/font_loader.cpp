@@ -99,6 +99,7 @@ namespace zc_app
 
             FT_GlyphSlot slot = face->glyph;
 
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
             for (char value : ascii)
             {
                 if (FT_Load_Char(face, value, FT_LOAD_RENDER))
@@ -142,8 +143,13 @@ namespace zc_app
                     face->glyph->advance.x
                 );
 
+                debug_print("Character '" + std::string(1, value) + "': atlas_pos(" +
+           std::to_string(current_x) + "," + std::to_string(current_y) +
+           ") size(" + std::to_string(width) + "," + std::to_string(height) + ")");
+
                 current_x += width;
             }
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
             glBindTexture(GL_TEXTURE_2D, 0);
             FT_Done_Face(face);
