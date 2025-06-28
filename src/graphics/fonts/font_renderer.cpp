@@ -32,6 +32,7 @@ void zc_app::font_renderer::setup(const std::string &name) {
     glowRadius = glGetUniformLocation(program, "glowRadius");
     glowIntensity = glGetUniformLocation(program, "glowIntensity");
     useGlow = glGetUniformLocation(program, "useGlow");
+    scale_u = glGetUniformLocation(program, "scale");
 
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &ebo);

@@ -40,6 +40,7 @@ namespace zc_app
         inline static GLint glowIntensity;
         inline static GLint glowColor;
         inline static GLint useGlow;
+        inline static GLint scale_u;
 
         inline static bool setup_x;
 
