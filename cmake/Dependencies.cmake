@@ -4,6 +4,7 @@ find_package(glm REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(Catch2 REQUIRED)
+find_package(harfbuzz REQUIRED)
 
 function(configure_apple_platform)
     if(APPLE)
@@ -71,4 +72,5 @@ set(COMMON_LIBS
         glm::glm
         Freetype::Freetype
         Catch2::Catch2
+        harfbuzz::harfbuzz
 )

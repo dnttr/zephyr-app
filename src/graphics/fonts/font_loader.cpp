@@ -6,6 +6,7 @@
 
 #include <string>
 #include <vector>
+#include <hb-ft.h>
 
 #include "ZCApp/graphics/fonts/font_manager.hpp"
 #include "ZCGKit/external.hpp"
@@ -35,13 +36,10 @@ namespace zc_app
 
     void font_loader::load_font(const std::string& name)
     {
-        const auto font_data = buffers.find(name)->second;
+        const auto& font_data = buffers.at(name);
         const size_t size = font_data.size();
 
-        const std::unique_ptr<unsigned char[]> buffer(new unsigned char[size]);
-        std::memcpy(buffer.get(), font_data.data(), size);
-
-        if (buffer && size > 0)
+        if (size > 0)
         {
             if (font_manager::fonts_map.contains(name))
             {
@@ -49,32 +47,28 @@ namespace zc_app
             }
 
             FT_Face face;
-
-            if (FT_New_Memory_Face(font_manager::ft, buffer.get(), static_cast<FT_Long>(size), 0, &face))
+            if (FT_New_Memory_Face(font_manager::ft, reinterpret_cast<const FT_Byte*>(font_data.data()), static_cast<FT_Long>(size), 0, &face))
             {
-                if (font_manager::ft == nullptr)
-                {
-                    debug_print_cerr("FreeType library is not initialized.");
-                    return;
-                }
-
                 debug_print_cerr("unable to create FreeType face for font: " + name);
                 return;
             }
 
+            font_manager::faces[name] = face;
+
             if (FT_Set_Pixel_Sizes(face, 0, 64))
             {
                 debug_print_cerr("unable to set pixel size for font: " + name);
-                FT_Done_Face(face);
                 return;
             }
 
             font_manager::font new_font;
 
+            new_font.hb_font = hb_ft_font_create(face, nullptr);
+
             glGenTextures(1, &new_font.atlas_texture_id);
             glBindTexture(GL_TEXTURE_2D, new_font.atlas_texture_id);
 
-            std::vector<unsigned char> atlas_data(ATLAS_WIDTH * ATLAS_HEIGHT, 0);
+            const std::vector<unsigned char> atlas_data(ATLAS_WIDTH * ATLAS_HEIGHT, 0);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, ATLAS_WIDTH, ATLAS_HEIGHT, 0, GL_RED,
                          GL_UNSIGNED_BYTE, atlas_data.data());
 
@@ -94,22 +88,23 @@ namespace zc_app
             int current_y = 0;
             int row_height = 0;
 
-            FT_Int major, minor, patch;
-
-            FT_Library_Version(font_manager::ft, &major, &minor, &patch);
-            debug_print("FreeType version: " + std::to_string(major) + "." + std::to_string(minor) + "." + std::to_string(patch));
-
-            FT_GlyphSlot slot = face->glyph;
-
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
             for (char value : ascii)
             {
-                if (FT_Load_Char(face, value, FT_LOAD_RENDER))
+                const FT_UInt glyph_index = FT_Get_Char_Index(face, value);
+                if (glyph_index == 0) continue;
+
+                if (FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER))
                 {
-                    debug_print_cerr("unable to load character '" + std::string(1, value) + "' for font: " + name);
+                    debug_print_cerr("unable to load glyph for character '" + std::string(1, value) + "' for font: " + name);
+                    continue;
                 }
 
-                FT_Render_Glyph(slot, FT_RENDER_MODE_SDF);
+                if (FT_Render_Glyph(face->glyph, FT_RENDER_MODE_SDF))
+                {
+                    debug_print_cerr("unable to render SDF for character '" + std::string(1, value) + "' for font: " + name);
+                    continue;
+                }
 
                 int width = face->glyph->bitmap.width;
                 int height = face->glyph->bitmap.rows;
@@ -135,26 +130,20 @@ namespace zc_app
                 {
                     glTexSubImage2D(GL_TEXTURE_2D, 0, current_x, current_y, width, height, GL_RED, GL_UNSIGNED_BYTE,
                 face->glyph->bitmap.buffer);
-
                 }
 
-                new_font.characters_map[value] = font_manager::character(
+                new_font.characters_map[glyph_index] = font_manager::character(
                     {current_x, current_y},
                     {width, height},
                     {face->glyph->bitmap_left, face->glyph->bitmap_top},
                     face->glyph->advance.x
                 );
 
-                debug_print("Character '" + std::string(1, value) + "': atlas_pos(" +
-           std::to_string(current_x) + "," + std::to_string(current_y) +
-           ") size(" + std::to_string(width) + "," + std::to_string(height) + ")");
-
                 current_x += width;
             }
             glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
             glBindTexture(GL_TEXTURE_2D, 0);
-            FT_Done_Face(face);
 
             font_manager::fonts_map[name] = std::move(new_font);
         }

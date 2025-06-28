@@ -28,7 +28,7 @@ namespace zc_app
     void renderer::initialize()
     {
         font_manager::initialize();
-        font_loader::load_font("Roboto_Condensed-Medium");
+        font_loader::load_font("Roboto-Regular");
 
         glClearColor(0.2F, 0.2F, 0.2F, 1.0F);
 
@@ -50,8 +50,10 @@ namespace zc_app
             static_cast<GLsizei>(cfg.viewport_width),
             static_cast<GLsizei>(cfg.viewport_height));
 
-        auto font = font_manager::get_font("Roboto_Condensed-Medium");
-        font_renderer::render(font, "Test", 200, 200, 1, c);
+        auto font = font_manager::get_font("Roboto-Regular");
+        font_renderer::render(font, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", 0, 100, 1, c);
+        font_renderer::render(font, "abcdefghijklmnopqrstuvwxyz", 0, 200, 1, c);
+        font_renderer::render(font, "123456789", 0, 300, 1, c);
 
      //   rect.draw();
        // fan.draw();

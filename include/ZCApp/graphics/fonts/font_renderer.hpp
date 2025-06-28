@@ -3,10 +3,12 @@
 //
 
 #pragma once
+
 #include "font_manager.hpp"
 #include "ZCApp/graphics/shaders/shaders.hpp"
 #include "ZCApp/graphics/utils/colour.hpp"
 #include "ZCApp/graphics/utils/perspective_util.hpp"
+#include <hb.h>
 
 namespace zc_app
 {
@@ -77,11 +79,22 @@ namespace zc_app
                 return;
             }
 
+            hb_buffer_t *buf = hb_buffer_create();
+            hb_buffer_add_utf8(buf, text.c_str(), -1, 0, -1);
+            hb_buffer_set_direction(buf, HB_DIRECTION_LTR);
+            hb_buffer_set_script(buf, HB_SCRIPT_LATIN);
+            hb_buffer_set_language(buf, hb_language_from_string("en", -1));
+
+            hb_shape(font.hb_font, buf, nullptr, 0);
+
+            unsigned int glyph_count;
+            hb_glyph_info_t *glyph_info = hb_buffer_get_glyph_infos(buf, &glyph_count);
+            hb_glyph_position_t *glyph_pos = hb_buffer_get_glyph_positions(buf, &glyph_count);
+
             glUseProgram(program);
             glUniform1i(fontAtlas, 0);
 
             auto proj = perspective_util::get_projection_matrix();
-
             glUniformMatrix4fv(projection, 1, GL_FALSE, proj);
 
             glUniform1f(smoothing, 0.01f);
@@ -93,87 +106,58 @@ namespace zc_app
             glUniform4f(textColor, color.get_red_direct(), color.get_green_direct(), color.get_blue_direct(),
                        color.get_alpha_direct());
 
-
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, font.atlas_texture_id);
 
             std::vector<float> vertices;
-            vertices.reserve(text.size() * 6 * 4);
+            vertices.reserve(glyph_count * 6 * 4);
 
-            float cursor_x = x;
-            float cursor_y = y;
+            float c_x = x;
+            float c_y = y;
 
-            for (char c : text)
+            for (unsigned int i = 0; i < glyph_count; i++)
             {
-                auto it = font.characters_map.find(c);
+                const hb_codepoint_t glyph_index = glyph_info[i].codepoint;
+                const auto it = font.characters_map.find(glyph_index);
 
-                if (it == font.characters_map.end())
-                {
-                    continue;
-                }
+                if (it == font.characters_map.end()) continue;
 
                 auto character = it->second;
 
-                float xpos = cursor_x + character.bearing.x * f_scale;
-                float ypos = cursor_y - (character.size.y) * f_scale;
-                float w = character.size.x * f_scale;
-                float h = character.size.y * f_scale;
+                const float xpos = c_x + (glyph_pos[i].x_offset / 64.0f) * f_scale + character.bearing.x * f_scale;
+                const float ypos = c_y - (character.bearing.y - (glyph_pos[i].y_offset / 64.0f)) * f_scale;
 
-                float tex_x = static_cast<float>(character.atlas_offset.x) / font_loader::ATLAS_WIDTH;
-                float tex_y = static_cast<float>(character.atlas_offset.y) / font_loader::ATLAS_HEIGHT;
-                float tex_w = static_cast<float>(character.atlas_offset.x + character.size.x) / font_loader::ATLAS_WIDTH;
-                float tex_h = static_cast<float>(character.atlas_offset.y + character.size.y) / font_loader::ATLAS_HEIGHT;
+                const float w = character.size.x * f_scale;
+                const float h = character.size.y * f_scale;
 
-                // 1   1
-                //
-                // 1
+                const float tex_x = static_cast<float>(character.atlas_offset.x) / font_loader::ATLAS_WIDTH;
+                const float tex_y = static_cast<float>(character.atlas_offset.y) / font_loader::ATLAS_HEIGHT;
+                const float tex_w = static_cast<float>(character.size.x) / font_loader::ATLAS_WIDTH;
+                const float tex_h = static_cast<float>(character.size.y) / font_loader::ATLAS_HEIGHT;
 
-                //FIRST TRIANGLE
-                // bottom left
-                vertices.push_back(xpos);           vertices.push_back(ypos);           vertices.push_back(tex_x);      vertices.push_back(tex_y);
-                //top left
-                vertices.push_back(xpos);           vertices.push_back(ypos + h);     vertices.push_back(tex_x);      vertices.push_back(tex_h);
-                //top right
-                vertices.push_back(xpos + w);     vertices.push_back(ypos + h);     vertices.push_back(tex_w);      vertices.push_back(tex_h);
+                vertices.insert(vertices.end(), {xpos,     ypos,     tex_x,         tex_y        });
+                vertices.insert(vertices.end(), {xpos + w, ypos,     tex_x + tex_w, tex_y        });
+                vertices.insert(vertices.end(), {xpos + w, ypos + h, tex_x + tex_w, tex_y + tex_h});
 
-                //SECOND TRIANGLE
+                vertices.insert(vertices.end(), {xpos,     ypos,     tex_x,         tex_y        });
+                vertices.insert(vertices.end(), {xpos + w, ypos + h, tex_x + tex_w, tex_y + tex_h});
+                vertices.insert(vertices.end(), {xpos,     ypos + h, tex_x,         tex_y + tex_h});
 
-                //      2
-                //
-                // 2    2
-
-                //bottom left
-                vertices.push_back(xpos);          vertices.push_back(ypos);            vertices.push_back(tex_x);      vertices.push_back(tex_y);
-                //bottom right
-                vertices.push_back(xpos + w);    vertices.push_back(ypos);            vertices.push_back(tex_w);      vertices.push_back(tex_y);
-                //top right
-                vertices.push_back(xpos + w);    vertices.push_back(ypos + h);      vertices.push_back(tex_w);      vertices.push_back(tex_h);
-
-                cursor_x += (character.advance >> 6) * f_scale;
+                c_x += (glyph_pos[i].x_advance / 64.0f) * f_scale;
+                c_y += (glyph_pos[i].y_advance / 64.0f) * f_scale;
             }
 
             if (!vertices.empty())
             {
-
                 glBindVertexArray(vao);
                 glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-                GLint bufferSize;
-                glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &bufferSize);
-
-                if (vertices.size() * sizeof(float) > static_cast<size_t>(bufferSize))
-                {
-                    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
-                }
-                else
-                {
-                    glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(float), vertices.data());
-                }
-
+                glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
                 glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 4);
                 glBindBuffer(GL_ARRAY_BUFFER, 0);
                 glBindVertexArray(0);
             }
+            
+            hb_buffer_destroy(buf);
 
             glBindTexture(GL_TEXTURE_2D, 0);
             glUseProgram(0);
