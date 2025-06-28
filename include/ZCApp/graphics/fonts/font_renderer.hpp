@@ -115,7 +115,7 @@ namespace zc_app
                 auto character = it->second;
 
                 float xpos = cursor_x + character.bearing.x * f_scale;
-                float ypos = cursor_y - (character.size.y - character.bearing.y) * f_scale;
+                float ypos = cursor_y - (character.size.y) * f_scale;
                 float w = character.size.x * f_scale;
                 float h = character.size.y * f_scale;
 
