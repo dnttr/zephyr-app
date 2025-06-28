@@ -17,7 +17,7 @@ add_executable(zephyr-app
         src/graphics/renderer.cpp
         src/graphics/window.cpp
         src/graphics/utils/perspective_util.cpp
-        src/graphics/shapes/rectangle.cpp
+        src/graphics/objects/shapes/rectangle.cpp
         src/graphics/textures/texture_loader.cpp
         src/graphics/textures/texture_manager.cpp
         src/graphics/textures/quad_texture.cpp
@@ -25,6 +25,7 @@ add_executable(zephyr-app
         src/graphics/fonts/font_manager.cpp
         src/graphics/fonts/font_loader.cpp
         src/graphics/fonts/font_renderer.cpp
+        src/graphics/objects/text.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE include)

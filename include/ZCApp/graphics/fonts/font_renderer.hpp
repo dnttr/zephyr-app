@@ -40,11 +40,15 @@ namespace zc_app
         inline static GLint glowIntensity;
         inline static GLint glowColor;
         inline static GLint useGlow;
-        inline static GLint scale_u;
+        inline static GLint maxScale;
+        inline static GLint startingScale;
+        inline static GLint speedScaling;
+        inline static GLint revealSpeed;
+        inline static GLint revealDirection;
 
         inline static bool setup_x;
 
-        static void setup(const std::string &name);
+        static void setup();
     public:
 
         static void render(font_manager::font &font, const std::string &text, float x, float y, float f_scale, const colour &color);

@@ -10,7 +10,7 @@
 #include "ZCApp/graphics/fonts/font_loader.hpp"
 #include "ZCApp/graphics/utils/perspective_util.hpp"
 
-void zc_app::font_renderer::setup(const std::string &name) {
+void zc_app::font_renderer::setup() {
     program = shaders::create_program("text_vert", "text_frag");
 
     projection = glGetUniformLocation(program, "projection");
@@ -32,7 +32,9 @@ void zc_app::font_renderer::setup(const std::string &name) {
     glowRadius = glGetUniformLocation(program, "glowRadius");
     glowIntensity = glGetUniformLocation(program, "glowIntensity");
     useGlow = glGetUniformLocation(program, "useGlow");
-    scale_u = glGetUniformLocation(program, "scale");
+    maxScale = glGetUniformLocation(program, "maxScale");
+    startingScale = glGetUniformLocation(program, "startingScale");
+    speedScaling = glGetUniformLocation(program, "speedScaling");
 
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &ebo);
@@ -64,7 +66,7 @@ void zc_app::font_renderer::render(font_manager::font &font, const std::string &
     const colour &color) {
     if (!setup_x)
     {
-        setup(text);
+        setup();
     }
 
     if (program == -1 || program == 0) {
@@ -105,6 +107,9 @@ void zc_app::font_renderer::render(font_manager::font &font, const std::string &
     glUniform1f(glowRadius, 0.25f);
     glUniform1f(glowIntensity, 1.0f);
     glUniform1i(useGlow, 1);
+    glUniform1f(maxScale, 1.0f);
+    glUniform1f(startingScale, 1.0f);
+    glUniform1f(speedScaling, 0.5f);
 
     auto currentTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<float> elapsed = currentTime - startTime;
@@ -144,10 +149,9 @@ void zc_app::font_renderer::render(font_manager::font &font, const std::string &
         hb_glyph_info_t *glyph_info = hb_buffer_get_glyph_infos(buf, &glyph_count);
         hb_glyph_position_t *glyph_pos = hb_buffer_get_glyph_positions(buf, &glyph_count);
 
+
         for (int i = 0; i < glyph_count; i++)
         {
-            glUniform1i(charIndex, i);
-
             const hb_codepoint_t glyph_index = glyph_info[i].codepoint;
             const auto it = font.characters_map.find(glyph_index);
 
