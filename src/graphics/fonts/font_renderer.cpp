@@ -4,6 +4,8 @@
 
 #include "ZCApp/graphics/fonts/font_renderer.hpp"
 
+#include <sstream>
+
 #include "ZCApp/graphics/fonts/font_loader.hpp"
 
 void zc_app::font_renderer::setup() {
@@ -51,17 +53,13 @@ void zc_app::font_renderer::render(font_manager::font &font, const std::string &
         return;
     }
 
-    hb_buffer_t *buf = hb_buffer_create();
-    hb_buffer_add_utf8(buf, text.c_str(), -1, 0, -1);
-    hb_buffer_set_direction(buf, HB_DIRECTION_LTR);
-    hb_buffer_set_script(buf, HB_SCRIPT_LATIN);
-    hb_buffer_set_language(buf, hb_language_from_string("en", -1));
+    std::vector<std::string> lines;
+    std::stringstream ss(text);
+    std::string line;
 
-    hb_shape(font.hb_font, buf, nullptr, 0);
-
-    unsigned int glyph_count;
-    hb_glyph_info_t *glyph_info = hb_buffer_get_glyph_infos(buf, &glyph_count);
-    hb_glyph_position_t *glyph_pos = hb_buffer_get_glyph_positions(buf, &glyph_count);
+    while (std::getline(ss, line, '\n')) {
+        lines.push_back(line);
+    }
 
     glUseProgram(program);
     glUniform1i(fontAtlas, 0);
@@ -70,9 +68,9 @@ void zc_app::font_renderer::render(font_manager::font &font, const std::string &
     glUniformMatrix4fv(projection, 1, GL_FALSE, proj);
 
     glUniform1f(smoothing, 0.01f);
-    glUniform1f(outlineWidth, 0.0f);
-    glUniform2f(shadowOffset, 0.0f, 0.0f);
-    glUniform4f(outlineColor, 0.0f, 0.0f, 0.0f, 0.5f);
+    glUniform1f(outlineWidth, 2.0f);
+    glUniform2f(shadowOffset, 4.0f, 4.0f);
+    glUniform4f(outlineColor, 0.0f, 0.0f, 0.0f, 1.0f);
     glUniform4f(shadowColor, 0.0f, 0.0f, 0.0f, 0.5f);
 
     glUniform4f(textColor, color.get_red_direct(), color.get_green_direct(), color.get_blue_direct(),
@@ -82,41 +80,74 @@ void zc_app::font_renderer::render(font_manager::font &font, const std::string &
     glBindTexture(GL_TEXTURE_2D, font.atlas_texture_id);
 
     std::vector<float> vertices;
-    vertices.reserve(glyph_count * 6 * 4);
 
-    float c_x = x;
-    float c_y = y;
+    size_t total = 0;
+    for (auto str : lines) {
+        total += str.length();
+    }
 
-    for (unsigned int i = 0; i < glyph_count; i++)
-    {
-        const hb_codepoint_t glyph_index = glyph_info[i].codepoint;
-        const auto it = font.characters_map.find(glyph_index);
+    vertices.reserve(total * 6 * 4);
 
-        if (it == font.characters_map.end()) continue;
+    std::vector<unsigned int> indices;
+    indices.reserve(total * 6);
 
-        auto character = it->second;
+    unsigned int vertex_offset = 0;
 
-        const float xpos = c_x + (glyph_pos[i].x_offset / 64.0f) * f_scale + character.bearing.x * f_scale;
-        const float ypos = c_y - (character.bearing.y - (glyph_pos[i].y_offset / 64.0f)) * f_scale;
+    float another_y = y;
 
-        const float w = character.size.x * f_scale;
-        const float h = character.size.y * f_scale;
+    for (auto line : lines) {
+        float c_x = x;
+        float c_y = another_y;
 
-        const float tex_x = static_cast<float>(character.atlas_offset.x) / font_loader::ATLAS_WIDTH;
-        const float tex_y = static_cast<float>(character.atlas_offset.y) / font_loader::ATLAS_HEIGHT;
-        const float tex_w = static_cast<float>(character.size.x) / font_loader::ATLAS_WIDTH;
-        const float tex_h = static_cast<float>(character.size.y) / font_loader::ATLAS_HEIGHT;
+        hb_buffer_t *buf = hb_buffer_create();
+        hb_buffer_add_utf8(buf, line.c_str(), -1, 0, -1);
+        hb_buffer_set_direction(buf, HB_DIRECTION_LTR);
+        hb_buffer_set_script(buf, HB_SCRIPT_LATIN);
+        hb_buffer_set_language(buf, hb_language_from_string("en", -1));
 
-        vertices.insert(vertices.end(), {xpos,     ypos,     tex_x,         tex_y        });
-        vertices.insert(vertices.end(), {xpos + w, ypos,     tex_x + tex_w, tex_y        });
-        vertices.insert(vertices.end(), {xpos + w, ypos + h, tex_x + tex_w, tex_y + tex_h});
+        hb_shape(font.hb_font, buf, nullptr, 0);
 
-        vertices.insert(vertices.end(), {xpos,     ypos,     tex_x,         tex_y        });
-        vertices.insert(vertices.end(), {xpos + w, ypos + h, tex_x + tex_w, tex_y + tex_h});
-        vertices.insert(vertices.end(), {xpos,     ypos + h, tex_x,         tex_y + tex_h});
+        unsigned int glyph_count;
+        hb_glyph_info_t *glyph_info = hb_buffer_get_glyph_infos(buf, &glyph_count);
+        hb_glyph_position_t *glyph_pos = hb_buffer_get_glyph_positions(buf, &glyph_count);
 
-        c_x += (glyph_pos[i].x_advance / 64.0f) * f_scale;
-        c_y += (glyph_pos[i].y_advance / 64.0f) * f_scale;
+        for (unsigned int i = 0; i < glyph_count; i++)
+        {
+            const hb_codepoint_t glyph_index = glyph_info[i].codepoint;
+            const auto it = font.characters_map.find(glyph_index);
+
+            if (it == font.characters_map.end()) continue;
+
+            auto character = it->second;
+
+            const float xpos = c_x + (glyph_pos[i].x_offset / 64.0f) * f_scale + character.bearing.x * f_scale;
+            const float ypos = c_y - (character.bearing.y - (glyph_pos[i].y_offset / 64.0f)) * f_scale;
+
+            const float w = character.size.x * f_scale;
+            const float h = character.size.y * f_scale;
+
+            const float tex_x = static_cast<float>(character.atlas_offset.x) / font_loader::ATLAS_WIDTH;
+            const float tex_y = static_cast<float>(character.atlas_offset.y) / font_loader::ATLAS_HEIGHT;
+            const float tex_w = static_cast<float>(character.size.x) / font_loader::ATLAS_WIDTH;
+            const float tex_h = static_cast<float>(character.size.y) / font_loader::ATLAS_HEIGHT;
+
+            vertices.insert(vertices.end(), {xpos,     ypos,     tex_x,         tex_y        });
+            vertices.insert(vertices.end(), {xpos + w, ypos,     tex_x + tex_w, tex_y        });
+            vertices.insert(vertices.end(), {xpos + w, ypos + h, tex_x + tex_w, tex_y + tex_h});
+            vertices.insert(vertices.end(), {xpos,     ypos + h, tex_x,         tex_y + tex_h});
+
+
+            indices.insert(indices.end(), {vertex_offset, vertex_offset + 1, vertex_offset + 2});
+            indices.insert(indices.end(), {vertex_offset, vertex_offset + 2, vertex_offset + 3});
+
+            c_x += (glyph_pos[i].x_advance / 64.0f) * f_scale;
+            c_y += (glyph_pos[i].y_advance / 64.0f) * f_scale;
+
+            vertex_offset += 4;
+        }
+
+        another_y += f_scale * 64.0f;
+        hb_buffer_destroy(buf);
     }
 
     if (!vertices.empty())
@@ -124,12 +155,14 @@ void zc_app::font_renderer::render(font_manager::font &font, const std::string &
         glBindVertexArray(vao);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
-        glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 4);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_DYNAMIC_DRAW);
+
+        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }
-
-    hb_buffer_destroy(buf);
 
     glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
