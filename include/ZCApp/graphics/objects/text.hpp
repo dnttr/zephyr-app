@@ -56,6 +56,8 @@ namespace zc_app
             properties.total_characters = size;
             properties.startTime = std::chrono::steady_clock::now();
 
+            this->style = style;
+
             font_renderer::set_parameters(this->style, text_props, transform_props, properties);
         }
 

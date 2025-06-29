@@ -108,7 +108,7 @@ void zc_app::font_renderer::set_parameters(const text_style &style, text_propert
         style.text_color.get_alpha_direct()
     );
 
-    text_props.text_shadow_enable = style.shadow_enable ? 1 : 0;
+    text_props.text_shadow_enable = style.shadow_enable;
     text_props.text_shadow_color = glm::vec4(
         style.shadow_color.get_red_direct(),
         style.shadow_color.get_green_direct(),
@@ -118,7 +118,7 @@ void zc_app::font_renderer::set_parameters(const text_style &style, text_propert
 
     text_props.text_shadow_offset = glm::vec2(style.shadow_offset.first, style.shadow_offset.second);
 
-    text_props.text_outline_enable = style.outline_enable ? 1 : 0;
+    text_props.text_outline_enable = style.outline_enable;
     text_props.text_outline_color = glm::vec4(
         style.outline_color.get_red_direct(),
         style.outline_color.get_green_direct(),
@@ -127,7 +127,7 @@ void zc_app::font_renderer::set_parameters(const text_style &style, text_propert
     );
     text_props.text_outline_width = style.outline_width;
 
-    text_props.text_glow_enable = style.glow_enable ? 1 : 0;
+    text_props.text_glow_enable = style.glow_enable;
     text_props.text_glow_radius = style.glow_radius;
     text_props.text_glow_intensity = style.glow_intensity;
     text_props.text_glow_color = glm::vec4(
@@ -137,7 +137,7 @@ void zc_app::font_renderer::set_parameters(const text_style &style, text_propert
         style.glow_color.get_alpha_direct()
     );
 
-    text_props.text_rainbow_enable = style.rainbow_enable ? 1 : 0;
+    text_props.text_rainbow_enable = style.rainbow_enable;
     text_props.text_rainbow_speed = style.rainbow_speed;
     text_props.text_rainbow_variation = style.rainbow_variation;
     text_props.text_rainbow_saturation = style.rainbow_saturation;
