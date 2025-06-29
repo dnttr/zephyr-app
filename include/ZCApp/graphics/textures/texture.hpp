@@ -19,11 +19,11 @@ namespace zc_app
     {
         void fetch_uniforms()
         {
-            m_projection_uniform = glGetUniformLocation(m_program, "projection_matrix");
-            m_texture_uniform = glGetUniformLocation(m_program, "tex");
-            m_position_uniform = glGetUniformLocation(m_program, "tex_position");
-            m_size_uniform = glGetUniformLocation(m_program, "tex_size");
-            m_alpha_uniform = glGetUniformLocation(m_program, "tex_alpha");
+            u_projection = glGetUniformLocation(program, "projection_matrix");
+            u_texture = glGetUniformLocation(program, "tex");
+            u_position = glGetUniformLocation(program, "tex_position");
+            u_size = glGetUniformLocation(program, "tex_size");
+            u_alpha = glGetUniformLocation(program, "tex_alpha");
         }
 
         bool update = false;
@@ -34,26 +34,26 @@ namespace zc_app
         inline static int m_scale = 4;
 
         GLuint m_texture{};
-        GLuint m_program{};
+        GLuint program{};
 
         container m_container;
 
         std::string m_name;
 
-        GLint m_projection_uniform{};
-        GLint m_texture_uniform{};
-        GLint m_position_uniform{};
-        GLint m_size_uniform{};
-        GLint m_alpha_uniform{};
+        GLint u_projection{};
+        GLint u_texture{};
+        GLint u_position{};
+        GLint u_size{};
+        GLint u_alpha{};
 
         virtual void setup_uniforms(const float x, const float y, const float width, const float height)
         {
-            glUniformMatrix4fv(m_projection_uniform, 1, GL_FALSE, perspective_util::get_projection_matrix());
+            glUniformMatrix4fv(u_projection, 1, GL_FALSE, perspective_util::get_projection_matrix());
 
-            glUniform1i(m_texture_uniform, 0);
-            glUniform2f(m_position_uniform, x, y);
-            glUniform2f(m_size_uniform, width, height);
-            glUniform1f(m_alpha_uniform, 1.0f);
+            glUniform1i(u_texture, 0);
+            glUniform2f(u_position, x, y);
+            glUniform2f(u_size, width, height);
+            glUniform1f(u_alpha, 1.0f);
         }
 
         virtual void render() = 0;
@@ -69,7 +69,7 @@ namespace zc_app
 
         void draw()
         {
-            if (m_texture == 0 || m_program == 0)
+            if (m_texture == 0 || program == 0)
             {
                 setup();
 
@@ -83,13 +83,13 @@ namespace zc_app
                 m_container.set_height(static_cast<float>(scaled_height));
 
                 m_texture = tex_id;
-                m_program = shaders::create_program("texture_vert", "texture_frag");
+                program = shaders::create_program("texture_vert", "texture_frag");
                 fetch_uniforms();
 
                 update = true;
             }
 
-            glUseProgram(m_program);
+            glUseProgram(program);
 
             if (update)
             {

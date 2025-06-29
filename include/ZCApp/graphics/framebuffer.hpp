@@ -10,16 +10,37 @@ namespace zc_app
 {
     class framebuffer
     {
-        GLuint fbo = 0;
-        GLuint texture = 0;
-        GLuint rbo = 0;
+        static inline GLuint program{};
+
+        static inline GLint u_projection{};
+        static inline GLint u_texture{};
+        static inline GLint u_position{};
+        static inline GLint u_size{};
+        static inline GLint u_alpha{};
+
+        GLuint fbo{};
+        GLuint texture{};
+        GLuint rbo{};
+
+        GLuint vao{};
+        GLuint vbo{};
+        GLuint ebo{};
 
         int width = 0;
         int height = 0;
 
+        static void setup_program();
+        static void fetch_uniforms();
+        static void setup_uniforms(float x, float y, float width, float height);
+
+        bool need_update = true;
+
     public:
+        framebuffer() = default;
         framebuffer(const framebuffer &) = delete;
         framebuffer &operator=(const framebuffer &) = delete;
+
+        void draw();
 
         void setup(int width, int height);
 

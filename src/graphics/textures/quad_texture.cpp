@@ -17,6 +17,7 @@ namespace zc_app
 
         glGenVertexArrays(1, &vao);
         glGenBuffers(1, &vbo);
+        glGenBuffers(1, &ebo);
 
         glBindVertexArray(vao);
 
