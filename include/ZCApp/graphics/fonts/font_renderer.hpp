@@ -26,12 +26,12 @@ namespace zc_app
             glm::vec4 text_color;
 
             int text_shadow_enable;
-            float _pad0[3]; // Padding for text_shadow_color
+            float _pad0[3]; // Padding
             glm::vec4 text_shadow_color;
             glm::vec2 text_shadow_offset;
 
             int text_outline_enable;
-            float _pad1[1]; // Padding for text_outline_color
+            float _pad1[1]; // Padding
             glm::vec4 text_outline_color;
             float text_outline_width;
 
@@ -54,7 +54,7 @@ namespace zc_app
             float begin_text_scale;
             float end_text_scale;
             float speed_text_scale;
-            float _pad0[3];
+            float _pad0[3]; //Padding
         };
     private:
         inline static GLuint program;
