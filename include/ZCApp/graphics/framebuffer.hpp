@@ -25,8 +25,10 @@ namespace zc_app
 
         void resize(int new_width, int new_height);
 
-        void bind();
+        void bind() const;
 
         void unbind();
+
+        void destroy();
     };
 }
