@@ -34,12 +34,11 @@ namespace zc_app
         debug_print("Pushed font: " + name + " with size: " + std::to_string(buffers[name].size()) + " bytes");
     }
 
-    void font_loader::load_font(const std::string& name)
+    void font_loader::load_font(const std::string& name, const int pixel_size)
     {
         const auto& font_data = buffers.at(name);
-        const size_t size = font_data.size();
 
-        if (size > 0)
+        if (const size_t size = font_data.size(); size > 0)
         {
             if (font_manager::fonts_map.contains(name))
             {
@@ -55,7 +54,7 @@ namespace zc_app
 
             font_manager::faces[name] = face;
 
-            if (FT_Set_Pixel_Sizes(face, 0, 64))
+            if (FT_Set_Pixel_Sizes(face, 0, pixel_size))
             {
                 debug_print_cerr("unable to set pixel size for font: " + name);
                 return;
@@ -69,15 +68,14 @@ namespace zc_app
             glBindTexture(GL_TEXTURE_2D, new_font.atlas_texture_id);
 
             const std::vector<unsigned char> atlas_data(ATLAS_WIDTH * ATLAS_HEIGHT, 0);
+
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, ATLAS_WIDTH, ATLAS_HEIGHT, 0, GL_RED,
                          GL_UNSIGNED_BYTE, atlas_data.data());
 
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-            glGenerateMipmap(GL_TEXTURE_2D);
 
             if (const GLint level = zcg_kit::external::has_anisotropic_filtering(); level > 1)
             {
@@ -89,10 +87,15 @@ namespace zc_app
             int row_height = 0;
 
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-            for (char value : ascii)
+
+            for (const wchar_t value : ascii)
             {
                 const FT_UInt glyph_index = FT_Get_Char_Index(face, value);
-                if (glyph_index == 0) continue;
+
+                if (glyph_index == 0)
+                {
+                    continue;
+                }
 
                 if (FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER))
                 {

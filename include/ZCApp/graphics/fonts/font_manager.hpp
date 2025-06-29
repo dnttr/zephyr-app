@@ -5,16 +5,15 @@
 #pragma once
 
 #include <ft2build.h>
+#include <hb.h>
 #include <map>
+#include <ranges>
 #include <unordered_map>
 #include <glm/vec2.hpp>
 #include <OpenGL/gl3.h>
 #include <ZNBKit/debug.hpp>
 
 #include FT_FREETYPE_H
-
-#include <hb.h>
-#include <ranges>
 
 namespace zc_app
 {
@@ -56,6 +55,11 @@ namespace zc_app
             }
 
             return pair->second;
+        }
+
+        ~font_manager()
+        {
+            cleanup();
         }
 
         static void cleanup()

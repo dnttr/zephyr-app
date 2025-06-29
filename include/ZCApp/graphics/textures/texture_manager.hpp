@@ -19,6 +19,7 @@ namespace zc_app
         static void add_texture(const std::string &name, GLuint texture);
 
         static void delete_texture(const std::string &name);
+        ~texture_manager();
 
         static void cleanup();
     };

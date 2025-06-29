@@ -3,6 +3,7 @@
 //
 
 #pragma once
+
 #include <utility>
 
 #include "ZCApp/graphics/utils/colour.hpp"
@@ -31,8 +32,10 @@ namespace zc_app
         float glow_radius = 0.25F;
         float glow_intensity = 1.0F;
 
-        float end_text_scale = 1.0F;
-        float begin_text_scale = 1.0F;
-        float speed_text_scale = 1.0F;
+        float text_animation_scale_end = 1.0F;
+        float text_animation_scale_begin = 1.0F;
+        float text_animation_scale_speed = 1.0F;
+
+        float text_size_magnification = 1.0F;
     };
 }

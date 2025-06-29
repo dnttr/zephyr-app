@@ -10,24 +10,28 @@
 
 namespace zc_app
 {
-    static std::pair<std::vector<std::string>, int> get_lines(const std::string &text)
+    class string_util
     {
-        std::vector<std::string> lines;
-        std::stringstream ss(text);
-        std::string line;
-
-        while (std::getline(ss, line, '\n'))
+    public:
+        static std::pair<std::vector<std::string>, int> get_lines(const std::string &text)
         {
-            lines.push_back(line);
+            std::vector<std::string> lines;
+            std::stringstream ss(text);
+            std::string line;
+
+            while (std::getline(ss, line, '\n'))
+            {
+                lines.push_back(line);
+            }
+
+            size_t total = 0;
+
+            for (const auto &str : lines)
+            {
+                total += str.length();
+            }
+
+            return {lines, static_cast<int>(total)};
         }
-
-        size_t total = 0;
-
-        for (const auto &str : lines)
-        {
-            total += str.length();
-        }
-
-        return {lines, static_cast<int>(total)};
-    }
+    };
 }

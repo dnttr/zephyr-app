@@ -6,8 +6,8 @@
 
 #include <glm/glm.hpp>
 
-#include "font_manager.hpp"
-#include "ZCApp/graphics/objects/text_style.hpp"
+#include "ZCApp/graphics/fonts/font_manager.hpp"
+#include "ZCApp/graphics/objects/text/text_style.hpp"
 #include "ZCApp/graphics/shaders/shaders.hpp"
 
 namespace zc_app
@@ -51,11 +51,13 @@ namespace zc_app
             glm::mat4 projection_matrix;
             float time;
             int total_characters_amount;
-            float begin_text_scale;
-            float end_text_scale;
-            float speed_text_scale;
+            float text_animation_begin;
+            float text_animation_end;
+            float text_animation_speed;
+            float text_magnification;
             float _pad0[3]; //Padding
         };
+
     private:
         inline static GLuint program;
 
@@ -66,7 +68,10 @@ namespace zc_app
         static void update_transform_properties(const transform_properties &properties);
 
         static void setup_ubo();
+
     public:
+        static inline GLint u_atlas;
+
         struct geometry
         {
             GLuint vao;
@@ -89,17 +94,21 @@ namespace zc_app
             std::chrono::steady_clock::time_point startTime;
         };
 
-        static inline GLint u_atlas;
-
-        static void build_shader();
-
-        static geometry build_geometry();
-
-        static void set_parameters(const text_style &style, text_properties &text_props, transform_properties &transform_props, const properties &props);
-
-        static void render(properties &props,
-                           text_properties &text_props, transform_properties &transform_props, const geometry &geom);
+        ~font_renderer();
 
         static GLuint get_program();
+
+        static void build_shader();
+        static geometry build_geometry();
+
+        static void set_parameters(const text_style &style,
+                                   text_properties &text_props,
+                                   transform_properties &transform_props,
+                                   const properties &props);
+
+        static void render(properties &props,
+                           text_properties &text_props,
+                           transform_properties &transform_props,
+                           const geometry &geom);
     };
 }

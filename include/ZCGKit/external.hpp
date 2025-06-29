@@ -5,6 +5,7 @@
 #pragma once
 
 #include <OpenGL/gl3.h>
+#include <OpenGL/OpenGL.h>
 
 #ifndef GL_EXT_texture_filter_anisotropic
 #define GL_TEXTURE_MAX_ANISOTROPY_EXT     0x84FE
@@ -27,10 +28,7 @@ namespace zcg_kit
 
         static bool is_context_valid()
         {
-            GLint context = 0;
-            glGetIntegerv(GL_CURRENT_PROGRAM, &context);
-
-            return glGetError() == GL_NO_ERROR && context >= 0;
+            return CGLGetCurrentContext() != nullptr;
         }
     };
 }

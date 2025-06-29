@@ -22,5 +22,7 @@ namespace zc_app
         void setup() override;
 
         void render() override;
+
+        ~fan_texture() override;
     };
 }

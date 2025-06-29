@@ -21,8 +21,8 @@ namespace zc_app
 
     void rectangle::setup_uniforms()
     {
-        size = glGetUniformLocation(program, "shape_size");
-        radius = glGetUniformLocation(program, "shape_radius");
+        u_size = glGetUniformLocation(program, "shape_size");
+        u_radius = glGetUniformLocation(program, "shape_radius");
     }
 
     void rectangle::setup_shape()
@@ -63,12 +63,12 @@ namespace zc_app
     {
         glUseProgram(program);
 
-        glUniformMatrix4fv(projection, 1, GL_FALSE, perspective_util::get_projection_matrix());
-        glUniform2f(position, m_container.get_x(), m_container.get_y());
-        glUniform2f(size, m_container.get_width(), m_container.get_height());
-        glUniform1f(this->radius, m_radius);
-        glUniform3f(color, m_colour.get_red_direct(), m_colour.get_green_direct(), m_colour.get_blue_direct());
-        glUniform1f(opacity, m_colour.get_alpha_direct());
+        glUniformMatrix4fv(u_projection, 1, GL_FALSE, perspective_util::get_projection_matrix());
+        glUniform2f(u_position, dimension.get_x(), dimension.get_y());
+        glUniform2f(u_size, dimension.get_width(), dimension.get_height());
+        glUniform1f(this->u_radius, radius);
+        glUniform3f(u_color, color.get_red_direct(), color.get_green_direct(), color.get_blue_direct());
+        glUniform1f(u_opacity, color.get_alpha_direct());
 
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
@@ -79,31 +79,31 @@ namespace zc_app
 
     container& rectangle::get_container()
     {
-        return m_container;
+        return dimension;
     }
 
     void rectangle::set_container(const container& new_container)
     {
-        m_container = new_container;
+        dimension = new_container;
     }
 
     colour& rectangle::get_colour()
     {
-        return m_colour;
+        return color;
     }
 
     void rectangle::set_colour(const colour& new_colour)
     {
-        m_colour = new_colour;
+        color = new_colour;
     }
 
     float rectangle::get_radius() const
     {
-        return m_radius;
+        return radius;
     }
 
     void rectangle::set_radius(const float new_radius)
     {
-        m_radius = new_radius;
+        radius = new_radius;
     }
 }

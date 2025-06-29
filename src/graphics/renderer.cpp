@@ -14,10 +14,8 @@
 
 #include "ZCApp/graphics/fonts/font_loader.hpp"
 #include "ZCApp/graphics/fonts/font_manager.hpp"
-#include "ZCApp/graphics/fonts/font_renderer.hpp"
-#include "ZCApp/graphics/objects/text.hpp"
+#include "ZCApp/graphics/objects/text/text.hpp"
 #include "ZCApp/graphics/objects/shapes/rectangle.hpp"
-#include "ZCApp/graphics/textures/fan_texture.hpp"
 #include "ZCApp/graphics/utils/perspective_util.hpp"
 
 namespace zc_app
@@ -30,10 +28,10 @@ namespace zc_app
     void renderer::initialize()
     {
         font_manager::initialize();
-        font_loader::load_font("Roboto-Regular");
+        font_loader::load_font("Roboto-Regular", 128);
         font_manager::font font = font_manager::get_font("Roboto-Regular");
         text_style style;
-        tx.initialize("Hello, World! This is a test of the text rendering system. \n It should be able to handle long lines and multiple lines of text without any issues.", font, style);
+        tx.initialize("Hello, World! This is a test of the text rendering system.\nIt should be able to handle long lines and multiple lines of text without any issues.", container{100.0, 100.0}, font, style);
 
         glClearColor(0.2F, 0.2F, 0.2F, 1.0F);
 

@@ -6,11 +6,7 @@
 
 #include <algorithm>
 #include <stdexcept>
-#include <cmath>
-#include <iostream>
-#include <ostream>
 
-#include "ZCApp/graphics/textures/fan_texture.hpp"
 #include "ZCApp/graphics/textures/fan_texture.hpp"
 
 namespace zc_app

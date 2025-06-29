@@ -12,18 +12,18 @@ namespace zc_app
 {
     class rectangle final : public shape
     {
-        GLint size{};
-        GLint radius{};
+        GLint u_size{};
+        GLint u_radius{};
 
         GLuint vao{}, vbo{}, ebo{};
 
-        container m_container;
-        colour m_colour;
-        float m_radius;
+        container dimension;
+        colour color;
+        float radius;
 
     public:
         rectangle(const container container, const colour shape_colour, const float radius = 0.0F) :
-            shape("rectangle_vert", "rectangle_frag"), m_container(container), m_colour(shape_colour), m_radius(radius)
+            shape("rectangle_vert", "rectangle_frag"), dimension(container), color(shape_colour), radius(radius)
         {
         }
 

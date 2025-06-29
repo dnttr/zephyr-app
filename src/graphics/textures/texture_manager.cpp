@@ -32,6 +32,11 @@ namespace zc_app
         }
     }
 
+    texture_manager::~texture_manager()
+    {
+        cleanup();
+    }
+
     void texture_manager::cleanup()
     {
         for (const auto& [name, texture] : textures)

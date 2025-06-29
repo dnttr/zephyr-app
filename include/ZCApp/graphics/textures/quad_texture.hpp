@@ -7,8 +7,7 @@
 #include <algorithm>
 #include <string>
 
-#include "texture.hpp"
-#include "ZCApp/graphics/shaders/shaders.hpp"
+#include "ZCApp/graphics/textures/texture.hpp"
 
 namespace zc_app
 {
@@ -24,5 +23,7 @@ namespace zc_app
         void setup() override;
 
         void render() override;
+
+        ~quad_texture() override;
     };
 }

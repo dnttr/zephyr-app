@@ -15,10 +15,10 @@ namespace zc_app
     class shape
     {
     protected:
-        GLint color{};
-        GLint opacity{};
-        GLint projection{};
-        GLint position{};
+        GLint u_color{};
+        GLint u_opacity{};
+        GLint u_projection{};
+        GLint u_position{};
 
         GLuint program = -1;
 
@@ -43,11 +43,10 @@ namespace zc_app
             {
                 program = shaders::create_program(vertex_shader, fragment_shader);
 
-                projection = glGetUniformLocation(program, "projection_matrix");
-
-                color = glGetUniformLocation(program, "shape_color");
-                opacity = glGetUniformLocation(program, "shape_opacity");
-                position = glGetUniformLocation(program, "shape_position");
+                u_projection = glGetUniformLocation(program, "projection_matrix");
+                u_color = glGetUniformLocation(program, "shape_color");
+                u_opacity = glGetUniformLocation(program, "shape_opacity");
+                u_position = glGetUniformLocation(program, "shape_position");
 
                 setup_uniforms();
                 setup_shape();

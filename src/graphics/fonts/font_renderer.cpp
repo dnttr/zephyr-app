@@ -9,6 +9,9 @@
 #include "ZCApp/graphics/fonts/font_loader.hpp"
 #include "ZCApp/graphics/utils/perspective_util.hpp"
 #include "ZCApp/graphics/utils/time_util.hpp"
+#include "ZCGKit/external.hpp"
+
+#define SPACE 5
 
 void zc_app::font_renderer::build_shader()
 {
@@ -99,7 +102,7 @@ void zc_app::font_renderer::update_transform_properties(const transform_properti
 
 void zc_app::font_renderer::set_parameters(const text_style &style, text_properties &text_props, transform_properties &transform_props, const properties &props)
 {
-    text_props.smoothing = 0.01f;
+    text_props.smoothing = 0.01F;
 
     text_props.text_color = glm::vec4(
         style.text_color.get_red_direct(),
@@ -145,9 +148,10 @@ void zc_app::font_renderer::set_parameters(const text_style &style, text_propert
     update_text_properties(text_props);
 
     transform_props.total_characters_amount = props.total_characters;
-    transform_props.begin_text_scale = style.begin_text_scale;
-    transform_props.end_text_scale = style.end_text_scale;
-    transform_props.speed_text_scale = style.speed_text_scale;
+    transform_props.text_animation_begin = style.text_animation_scale_begin;
+    transform_props.text_animation_end = style.text_animation_scale_end;
+    transform_props.text_animation_speed = style.text_animation_scale_speed;
+    transform_props.text_magnification = style.text_size_magnification;
 }
 
 void zc_app::font_renderer::render(properties &props, text_properties &text_props, transform_properties &transform_props, const geometry &geom)
@@ -197,6 +201,8 @@ void zc_app::font_renderer::render(properties &props, text_properties &text_prop
         const auto *glyph_info = hb_buffer_get_glyph_infos(buf, &glyph_count);
         const auto *glyph_pos = hb_buffer_get_glyph_positions(buf, &glyph_count);
 
+        int line_height = 0;
+
         for (int i = 0; i < glyph_count; i++)
         {
             const auto glyph_index = glyph_info[i].codepoint;
@@ -223,6 +229,7 @@ void zc_app::font_renderer::render(properties &props, text_properties &text_prop
 
             const float x_advance = static_cast<float>(glyph_pos[i].x_advance) / 64.0f;
             const float y_advance = static_cast<float>(glyph_pos[i].y_advance) / 64.0f;
+            line_height = (size_ypos + bearing_ypos) * 2 + SPACE;
 
             const float xpos = cursor_x + glyph_xpos * props.text_scale + bearing_xpos * props.text_scale;
             const float ypos = cursor_y - (bearing_ypos - glyph_ypos) * props.text_scale;
@@ -255,7 +262,7 @@ void zc_app::font_renderer::render(properties &props, text_properties &text_prop
             vertex_offset += 4;
         }
 
-        base_y += props.text_scale * 64.0f;
+        base_y += line_height;
 
         hb_buffer_destroy(buf);
     }
@@ -278,4 +285,14 @@ void zc_app::font_renderer::render(properties &props, text_properties &text_prop
 GLuint zc_app::font_renderer::get_program()
 {
     return program;
+}
+
+zc_app::font_renderer::~font_renderer()
+{
+    if (zcg_kit::external::is_context_valid())
+    {
+        glDeleteBuffers(1, &text_ubo);
+        glDeleteBuffers(1, &transform_ubo);
+        glDeleteProgram(program);
+    }
 }
