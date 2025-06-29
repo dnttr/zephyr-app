@@ -116,6 +116,11 @@ namespace zc_app
         glUniform1f(u_alpha, 1.0f);
     }
 
+    framebuffer::~framebuffer()
+    {
+        destroy();
+    }
+
     void framebuffer::draw()
     {
         if (fbo != 0)
@@ -182,9 +187,15 @@ namespace zc_app
             glDeleteRenderbuffers(1, &rbo);
             glDeleteTextures(1, &texture);
 
+            glDeleteBuffers(1, &vbo);
+            glDeleteBuffers(1, &ebo);
+            glDeleteVertexArrays(1, &vao);
+
             rbo = 0;
             fbo = 0;
-
+            ebo = 0;
+            vbo = 0;
+            vao = 0;
             texture = 0;
         }
     }

@@ -40,6 +40,8 @@ namespace zc_app
         framebuffer(const framebuffer &) = delete;
         framebuffer &operator=(const framebuffer &) = delete;
 
+        ~framebuffer();
+
         void draw();
 
         void setup(int width, int height);
