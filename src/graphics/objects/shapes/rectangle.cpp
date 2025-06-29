@@ -2,7 +2,7 @@
 // Created by Damian Netter on 24/06/2025.
 //
 
-#include "ZCApp/graphics/shapes/rectangle.hpp"
+#include "ZCApp/graphics/objects/shapes/rectangle.hpp"
 
 #include "ZCApp/graphics/utils/perspective_util.hpp"
 #include "ZCGKit/external.hpp"
@@ -21,8 +21,8 @@ namespace zc_app
 
     void rectangle::setup_uniforms()
     {
-        size = glGetUniformLocation(program, "rectangle_size");
-        radius = glGetUniformLocation(program, "rectangle_radius");
+        size = glGetUniformLocation(program, "shape_size");
+        radius = glGetUniformLocation(program, "shape_radius");
     }
 
     void rectangle::setup_shape()
@@ -45,7 +45,7 @@ namespace zc_app
             current_config.virtual_width, 0.0F, 0.0F,
             current_config.virtual_width, current_config.virtual_height, 0.0F,
             0.0F, current_config.virtual_height, 0.0F
-        };
+        }; //replace it
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);

@@ -10,6 +10,9 @@
 #include <iostream>
 #include <ostream>
 
+#include "ZCApp/graphics/textures/fan_texture.hpp"
+#include "ZCApp/graphics/textures/fan_texture.hpp"
+
 namespace zc_app
 {
     zcg_kit::display::config perspective_util::current_config;
@@ -79,5 +82,10 @@ namespace zc_app
     const float *perspective_util::get_projection_matrix()
     {
         return glm::value_ptr(projection_matrix);
+    }
+
+    glm::mat4 perspective_util::get_projection_matrix_mat4()
+    {
+        return projection_matrix;
     }
 }

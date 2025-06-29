@@ -12,7 +12,6 @@ void zc_app::quad_texture::setup()
     };
 
     glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &ebo);
     glGenBuffers(1, &vbo);
 
     glBindVertexArray(vao);
@@ -23,7 +22,6 @@ void zc_app::quad_texture::setup()
         1.0F, 1.0F, 0.0F, 1.0f, 1.0f,
         0.0F, 1.0F, 0.0F, 0.0f, 1.0f
     };
-
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);

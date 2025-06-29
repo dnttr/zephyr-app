@@ -14,6 +14,8 @@ namespace zc_app
 {
     class quad_texture final : public texture
     {
+        GLuint ebo{};
+
     public:
         quad_texture(std::string name, const container &container) : texture(std::move(name), container)
         {

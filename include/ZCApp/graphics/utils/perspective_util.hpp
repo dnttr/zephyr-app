@@ -34,6 +34,8 @@ namespace zc_app
 
         static void calculate_viewport();
 
+        static glm::mat4 get_projection_matrix_mat4();
+
         static const float *get_projection_matrix();
     };
 }

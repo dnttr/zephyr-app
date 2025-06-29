@@ -15,20 +15,25 @@
 #include "ZCApp/graphics/fonts/font_loader.hpp"
 #include "ZCApp/graphics/fonts/font_manager.hpp"
 #include "ZCApp/graphics/fonts/font_renderer.hpp"
-#include "ZCApp/graphics/shapes/rectangle.hpp"
+#include "ZCApp/graphics/objects/text.hpp"
+#include "ZCApp/graphics/objects/shapes/rectangle.hpp"
 #include "ZCApp/graphics/textures/fan_texture.hpp"
 #include "ZCApp/graphics/utils/perspective_util.hpp"
 
 namespace zc_app
 {
     //rectangle rect(container(0, 0, 100.0F, 100.0F), colour(255, 0, 0, 255), 20.0F);
-   // fan_texture fan("test.png", container(200.0f, 200.0f), 0.5F, 128);
+    //fan_texture fan("test.png", container(200.0f, 200.0f), 0.5F, 128);
     colour c(255, 255, 255, 255);
 
+    text tx;
     void renderer::initialize()
     {
         font_manager::initialize();
         font_loader::load_font("Roboto-Regular");
+        font_manager::font font = font_manager::get_font("Roboto-Regular");
+        text_style style;
+        tx.initialize("Hello, World! This is a test of the text rendering system. \n It should be able to handle long lines and multiple lines of text without any issues.", font, style);
 
         glClearColor(0.2F, 0.2F, 0.2F, 1.0F);
 
@@ -50,13 +55,13 @@ namespace zc_app
             static_cast<GLsizei>(cfg.viewport_width),
             static_cast<GLsizei>(cfg.viewport_height));
 
-        auto font = font_manager::get_font("Roboto-Regular");
-        font_renderer::render(font, "ABCDEFGHIJKL\nMNOPQRSTUVWXYZ", 0, 100, 1, c);
-       // font_renderer::render(font, "abcdefghijklmnopqrstuvwxyz", 0, 200, 1, c);
+//        auto font = font_manager::get_font("Roboto-Regular");
+        tx.render();
+        // font_renderer::render(font, "abcdefghijklmnopqrstuvwxyz", 0, 200, 1, c);
        // font_renderer::render(font, "123456789", 0, 300, 1, c);
 
-     //   rect.draw();
-       // fan.draw();
+       // rect.draw();
+        //fan.draw();
     }
 
 

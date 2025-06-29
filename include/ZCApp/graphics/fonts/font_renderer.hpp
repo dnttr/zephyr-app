@@ -4,9 +4,11 @@
 
 #pragma once
 
+#include <glm/glm.hpp>
+
 #include "font_manager.hpp"
+#include "ZCApp/graphics/objects/text_style.hpp"
 #include "ZCApp/graphics/shaders/shaders.hpp"
-#include "ZCApp/graphics/utils/colour.hpp"
 
 namespace zc_app
 {
@@ -14,43 +16,90 @@ namespace zc_app
 
     class font_renderer
     {
-        inline static GLuint ebo{};
-        inline static GLuint vbo{};
-        inline static GLuint vao{};
-
-        inline static GLuint program = -1;
-
-        inline static GLint projection;
-        inline static GLint fontAtlas;
-        inline static GLint textColor;
-        inline static GLint outlineColor;
-        inline static GLint shadowColor;
-        inline static GLint smoothing;
-        inline static GLint outlineWidth;
-        inline static GLint shadowOffset;
-        inline static GLint useEffects;
-        inline static GLint totalChars;
-        inline static GLint charIndex;
-        inline static GLint variation;
-        inline static GLint position;
-        inline static GLint saturation;
-        inline static GLint time_u;
-        inline static GLint speed;
-        inline static GLint glowRadius;
-        inline static GLint glowIntensity;
-        inline static GLint glowColor;
-        inline static GLint useGlow;
-        inline static GLint maxScale;
-        inline static GLint startingScale;
-        inline static GLint speedScaling;
-        inline static GLint revealSpeed;
-        inline static GLint revealDirection;
-
-        inline static bool setup_x;
-
-        static void setup();
     public:
+        struct text_properties
+        {
+            float time;
+            float smoothing;
+            glm::vec2 text_position;
 
-        static void render(font_manager::font &font, const std::string &text, float x, float y, float f_scale, const colour &color);
+            glm::vec4 text_color;
+
+            int text_shadow_enable;
+            float _pad0[3]; // Padding for text_shadow_color
+            glm::vec4 text_shadow_color;
+            glm::vec2 text_shadow_offset;
+
+            int text_outline_enable;
+            float _pad1[1]; // Padding for text_outline_color
+            glm::vec4 text_outline_color;
+            float text_outline_width;
+
+            int text_glow_enable;
+            float text_glow_radius;
+            float text_glow_intensity;
+            glm::vec4 text_glow_color;
+
+            int text_rainbow_enable;
+            float text_rainbow_speed;
+            float text_rainbow_variation;
+            float text_rainbow_saturation;
+        };
+
+        struct transform_properties
+        {
+            glm::mat4 projection_matrix;
+            float time;
+            int total_characters_amount;
+            float begin_text_scale;
+            float end_text_scale;
+            float speed_text_scale;
+            float _pad0[3];
+        };
+    private:
+        inline static GLuint program;
+
+        static inline GLuint text_ubo;
+        static inline GLuint transform_ubo;
+
+        static void update_text_properties(const text_properties &properties);
+        static void update_transform_properties(const transform_properties &properties);
+
+        static void setup_ubo();
+    public:
+        struct geometry
+        {
+            GLuint vao;
+            GLuint vbo;
+            GLuint ebo;
+        };
+
+        struct properties
+        {
+            font_manager::font font;
+
+            float x;
+            float y;
+
+            float text_scale;
+
+            int total_characters;
+
+            std::vector<std::string> lines;
+            std::chrono::steady_clock::time_point startTime;
+        };
+
+        static inline GLint u_atlas;
+
+        static void build_shader();
+
+        static geometry build_geometry();
+
+        static void set_parameters(const text_style &style, text_properties &text_props, transform_properties &transform_props, const properties &props);
+
+        static void render(properties &props,
+                           text_properties &text_props, transform_properties &transform_props, const geometry &geom);
+
+        static GLuint get_program();
     };
 }

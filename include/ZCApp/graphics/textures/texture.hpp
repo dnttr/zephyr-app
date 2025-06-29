@@ -9,26 +9,27 @@
 #include <OpenGL/gl3.h>
 
 #include "ZCApp/graphics/shaders/shaders.hpp"
-#include "ZCApp/graphics/shapes/container.hpp"
+#include "ZCApp/graphics/objects/shapes/container.hpp"
 #include "ZCApp/graphics/textures/texture_loader.hpp"
 #include "ZCApp/graphics/utils/perspective_util.hpp"
 
 namespace zc_app
 {
-     class texture
+    class texture
     {
         void fetch_uniforms()
         {
-            m_projection_uniform = glGetUniformLocation(m_program, "m_projection_matrix");
-            m_texture_uniform = glGetUniformLocation(m_program, "m_texture");
-            m_position_uniform = glGetUniformLocation(m_program, "m_texture_position");
-            m_size_uniform = glGetUniformLocation(m_program, "m_texture_size");
+            m_projection_uniform = glGetUniformLocation(m_program, "projection_matrix");
+            m_texture_uniform = glGetUniformLocation(m_program, "tex");
+            m_position_uniform = glGetUniformLocation(m_program, "tex_position");
+            m_size_uniform = glGetUniformLocation(m_program, "tex_size");
+            m_alpha_uniform = glGetUniformLocation(m_program, "tex_alpha");
         }
 
         bool update = false;
 
     protected:
-        GLuint vao{}, vbo{}, ebo{};
+        GLuint vao{}, vbo{};
 
         inline static int m_scale = 4;
 
@@ -43,6 +44,7 @@ namespace zc_app
         GLint m_texture_uniform{};
         GLint m_position_uniform{};
         GLint m_size_uniform{};
+        GLint m_alpha_uniform{};
 
         virtual void setup_uniforms(const float x, const float y, const float width, const float height)
         {
@@ -51,6 +53,7 @@ namespace zc_app
             glUniform1i(m_texture_uniform, 0);
             glUniform2f(m_position_uniform, x, y);
             glUniform2f(m_size_uniform, width, height);
+            glUniform1f(m_alpha_uniform, 1.0f);
         }
 
         virtual void render() = 0;
@@ -60,7 +63,7 @@ namespace zc_app
     public:
         virtual ~texture() = default;
 
-        texture(std::string name, const container& container) : m_container(container), m_name(std::move(name))
+        texture(std::string name, const container &container) : m_container(container), m_name(std::move(name))
         {
         }
 
