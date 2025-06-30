@@ -2,7 +2,7 @@
 // Created by Damian Netter on 30/06/2025.
 //
 
-#include "ZCApp/graphics/objects/background.hpp""
+#include "ZCApp/graphics/objects/background.hpp"
 
 #include <iostream>
 #include <random>
@@ -17,20 +17,32 @@ namespace zc_app
 {
     constexpr int NUM_BALLS = 100;
 
+    std::uniform_real_distribution<float> background::alpha = std::uniform_real_distribution(0.1F, 1.0F);
+
     glm::vec2 ball_target_positions[NUM_BALLS];
     glm::vec2 ball_positions[NUM_BALLS];
     glm::vec2 ball_velocities[NUM_BALLS];
+
+    std::vector<glm::vec2> line_start_points;
+    std::vector<glm::vec2> line_end_points;
+    std::vector<float> line_alphas;
 
     void background::fetch_uniforms()
     {
         u_point_projection = glGetUniformLocation(point_program, "projection_matrix");
         u_point_ball_radius = glGetUniformLocation(point_program, "ball_radius");
         u_point_color = glGetUniformLocation(point_program, "ball_color");
+
+        u_line_projection = glGetUniformLocation(line_program, "projection_matrix");
+        u_line_ball_radius = glGetUniformLocation(line_program, "ball_radius");
+        u_line_width = glGetUniformLocation(line_program, "line_width_pixels");
+        u_line_color = glGetUniformLocation(line_program, "line_color");
     }
 
     void background::setup()
     {
         point_program = shaders::create_program("effect_vert", "effect_frag");
+        line_program = shaders::create_program("line_vert", "line_frag");
 
         fetch_uniforms();
 
@@ -38,10 +50,18 @@ namespace zc_app
         glGenBuffers(1, &point_instanced_vbo);
         glGenBuffers(1, &point_ebo);
 
+        glGenBuffers(1, &line_vbo);
+        glGenBuffers(1, &line_ebo);
+        glGenBuffers(1, &line_start_vbo);
+        glGenBuffers(1, &line_end_vbo);
+        glGenBuffers(1, &line_alpha_vbo);
+
+        glGenVertexArrays(1, &line_vao);
         glGenVertexArrays(1, &point_vao);
+
         glBindVertexArray(point_vao);
 
-        const float vertices[]
+        constexpr float vertices[]
         {
             0.0F, 0.0F,
             1.0F, 0.0F,
@@ -90,14 +110,51 @@ namespace zc_app
         glEnableVertexAttribArray(1);
 
         glVertexAttribDivisor(1, 1);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        glBindVertexArray(line_vao);
+        glBindBuffer(GL_ARRAY_BUFFER, line_vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+        glEnableVertexAttribArray(0);
+
+        glBindBuffer(GL_ARRAY_BUFFER, line_start_vbo);
+        glBufferData(GL_ARRAY_BUFFER, NUM_BALLS * sizeof(glm::vec2), nullptr, GL_DYNAMIC_DRAW);
+
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+        glEnableVertexAttribArray(1);
+        glVertexAttribDivisor(1, 1);
+
+        glBindBuffer(GL_ARRAY_BUFFER, line_end_vbo);
+        glBufferData(GL_ARRAY_BUFFER, NUM_BALLS * sizeof(glm::vec2), nullptr, GL_DYNAMIC_DRAW);
+
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+        glEnableVertexAttribArray(2);
+        glVertexAttribDivisor(2, 1);
+
+        glBindBuffer(GL_ARRAY_BUFFER, line_alpha_vbo);
+        glBufferData(GL_ARRAY_BUFFER, NUM_BALLS * NUM_BALLS * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
+
+        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(float), nullptr);
+        glEnableVertexAttribArray(3);
+        glVertexAttribDivisor(3, 1);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, line_ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
         glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 
     void background::update()
     {
+        line_start_points.clear();
+        line_end_points.clear();
+        line_alphas.clear();
+
         const float time = time_util::get_delta_time();
 
         if (evd.first == 0 || evd.second == 0)
@@ -165,6 +222,21 @@ namespace zc_app
 
                         glm::vec2 delta = ball_positions[i] - ball_positions[j];
                         const float distance = glm::length(delta);
+
+                        if (i < j)
+                        {
+                            if (distance > 0.0f && distance < searchRadius * 5)
+                            {
+                                line_start_points.push_back(ball_positions[i]);
+                                line_end_points.push_back(ball_positions[j]);
+
+                                float normalized_distance = distance / (searchRadius * 5);
+                                float distance_alpha = 1.0f - normalized_distance;
+                                distance_alpha = std::clamp(distance_alpha * 0.9f + 0.1f, 0.1f, 1.0f);
+
+                                line_alphas.push_back(distance_alpha);
+                            }
+                        }
 
                         if (distance > 0.0f && distance < searchRadius)
                         {
@@ -256,17 +328,56 @@ namespace zc_app
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        glUniform1f(u_point_ball_radius, 5.0f);
-        glUniform3f(u_point_color, 0.0f, 0.0f, 1.0f);
-        glUniformMatrix4fv(u_point_projection, 1, GL_FALSE, perspective_util::get_projection_matrix());
-
-        need_update = false;
-
+        if (need_update)
+        {
+            glUniform1f(u_point_ball_radius, 5.0f);
+            glUniform3f(u_point_color, 1.0f, 1.0f, 1.0f);
+            glUniformMatrix4fv(u_point_projection, 1, GL_FALSE, perspective_util::get_projection_matrix());
+        }
 
         glBindVertexArray(point_vao);
         glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, 100);
+
+        glBindVertexArray(0);
+        glUseProgram(line_program);
+
+        glBindBuffer(GL_ARRAY_BUFFER, line_start_vbo);
+        if (auto *ptr = static_cast<glm::vec2 *>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY)))
+        {
+            memcpy(ptr, line_start_points.data(), line_start_points.size() * sizeof(glm::vec2));
+            glUnmapBuffer(GL_ARRAY_BUFFER);
+        }
+
+        glBindBuffer(GL_ARRAY_BUFFER, line_end_vbo);
+        if (auto *ptr = static_cast<glm::vec2 *>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY)))
+        {
+            memcpy(ptr, line_end_points.data(), line_end_points.size() * sizeof(glm::vec2));
+            glUnmapBuffer(GL_ARRAY_BUFFER);
+        }
+
+        glBindBuffer(GL_ARRAY_BUFFER, line_alpha_vbo);
+        if (auto *ptr = static_cast<float *>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY)))
+        {
+            memcpy(ptr, line_alphas.data(), line_alphas.size() * sizeof(float));
+            glUnmapBuffer(GL_ARRAY_BUFFER);
+        }
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        if (need_update)
+        {
+            glUniformMatrix4fv(u_line_projection, 1, GL_FALSE, perspective_util::get_projection_matrix());
+            glUniform1f(u_line_ball_radius, 5.0f);
+            glUniform3f(u_line_color, 1.0f, 1.0f, 1.0f);
+            glUniform1f(u_line_width, 1.0f);
+        }
+
+        glBindVertexArray(line_vao);
+        glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, line_start_points.size());
         glBindVertexArray(0);
         glUseProgram(0);
+
+        need_update = false;
     }
 
     void background::reshape() const

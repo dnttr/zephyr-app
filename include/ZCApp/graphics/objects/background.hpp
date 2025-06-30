@@ -12,11 +12,18 @@ namespace zc_app
 {
     class background
     {
-        GLuint point_vbo{}, point_instanced_vbo{}, line_vbo{};
+        static std::uniform_real_distribution<float> alpha;
+
+        GLuint point_vbo{}, point_instanced_vbo{}, line_vbo{}, line_start_vbo{}, line_end_vbo{}, line_alpha_vbo{};
         GLuint point_vao{}, line_vao{};
         GLuint point_ebo{}, line_ebo{};
 
         GLuint point_program{}, line_program{};
+
+        GLint u_line_projection{};
+        GLint u_line_ball_radius{};
+        GLint u_line_width{};
+        GLint u_line_color{};
 
         GLint u_point_projection{};
         GLint u_point_ball_radius{};
@@ -25,16 +32,16 @@ namespace zc_app
         bool need_update = true;
 
         std::pair<float, float> evd{};
+        std::vector<std::vector<int>> grid;
+
         std::uniform_real_distribution<float> dist_x{}, dist_y{};
 
         std::random_device rd;
         std::mt19937 random;
 
-        std::vector<std::vector<int>> grid;
-
         const float searchRadiusSquared = 20.0f;
         const float searchRadius = 10.0f;
-        const float speed = 75.0f;
+        const float speed = 50.0f;
         const int cellSize = 30;
 
         int cells_count_x{};
