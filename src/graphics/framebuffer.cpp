@@ -159,8 +159,6 @@ namespace zc_app
 
         if (fbo != 0)
         {
-            need_update = true;
-
             glBindTexture(GL_TEXTURE_2D, texture);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->width, this->height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 

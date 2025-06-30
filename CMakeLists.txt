@@ -27,6 +27,7 @@ add_executable(zephyr-app
         src/graphics/fonts/font_renderer.cpp
         src/graphics/objects/text.cpp
         src/graphics/framebuffer.cpp
+        src/graphics/objects/background.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE include)
