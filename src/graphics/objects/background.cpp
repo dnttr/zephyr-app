@@ -7,6 +7,7 @@
 #include <iostream>
 #include <random>
 
+#include "ZCApp/graphics/framebuffer.hpp"
 #include "ZCApp/graphics/shaders/shaders.hpp"
 #include "ZCApp/graphics/utils/math_util.hpp"
 #include "ZCApp/graphics/utils/perspective_util.hpp"
@@ -27,6 +28,8 @@ namespace zc_app
     std::vector<glm::vec2> line_end_points;
     std::vector<float> line_alphas;
 
+    framebuffer fbo_1, fbo_2;
+
     void background::fetch_uniforms()
     {
         u_point_projection = glGetUniformLocation(point_program, "projection_matrix");
@@ -37,12 +40,22 @@ namespace zc_app
         u_line_ball_radius = glGetUniformLocation(line_program, "ball_radius");
         u_line_width = glGetUniformLocation(line_program, "line_width_pixels");
         u_line_color = glGetUniformLocation(line_program, "line_color");
+
+        u_blur_projection = glGetUniformLocation(blur_program, "projection_matrix");
+
+        u_blur_texture = glGetUniformLocation(blur_program, "tex");
+        u_blur_radius = glGetUniformLocation(blur_program, "blur_radius");
+        u_blur_size = glGetUniformLocation(blur_program, "tex_size");
+        u_blur_tint_color = glGetUniformLocation(blur_program, "tint_color");
+        u_blur_tint_strength = glGetUniformLocation(blur_program, "tint_strength");
+        u_blur_quality = glGetUniformLocation(blur_program, "sample_count");
     }
 
     void background::setup()
     {
         point_program = shaders::create_program("effect_vert", "effect_frag");
         line_program = shaders::create_program("line_vert", "line_frag");
+        blur_program = shaders::create_program("fs_blur_vert", "fs_blur_frag");
 
         fetch_uniforms();
 
@@ -56,10 +69,12 @@ namespace zc_app
         glGenBuffers(1, &line_end_vbo);
         glGenBuffers(1, &line_alpha_vbo);
 
+        glGenBuffers(1, &blur_vbo);
+        glGenBuffers(1, &blur_ebo);
+
+        glGenVertexArrays(1, &blur_vao);
         glGenVertexArrays(1, &line_vao);
         glGenVertexArrays(1, &point_vao);
-
-        glBindVertexArray(point_vao);
 
         constexpr float vertices[]
         {
@@ -67,6 +82,13 @@ namespace zc_app
             1.0F, 0.0F,
             1.0F, 1.0F,
             0.0F, 1.0F
+        };
+
+        constexpr float vertices_blur[] {
+            0.0F, 0.0F, 0.0F, 1.0F,
+            1.0F, 0.0F, 1.0F, 1.0F,
+            1.0F, 1.0F, 1.0F, 0.0F,
+            0.0F, 1.0F, 0.0F, 0.0F
         };
 
         const unsigned int indices[] = {
@@ -93,6 +115,24 @@ namespace zc_app
         {
             ball_target_position = math_util::get_random(random, distX, distY, existingPositions, 15.0f);
         }
+
+        glBindVertexArray(blur_vao);
+
+        glBindBuffer(GL_ARRAY_BUFFER, blur_vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_blur), vertices_blur, GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, blur_ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), reinterpret_cast<void *>(2 * sizeof(float)));
+        glEnableVertexAttribArray(1);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        glBindVertexArray(point_vao);
 
         glBindBuffer(GL_ARRAY_BUFFER, point_vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -312,6 +352,54 @@ namespace zc_app
         }
     }
 
+    void background::draw_quad()
+    {
+        glBindVertexArray(blur_vao);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+        glBindVertexArray(0);
+    }
+
+    void background::draw(int width, int height)
+    {
+        fbo_1.setup(width, height);
+        fbo_2.setup(width, height);
+
+        fbo_1.bind();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        render();
+        fbo_1.unbind();
+
+        glUseProgram(blur_program);
+
+        if (blur_need_update)
+        {
+            auto identity = glm::mat4(1.0f);
+
+            glUniform1i(u_blur_texture, 0);
+            glUniform1f(u_blur_radius, 20.0f);
+            glUniformMatrix4fv(u_blur_projection, 1, GL_FALSE, glm::value_ptr(identity));
+            glUniform2f(u_blur_size, width, height);
+            glUniform3f(u_blur_tint_color, 1.0f, 0.2f, 0.2f);
+            glUniform1f(u_blur_tint_strength, 0.05f);
+            glUniform1i(u_blur_quality, 28);
+        }
+
+        fbo_2.bind();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, fbo_1.get_texture());
+        draw_quad();
+        fbo_2.unbind();
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, fbo_2.get_texture());
+        draw_quad();
+
+        blur_need_update = false;
+    }
+
     void background::render()
     {
         glUseProgram(point_program);
@@ -328,7 +416,7 @@ namespace zc_app
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        if (need_update)
+        if (effect_need_update)
         {
             glUniform1f(u_point_ball_radius, 5.0f);
             glUniform3f(u_point_color, 1.0f, 1.0f, 1.0f);
@@ -364,12 +452,12 @@ namespace zc_app
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        if (need_update)
+        if (effect_need_update)
         {
             glUniformMatrix4fv(u_line_projection, 1, GL_FALSE, perspective_util::get_projection_matrix());
             glUniform1f(u_line_ball_radius, 5.0f);
             glUniform3f(u_line_color, 1.0f, 1.0f, 1.0f);
-            glUniform1f(u_line_width, 1.0f);
+            glUniform1f(u_line_width, 2.0f);
         }
 
         glBindVertexArray(line_vao);
@@ -377,12 +465,17 @@ namespace zc_app
         glBindVertexArray(0);
         glUseProgram(0);
 
-        need_update = false;
+        effect_need_update = false;
     }
 
-    void background::reshape() const
+    void background::reshape(int width, int height) const
     {
+        glUseProgram(point_program);
         glUniformMatrix4fv(u_point_projection, 1, GL_FALSE, perspective_util::get_projection_matrix());
+        glUseProgram(0);
+
+        fbo_1.resize(width, height);
+        fbo_2.resize(width, height);
     }
 
     background::~background()
@@ -415,6 +508,9 @@ namespace zc_app
 
             glDeleteVertexArrays(1, &line_vao);
             line_vao = 0;
+
+            fbo_1.destroy();
+            fbo_2.destroy();
         }
     }
 }

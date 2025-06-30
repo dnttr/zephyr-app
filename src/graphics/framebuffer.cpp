@@ -8,6 +8,7 @@
 
 #include "ZCApp/graphics/shaders/shaders.hpp"
 #include "ZCApp/graphics/utils/perspective_util.hpp"
+#include "ZCGKit/external.hpp"
 
 namespace zc_app
 {
@@ -179,7 +180,7 @@ namespace zc_app
 
     void framebuffer::destroy()
     {
-        if (fbo != 0)
+        if (fbo != 0 && zcg_kit::external::is_context_valid())
         {
             glDeleteFramebuffers(1, &fbo);
             glDeleteRenderbuffers(1, &rbo);
@@ -196,5 +197,15 @@ namespace zc_app
             vao = 0;
             texture = 0;
         }
+    }
+
+    GLuint framebuffer::get_texture() const
+    {
+        return texture;
+    }
+
+    GLuint framebuffer::get_id() const
+    {
+        return fbo;
     }
 }

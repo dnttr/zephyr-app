@@ -31,7 +31,6 @@ namespace zc_app
     //fan_texture fan("test.png", container(200.0f, 200.0f), 0.5F, 128);
     colour c(255, 255, 255, 255);
     background background;
-    framebuffer fbo;
 
     text tx;
 
@@ -68,33 +67,21 @@ namespace zc_app
     void renderer::render() const
     {
         const auto &cfg = perspective_util::get_current_display_config();
-        fbo.setup(cfg.viewport_width, cfg.viewport_height);
 
         glViewport(static_cast<GLint>(cfg.viewport_x), static_cast<GLint>(cfg.viewport_y),
                    static_cast<GLsizei>(cfg.viewport_width),
                    static_cast<GLsizei>(cfg.viewport_height));
 
-        fbo.bind();
         glClearColor(0.2F, 0.2F, 0.2F, 1.0F);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        tx.render();
-
-        fbo.unbind();
-
-        glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        fbo.draw();
-
-        background.render();
+        background.draw(1920 * 2, 1080 * 2);
     }
 
 
     void renderer::reshape(const int width, const int height)
     {
-        background.reshape();
-        fbo.resize(width, height);
+        background.reshape(width, height);
     }
 
     void renderer::update()

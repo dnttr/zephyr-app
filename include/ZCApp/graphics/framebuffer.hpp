@@ -53,5 +53,9 @@ namespace zc_app
         void unbind();
 
         void destroy();
+
+        [[nodiscard]] GLuint get_texture() const;
+
+        [[nodiscard]] GLuint get_id() const;
     };
 }

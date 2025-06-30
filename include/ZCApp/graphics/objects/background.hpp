@@ -14,11 +14,11 @@ namespace zc_app
     {
         static std::uniform_real_distribution<float> alpha;
 
-        GLuint point_vbo{}, point_instanced_vbo{}, line_vbo{}, line_start_vbo{}, line_end_vbo{}, line_alpha_vbo{};
-        GLuint point_vao{}, line_vao{};
-        GLuint point_ebo{}, line_ebo{};
+        GLuint point_vbo{}, point_instanced_vbo{}, line_vbo{}, line_start_vbo{}, line_end_vbo{}, line_alpha_vbo{}, blur_vbo{};
+        GLuint point_vao{}, line_vao{}, blur_vao{};
+        GLuint point_ebo{}, line_ebo{}, blur_ebo{};
 
-        GLuint point_program{}, line_program{};
+        GLuint point_program{}, line_program{}, blur_program{}, texture_program{};
 
         GLint u_line_projection{};
         GLint u_line_ball_radius{};
@@ -29,7 +29,17 @@ namespace zc_app
         GLint u_point_ball_radius{};
         GLint u_point_color{};
 
-        bool need_update = true;
+        GLint u_blur_projection{};
+        GLint u_blur_radius{};
+        GLint u_blur_texture{};
+        GLint u_blur_direction{};
+        GLint u_blur_size{};
+        GLint u_blur_quality{};
+        GLint u_blur_tint_strength{};
+        GLint u_blur_tint_color{};
+
+        bool effect_need_update = true;
+        bool blur_need_update = true;
 
         std::pair<float, float> evd{};
         std::vector<std::vector<int>> grid;
@@ -49,14 +59,15 @@ namespace zc_app
 
         void fetch_uniforms();
         void update();
+        void draw_quad();
 
     public:
         background() = default;
 
         void setup();
-
+        void draw(int width, int height);
         void render();
-        void reshape() const;
+        void reshape(int width, int height) const;
 
         ~background();
     };
