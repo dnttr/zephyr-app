@@ -99,6 +99,7 @@ namespace zc_app
         static GLuint get_program();
 
         static void build_shader();
+
         static geometry build_geometry();
 
         static void set_parameters(const text_style &style,

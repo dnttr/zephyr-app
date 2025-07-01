@@ -14,23 +14,21 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 
-#include "ZCApp/graphics/framebuffer.hpp"
+#include <random>
+#include <glm/gtx/string_cast.hpp>
+
+#include "ZCApp/app/scenes/main/main_scene.hpp"
 #include "ZCApp/graphics/fonts/font_loader.hpp"
 #include "ZCApp/graphics/fonts/font_manager.hpp"
-#include "ZCApp/graphics/objects/text/text.hpp"
-#include "ZCApp/graphics/objects/shapes/rectangle.hpp"
-#include "ZCApp/graphics/utils/perspective_util.hpp"
-#include <glm/gtx/string_cast.hpp>
-#include <random>
-
 #include "ZCApp/graphics/objects/background.hpp"
-#include "ZCApp/graphics/objects/blur.hpp"
+#include "ZCApp/graphics/objects/text/text.hpp"
+#include "ZCApp/graphics/utils/perspective_util.hpp"
 
 namespace zc_app
 {
-    blur b;
-
     text tx;
+
+    main_scene ms;
 
     void renderer::initialize()
     {
@@ -50,8 +48,6 @@ namespace zc_app
             "Hello, World! This is a test of the text rendering system.\nIt should be able to handle long lines and multiple lines of text without any issues.",
             container{100.0, 100.0}, font, style);
 
-        b.setup();
-
         glClearColor(0.2F, 0.2F, 0.2F, 1.0F);
 
         glEnable(GL_BLEND);
@@ -59,7 +55,7 @@ namespace zc_app
 
         glEnable(GL_MULTISAMPLE);
 
-        //  glGenBuffers(1, &framebuffer);
+        ms.initialize();
     }
 
     void renderer::render() const
@@ -70,7 +66,7 @@ namespace zc_app
                    static_cast<GLsizei>(cfg.viewport_width),
                    static_cast<GLsizei>(cfg.viewport_height));
 
-        b.render(cfg.window_width , cfg.window_height);
+        ms.render();
     }
 
 
@@ -78,15 +74,17 @@ namespace zc_app
     {
         const auto &cfg = perspective_util::get_current_display_config();
 
-        b.reshape(cfg.window_width , cfg.window_height);
+        ms.resize(width, height);
     }
 
     void renderer::update()
     {
+        ms.update();
     }
 
     void renderer::destroy()
     {
+        ms.destroy();
     }
 
     void renderer::run()

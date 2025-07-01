@@ -16,7 +16,6 @@
 void zc_app::font_renderer::build_shader()
 {
     program = shaders::create_program("text_vert", "text_frag");
-
     u_atlas = glGetUniformLocation(program, "atlas");
 
     setup_ubo();
