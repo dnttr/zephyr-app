@@ -1,5 +1,5 @@
 <h3 align="center">Project Development Roadmap</h3>
-<p align="center"><em>Last Updated: June 2025</em></p>
+<p align="center"><em>Last Updated: July 2025</em></p>
 
 ---
 
@@ -40,7 +40,7 @@
 
 | Component     | Focus                     |
 |---------------|---------------------------|
-| **Application** | Resource loading          |
+| **Application** | Post-processing effects, shapes          |
 | **Core Graphics** | Callbacks, advanced window features, tray integration |
 | **Management**   | Core features development |
 </details>
