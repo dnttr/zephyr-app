@@ -4,6 +4,8 @@
 
 #include "ZCApp/graphics/objects/shapes/rectangle.hpp"
 
+#include <iostream>
+
 #include "ZCApp/graphics/utils/perspective_util.hpp"
 #include "ZCGKit/external.hpp"
 
@@ -23,6 +25,13 @@ namespace zc_app
     {
         u_size = glGetUniformLocation(program, "shape_size");
         u_radius = glGetUniformLocation(program, "shape_radius");
+
+        if (u_projection == -1) std::cerr << "ERROR: Uniform 'projection_matrix' not found in rectangle shader!\n";
+        if (u_position == -1) std::cerr << "ERROR: Uniform 'u_position' not found in rectangle shader!\n";
+        if (u_size == -1) std::cerr << "ERROR: Uniform 'u_size' not found in rectangle shader!\n";
+        if (u_radius == -1) std::cerr << "ERROR: Uniform 'shape_radius' not found in rectangle shader!\n";
+        if (u_color == -1) std::cerr << "ERROR: Uniform 'shape_color' not found in rectangle shader!\n";
+        if (u_opacity == -1) std::cerr << "ERROR: Uniform 'shape_opacity' not found in rectangle shader!\n";
     }
 
     void rectangle::setup_shape()
@@ -38,14 +47,13 @@ namespace zc_app
 
         glBindVertexArray(vao);
 
-        const auto& current_config = perspective_util::get_current_display_config();
-
         const float vertices[] = {
             0.0F, 0.0F, 0.0F,
-            current_config.virtual_width, 0.0F, 0.0F,
-            current_config.virtual_width, current_config.virtual_height, 0.0F,
-            0.0F, current_config.virtual_height, 0.0F
-        }; //replace it
+            1.0F, 0.0F, 0.0F,
+            1.0F, 1.0F, 0.0F,
+            0.0F, 1.0F, 0.0F
+        };
+
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);

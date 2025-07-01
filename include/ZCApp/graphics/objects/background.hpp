@@ -18,7 +18,7 @@ namespace zc_app
         GLuint point_vao{}, line_vao{}, blur_vao{};
         GLuint point_ebo{}, line_ebo{}, blur_ebo{};
 
-        GLuint point_program{}, line_program{}, blur_program{}, texture_program{};
+        GLuint point_program{}, line_program{}, blur_program{}, passthrough_program{};
 
         GLint u_line_projection{};
         GLint u_line_ball_radius{};
@@ -37,6 +37,8 @@ namespace zc_app
         GLint u_blur_quality{};
         GLint u_blur_tint_strength{};
         GLint u_blur_tint_color{};
+
+        GLint u_passthrough_screen_texture{};
 
         bool effect_need_update = true;
         bool blur_need_update = true;

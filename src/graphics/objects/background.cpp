@@ -49,6 +49,8 @@ namespace zc_app
         u_blur_tint_color = glGetUniformLocation(blur_program, "tint_color");
         u_blur_tint_strength = glGetUniformLocation(blur_program, "tint_strength");
         u_blur_quality = glGetUniformLocation(blur_program, "sample_count");
+
+        u_passthrough_screen_texture = glGetUniformLocation(passthrough_program, "screenTexture");
     }
 
     void background::setup()
@@ -56,6 +58,7 @@ namespace zc_app
         point_program = shaders::create_program("effect_vert", "effect_frag");
         line_program = shaders::create_program("line_vert", "line_frag");
         blur_program = shaders::create_program("fs_blur_vert", "fs_blur_frag");
+        passthrough_program = shaders::create_program("fs_blur_vert", "passthrough_frag");
 
         fetch_uniforms();
 
@@ -361,6 +364,9 @@ namespace zc_app
 
     void background::draw(int width, int height)
     {
+        GLint original_fbo;
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &original_fbo);
+
         fbo_1.setup(width, height);
         fbo_2.setup(width, height);
 
@@ -373,11 +379,9 @@ namespace zc_app
 
         if (blur_need_update)
         {
-            auto identity = glm::mat4(1.0f);
 
             glUniform1i(u_blur_texture, 0);
             glUniform1f(u_blur_radius, 20.0f);
-            glUniformMatrix4fv(u_blur_projection, 1, GL_FALSE, glm::value_ptr(identity));
             glUniform2f(u_blur_size, width, height);
             glUniform3f(u_blur_tint_color, 1.0f, 0.2f, 0.2f);
             glUniform1f(u_blur_tint_strength, 0.05f);
@@ -392,10 +396,15 @@ namespace zc_app
         draw_quad();
         fbo_2.unbind();
 
+        glBindFramebuffer(GL_FRAMEBUFFER, original_fbo);
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glUseProgram(passthrough_program);
+        glUniform1i(u_passthrough_screen_texture, 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, fbo_2.get_texture());
         draw_quad();
+        glUseProgram(0);
 
         blur_need_update = false;
     }

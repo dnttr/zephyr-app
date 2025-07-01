@@ -24,13 +24,11 @@
 #include <random>
 
 #include "ZCApp/graphics/objects/background.hpp"
+#include "ZCApp/graphics/objects/blur.hpp"
 
 namespace zc_app
 {
-    rectangle rect(container(0, 100, 100.0F, 100.0F), colour(255, 0, 0, 255), 20.0F);
-    //fan_texture fan("test.png", container(200.0f, 200.0f), 0.5F, 128);
-    colour c(255, 255, 255, 255);
-    background background;
+    blur b;
 
     text tx;
 
@@ -52,7 +50,7 @@ namespace zc_app
             "Hello, World! This is a test of the text rendering system.\nIt should be able to handle long lines and multiple lines of text without any issues.",
             container{100.0, 100.0}, font, style);
 
-        background.setup();
+        b.setup();
 
         glClearColor(0.2F, 0.2F, 0.2F, 1.0F);
 
@@ -72,18 +70,15 @@ namespace zc_app
                    static_cast<GLsizei>(cfg.viewport_width),
                    static_cast<GLsizei>(cfg.viewport_height));
 
-        glClearColor(0.2F, 0.2F, 0.2F, 1.0F);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        background.draw(1920 * 2, 1080 * 2);
-
-        rect.draw();
+        b.render(cfg.window_width , cfg.window_height);
     }
 
 
     void renderer::reshape(const int width, const int height)
     {
-        background.reshape(width, height);
+        const auto &cfg = perspective_util::get_current_display_config();
+
+        b.reshape(cfg.window_width , cfg.window_height);
     }
 
     void renderer::update()
