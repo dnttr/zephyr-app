@@ -12,10 +12,10 @@
 
 namespace zc_app
 {
-    class blur final
+    class partial_blur final
     {
     public:
-        blur() = default;
+        partial_blur() = default;
 
         GLuint blur_program{};
         GLuint pass_program{};
@@ -34,6 +34,8 @@ namespace zc_app
         GLint u_blur_tint_strength{};
         GLint u_blur_quality{};
         GLint u_pass_screen_texture{};
+        GLint u_blur_alpha{};
+        GLint u_blur_time{};
 
         bool need_update = true;
 

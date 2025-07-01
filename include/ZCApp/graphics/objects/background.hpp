@@ -12,10 +12,14 @@
 #include <OpenGL/gl3.h>
 #include <glm/glm.hpp>
 
+#include "ZCApp/graphics/effects/fullscreen_blur.hpp"
+
 namespace zc_app
 {
     class background
     {
+        static fullscreen_blur blur;
+
         struct line_buffer_set {
             GLuint start_vbo;
             GLuint end_vbo;
@@ -49,11 +53,11 @@ namespace zc_app
 
         line_buffer_set line_buffers[3];
 
-        GLuint point_vbo{}, point_instanced_vbo{}, line_vbo{}, blur_vbo{};
-        GLuint point_vao{}, line_vao{}, blur_vao{};
-        GLuint point_ebo{}, line_ebo{}, blur_ebo{};
+        GLuint point_vbo{}, point_instanced_vbo{}, line_vbo{};
+        GLuint point_vao{}, line_vao{};
+        GLuint point_ebo{}, line_ebo{};
 
-        GLuint point_program{}, line_program{}, blur_program{}, passthrough_program{};
+        GLuint point_program{}, line_program{}, passthrough_program{};
 
         GLint u_line_projection{};
         GLint u_line_ball_radius{};
@@ -64,19 +68,9 @@ namespace zc_app
         GLint u_point_ball_radius{};
         GLint u_point_color{};
 
-        GLint u_blur_projection{};
-        GLint u_blur_radius{};
-        GLint u_blur_texture{};
-        GLint u_blur_direction{};
-        GLint u_blur_size{};
-        GLint u_blur_quality{};
-        GLint u_blur_tint_strength{};
-        GLint u_blur_tint_color{};
-
         GLint u_passthrough_screen_texture{};
 
         bool effect_need_update = true;
-        bool blur_need_update = true;
 
         std::pair<float, float> evd{};
         std::vector<std::vector<int>> grid;
@@ -101,8 +95,6 @@ namespace zc_app
         void update(int buffer_idx);
 
         void nearby_update(glm::vec2 & b_1, glm::vec2 & b_2, int i, int j, float width, float height, line_buffer_set &buffer);
-
-        void draw_quad() const;
 
         void render();
     public:

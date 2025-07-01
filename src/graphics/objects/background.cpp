@@ -3,15 +3,8 @@
 //
 
 #include "ZCApp/graphics/objects/background.hpp"
-#include "ZCApp/graphics/objects/background.hpp"
-#include "ZCApp/graphics/objects/background.hpp"
-#include "ZCApp/graphics/objects/background.hpp"
-#include "ZCApp/graphics/objects/background.hpp"
-#include "ZCApp/graphics/objects/background.hpp"
-#include "ZCApp/graphics/objects/background.hpp"
-#include "ZCApp/graphics/objects/background.hpp"
-#include "ZCApp/graphics/objects/background.hpp"
 
+#include <fstream>
 #include <iostream>
 #include <random>
 
@@ -24,9 +17,12 @@
 
 namespace zc_app
 {
+
+    framebuffer fbo;
+
     std::uniform_real_distribution<float> background::alpha = std::uniform_real_distribution(0.1F, 1.0F);
 
-    framebuffer fbo_1, fbo_2;
+    fullscreen_blur background::blur;
 
     void background::fetch_uniforms()
     {
@@ -38,25 +34,12 @@ namespace zc_app
         u_line_ball_radius = glGetUniformLocation(line_program, "ball_radius");
         u_line_width = glGetUniformLocation(line_program, "line_width_pixels");
         u_line_color = glGetUniformLocation(line_program, "line_color");
-
-        u_blur_projection = glGetUniformLocation(blur_program, "projection_matrix");
-
-        u_blur_texture = glGetUniformLocation(blur_program, "tex");
-        u_blur_radius = glGetUniformLocation(blur_program, "blur_radius");
-        u_blur_size = glGetUniformLocation(blur_program, "tex_size");
-        u_blur_tint_color = glGetUniformLocation(blur_program, "tint_color");
-        u_blur_tint_strength = glGetUniformLocation(blur_program, "tint_strength");
-        u_blur_quality = glGetUniformLocation(blur_program, "sample_count");
-
-        u_passthrough_screen_texture = glGetUniformLocation(passthrough_program, "screenTexture");
     }
 
     void background::setup()
     {
         point_program = shaders::create_program("effect_vert", "effect_frag");
         line_program = shaders::create_program("line_vert", "line_frag");
-        blur_program = shaders::create_program("fs_blur_vert", "fs_blur_frag");
-        passthrough_program = shaders::create_program("fs_blur_vert", "passthrough_frag");
 
         fetch_uniforms();
 
@@ -67,10 +50,6 @@ namespace zc_app
         glGenBuffers(1, &line_vbo);
         glGenBuffers(1, &line_ebo);
 
-        glGenBuffers(1, &blur_vbo);
-        glGenBuffers(1, &blur_ebo);
-
-        glGenVertexArrays(1, &blur_vao);
         glGenVertexArrays(1, &line_vao);
         glGenVertexArrays(1, &point_vao);
 
@@ -80,13 +59,6 @@ namespace zc_app
             1.0F, 0.0F,
             1.0F, 1.0F,
             0.0F, 1.0F
-        };
-
-        constexpr float vertices_blur[]{
-            0.0F, 0.0F, 0.0F, 1.0F,
-            1.0F, 0.0F, 1.0F, 1.0F,
-            1.0F, 1.0F, 1.0F, 0.0F,
-            0.0F, 1.0F, 0.0F, 0.0F
         };
 
         const unsigned int indices[] = {
@@ -113,22 +85,6 @@ namespace zc_app
         {
             ball_target_position = math_util::get_random(random, distX, distY, existingPositions, 15.0f);
         }
-
-        glBindVertexArray(blur_vao);
-
-        glBindBuffer(GL_ARRAY_BUFFER, blur_vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_blur), vertices_blur, GL_STATIC_DRAW);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, blur_ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
-        glEnableVertexAttribArray(0);
-
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), reinterpret_cast<void *>(2 * sizeof(float)));
-        glEnableVertexAttribArray(1);
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glBindVertexArray(point_vao);
 
@@ -186,6 +142,8 @@ namespace zc_app
             glBindBuffer(GL_ARRAY_BUFFER, line_buffer.alpha_vbo);
             glBufferData(GL_ARRAY_BUFFER, max_possible_lines * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
         }
+
+        this->blur.setup(width, height);
 
         physics_running = true;
         physics_thread = std::thread(&background::physics_thread_function, this);
@@ -409,63 +367,12 @@ namespace zc_app
         }
     }
 
-    void background::draw_quad() const
-    {
-        glBindVertexArray(blur_vao);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-        glBindVertexArray(0);
-    }
-
     void background::draw(const int width, const int height)
     {
-        GLint original_fbo;
-        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &original_fbo);
-
-        fbo_1.setup(width, height);
-        fbo_2.setup(width, height);
-
-        fbo_1.bind();
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        render();
-
-        fbo_1.unbind();
-
-        glUseProgram(blur_program);
-
-        if (blur_need_update)
-        {
-            glUniform3f(u_blur_tint_color, 1.0f, 0.2f, 0.2f);
-            glUniform2f(u_blur_size, static_cast<float>(width), static_cast<float>(height));
-            glUniform1f(u_blur_radius, 20.0f);
-            glUniform1f(u_blur_tint_strength, 0.05f);
-            glUniform1i(u_blur_texture, 0);
-            glUniform1i(u_blur_quality, 20);
-        }
-
-        fbo_2.bind();
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, fbo_1.get_texture());
-
-        draw_quad();
-        fbo_2.unbind();
-
-        glBindFramebuffer(GL_FRAMEBUFFER, original_fbo);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glUseProgram(passthrough_program);
-        glUniform1i(u_passthrough_screen_texture, 0);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, fbo_2.get_texture());
-
-        draw_quad();
-
-        glUseProgram(0);
-
-        blur_need_update = false;
+        blur.draw(width, height, [this]
+                {
+                    render();
+                });
     }
 
     void background::setup_buffers(const line_buffer_set &lbs)
@@ -515,7 +422,7 @@ namespace zc_app
             memcpy(ptr, ball_positions, NUM_BALLS * sizeof(glm::vec2));
             glUnmapBuffer(GL_ARRAY_BUFFER);
         }
-        
+
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         if (effect_need_update)
@@ -568,8 +475,7 @@ namespace zc_app
         glUniformMatrix4fv(u_point_projection, 1, GL_FALSE, perspective_util::get_projection_matrix());
         glUseProgram(0);
 
-        fbo_1.resize(width, height);
-        fbo_2.resize(width, height);
+        blur.reshape(width, height);
     }
 
     background::~background()
@@ -612,9 +518,6 @@ namespace zc_app
 
             glDeleteVertexArrays(1, &line_vao);
             line_vao = 0;
-
-            fbo_1.destroy();
-            fbo_2.destroy();
         }
     }
 }

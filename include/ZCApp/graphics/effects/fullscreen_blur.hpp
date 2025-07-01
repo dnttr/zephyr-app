@@ -5,6 +5,7 @@
 #pragma once
 
 #include <OpenGL/gl3.h>
+#include <__functional/function.h>
 
 #include "ZCApp/graphics/framebuffer.hpp"
 
@@ -16,12 +17,11 @@ namespace zc_app
         fullscreen_blur() = default;
         ~fullscreen_blur();
 
-        void setup();
+        void setup(int width, int height);
 
-        void draw(GLuint input_texture, int width, int height);
+        void draw(int width, int height, std::function<void()> const &render_scene);
 
         void reshape(int width, int height);
-
     private:
         void fetch_uniforms();
         void draw_quad() const;
@@ -42,8 +42,7 @@ namespace zc_app
         GLuint blur_vbo = 0;
         GLuint blur_ebo = 0;
 
-        multi_attachment_framebuffer multi_fbo;
-
         bool need_update = true;
+
     };
 }

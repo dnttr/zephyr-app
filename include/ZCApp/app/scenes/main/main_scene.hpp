@@ -3,7 +3,8 @@
 //
 
 #pragma once
-#include "ZCApp/graphics/effects/blur.hpp"
+
+#include "ZCApp/graphics/effects/partial_blur.hpp"
 #include "ZCApp/graphics/objects/background.hpp"
 #include "ZCApp/graphics/objects/shapes/rectangle.hpp"
 #include "ZCApp/graphics/scene/scene.hpp"
@@ -12,12 +13,12 @@ namespace zc_app
 {
     class main_scene final : public scene
     {
-        colour tint_color{200, 0, 5};
+        colour tint_color{150, 150, 150};
 
-        blur blur_effect{};
+        partial_blur blur_effect{};
         background bg{};
 
-        rectangle rect{container(0, 0, 100, 100), colour(255, 255, 255, 100), 20.0F};
+        rectangle rect{container(0, 0, 200, 540), colour(50, 50, 50, 10), 20.0F};
 
         int scene_width = 0;
         int scene_height = 0;
@@ -37,7 +38,8 @@ namespace zc_app
             blur_effect.capture_and_blur(
                 scene_width, scene_height,
                 tint_color,
-                [this]() {
+                [this]
+                {
                     bg.draw(scene_width, scene_height);
                 },
                 [this]() {
@@ -55,7 +57,6 @@ namespace zc_app
             scene_width = width;
             scene_height = height;
 
-            // Update dependent objects
             bg.reshape(width, height);
             blur_effect.reshape(width, height);
         }
