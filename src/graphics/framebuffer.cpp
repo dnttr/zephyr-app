@@ -27,7 +27,7 @@ namespace zc_app
 
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->width, this->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
@@ -61,7 +61,7 @@ namespace zc_app
                 2, 3, 0
             };
 
-            const float vertices[] = {
+            constexpr float vertices[] = {
                 0.0F, 0.0F, 0.0f, 0.0F, 1.0F,
                 1.0F, 0.0F, 0.0F, 1.0F, 1.0F,
                 1.0F, 1.0F, 0.0F, 1.0F, 0.0F,
@@ -207,5 +207,136 @@ namespace zc_app
     GLuint framebuffer::get_id() const
     {
         return fbo;
+    }
+
+    void multi_attachment_framebuffer::setup(int width, int height, int attachment_count)
+    {
+        if (fbo == 0)
+        {
+            this->width = width;
+            this->height = height;
+
+            glGenFramebuffers(1, &fbo);
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+            textures.resize(attachment_count);
+            glGenTextures(attachment_count, textures.data());
+
+            std::vector<GLenum> draw_buffers(attachment_count);
+
+            for (int i = 0; i < attachment_count; i++)
+            {
+                glBindTexture(GL_TEXTURE_2D, textures[i]);
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, textures[i], 0);
+                draw_buffers[i] = GL_COLOR_ATTACHMENT0 + i;
+            }
+
+            glDrawBuffers(attachment_count, draw_buffers.data());
+
+            glGenRenderbuffers(1, &rbo);
+            glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            {
+                throw std::runtime_error("Multi-attachment framebuffer is not complete!");
+            }
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        }
+    }
+
+    void multi_attachment_framebuffer::bind(const int attachment_index) const
+    {
+        const GLenum buffers[] = {static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + attachment_index)};
+
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        glDrawBuffers(1, buffers);
+    }
+
+    void multi_attachment_framebuffer::bind_attachments() const
+    {
+        std::vector<GLenum> buffers(textures.size());
+
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        for (size_t i = 0; i < textures.size(); i++)
+        {
+            buffers[i] = GL_COLOR_ATTACHMENT0 + i;
+        }
+
+        glDrawBuffers(GL_SIZEI(textures.size()), buffers.data());
+    }
+
+    void multi_attachment_framebuffer::resize(const int width, const int height)
+    {
+        if (this->width == width && this->height == height)
+        {
+            return;
+        }
+
+        this->width = width;
+        this->height = height;
+
+        if (fbo != 0)
+        {
+            for (const GLuint tex : textures)
+            {
+                glBindTexture(GL_TEXTURE_2D, tex);
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->width, this->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+            }
+
+            glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, this->width, this->height);
+        }
+    }
+
+    void multi_attachment_framebuffer::bind_textures(int start_unit) const
+    {
+        for (size_t i = 0; i < textures.size(); i++)
+        {
+            glActiveTexture(GL_TEXTURE0 + start_unit + i);
+            glBindTexture(GL_TEXTURE_2D, textures[i]);
+        }
+    }
+
+    void multi_attachment_framebuffer::unbind()
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    GLuint multi_attachment_framebuffer::get_texture(int attachment_index) const
+    {
+        return textures[attachment_index];
+    }
+
+    GLuint multi_attachment_framebuffer::get_id() const
+    {
+        return fbo;
+    }
+
+    multi_attachment_framebuffer::~multi_attachment_framebuffer()
+    {
+        destroy();
+    }
+
+    void multi_attachment_framebuffer::destroy()
+    {
+        if (fbo != 0)
+        {
+            glDeleteFramebuffers(1, &fbo);
+            glDeleteRenderbuffers(1, &rbo);
+            glDeleteTextures(GL_SIZEI(textures.size()), textures.data());
+
+            fbo = 0;
+            rbo = 0;
+
+            textures.clear();
+        }
     }
 }

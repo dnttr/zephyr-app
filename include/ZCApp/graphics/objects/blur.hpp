@@ -24,7 +24,7 @@ namespace zc_app
         GLuint blur_vbo{};
         GLuint blur_ebo{};
 
-        framebuffer fbo_1{}, fbo_2{};
+        multi_attachment_framebuffer multi_fbo;
 
         GLint u_blur_texture{};
         GLint u_blur_mask_texture{};
@@ -92,7 +92,7 @@ namespace zc_app
         }
 
 
-        void draw_quad()
+        void draw_quad() const
         {
             glBindVertexArray(blur_vao);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
@@ -103,22 +103,21 @@ namespace zc_app
         {
             glDisable(GL_BLEND);
 
-            fbo_1.setup(width, height);
-            fbo_2.setup(width, height);
+            multi_fbo.setup(width, height, 2);
 
-            fbo_1.bind();
+            multi_fbo.bind(0);
             glViewport(0, 0, width, height);
             glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
             background.draw(width, height);
-            fbo_1.unbind();
 
-            fbo_2.bind();
+            multi_fbo.bind(1);
             glViewport(0, 0, width, height);
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT);
             rectangle.draw();
-            fbo_2.unbind();
+
+            multi_fbo.unbind();
 
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             glViewport(0, 0, width, height);
@@ -140,22 +139,19 @@ namespace zc_app
             }
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, fbo_1.get_texture());
+            glBindTexture(GL_TEXTURE_2D, multi_fbo.get_texture(0));
 
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, fbo_2.get_texture());
+            glBindTexture(GL_TEXTURE_2D, multi_fbo.get_texture(1));
 
             draw_quad();
 
             glUseProgram(0);
-            glActiveTexture(GL_TEXTURE0);
         }
 
         void reshape(int width, int height)
         {
-            fbo_1.resize(width, height);
-            fbo_2.resize(width, height);
-
+            multi_fbo.resize(width, height);
             background.reshape(width, height);
 
             this->need_update = true;

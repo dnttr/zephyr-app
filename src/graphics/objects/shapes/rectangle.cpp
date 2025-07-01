@@ -47,7 +47,7 @@ namespace zc_app
 
         glBindVertexArray(vao);
 
-        const float vertices[] = {
+        constexpr float vertices[] = {
             0.0F, 0.0F, 0.0F,
             1.0F, 0.0F, 0.0F,
             1.0F, 1.0F, 0.0F,

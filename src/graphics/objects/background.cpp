@@ -3,6 +3,14 @@
 //
 
 #include "ZCApp/graphics/objects/background.hpp"
+#include "ZCApp/graphics/objects/background.hpp"
+#include "ZCApp/graphics/objects/background.hpp"
+#include "ZCApp/graphics/objects/background.hpp"
+#include "ZCApp/graphics/objects/background.hpp"
+#include "ZCApp/graphics/objects/background.hpp"
+#include "ZCApp/graphics/objects/background.hpp"
+#include "ZCApp/graphics/objects/background.hpp"
+#include "ZCApp/graphics/objects/background.hpp"
 
 #include <iostream>
 #include <random>
@@ -58,9 +66,6 @@ namespace zc_app
 
         glGenBuffers(1, &line_vbo);
         glGenBuffers(1, &line_ebo);
-        glGenBuffers(1, &line_start_vbo);
-        glGenBuffers(1, &line_end_vbo);
-        glGenBuffers(1, &line_alpha_vbo);
 
         glGenBuffers(1, &blur_vbo);
         glGenBuffers(1, &blur_ebo);
@@ -152,27 +157,6 @@ namespace zc_app
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
         glEnableVertexAttribArray(0);
 
-        glBindBuffer(GL_ARRAY_BUFFER, line_start_vbo);
-        glBufferData(GL_ARRAY_BUFFER, NUM_BALLS * sizeof(glm::vec2), nullptr, GL_DYNAMIC_DRAW);
-
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-        glEnableVertexAttribArray(1);
-        glVertexAttribDivisor(1, 1);
-
-        glBindBuffer(GL_ARRAY_BUFFER, line_end_vbo);
-        glBufferData(GL_ARRAY_BUFFER, NUM_BALLS * sizeof(glm::vec2), nullptr, GL_DYNAMIC_DRAW);
-
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-        glEnableVertexAttribArray(2);
-        glVertexAttribDivisor(2, 1);
-
-        glBindBuffer(GL_ARRAY_BUFFER, line_alpha_vbo);
-        glBufferData(GL_ARRAY_BUFFER, NUM_BALLS * NUM_BALLS * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
-
-        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(float), nullptr);
-        glEnableVertexAttribArray(3);
-        glVertexAttribDivisor(3, 1);
-
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, line_ebo);
@@ -182,9 +166,26 @@ namespace zc_app
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
         constexpr int max_possible_lines = (NUM_BALLS * NUM_BALLS) / 2;
-        line_start_points.reserve(max_possible_lines);
-        line_end_points.reserve(max_possible_lines);
-        line_alphas.reserve(max_possible_lines);
+
+        for (auto &line_buffer : line_buffers)
+        {
+            line_buffer.start_points.reserve(max_possible_lines);
+            line_buffer.end_points.reserve(max_possible_lines);
+            line_buffer.alphas.reserve(max_possible_lines);
+            line_buffer.count = 0;
+
+            glGenBuffers(1, &line_buffer.start_vbo);
+            glBindBuffer(GL_ARRAY_BUFFER, line_buffer.start_vbo);
+            glBufferData(GL_ARRAY_BUFFER, max_possible_lines * sizeof(glm::vec2), nullptr, GL_DYNAMIC_DRAW);
+
+            glGenBuffers(1, &line_buffer.end_vbo);
+            glBindBuffer(GL_ARRAY_BUFFER, line_buffer.end_vbo);
+            glBufferData(GL_ARRAY_BUFFER, max_possible_lines * sizeof(glm::vec2), nullptr, GL_DYNAMIC_DRAW);
+
+            glGenBuffers(1, &line_buffer.alpha_vbo);
+            glBindBuffer(GL_ARRAY_BUFFER, line_buffer.alpha_vbo);
+            glBufferData(GL_ARRAY_BUFFER, max_possible_lines * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
+        }
 
         physics_running = true;
         physics_thread = std::thread(&background::physics_thread_function, this);
@@ -194,20 +195,39 @@ namespace zc_app
     {
         while (physics_running)
         {
+            const int current = physics_buffer.load();
+
+            line_buffers[current].start_points.clear();
+            line_buffers[current].end_points.clear();
+            line_buffers[current].alphas.clear();
+
+            update(current);
+
+            const int next_buffer = (current + 1) % 3;
+
+            int wait_attempts = 0;
+            constexpr int MAX_WAIT_ATTEMPTS = 100;
+
+            while (next_buffer == render_buffer.load() && wait_attempts < MAX_WAIT_ATTEMPTS)
             {
-                std::lock_guard lock(data_mutex);
-                update();
+                std::this_thread::yield();
+                wait_attempts++;
+
+                if (wait_attempts % 10 == 0)
+                {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                }
             }
+
+            physics_buffer.store(next_buffer);
 
             std::this_thread::sleep_for(std::chrono::milliseconds(16));
         }
     }
 
-    void background::update()
+    void background::update(const int buffer_idx)
     {
-        line_start_points.clear();
-        line_end_points.clear();
-        line_alphas.clear();
+        auto &buffer = line_buffers[buffer_idx];
 
         const float time = time_util::get_delta_time();
 
@@ -246,6 +266,9 @@ namespace zc_app
             grid[cell_y * cells_count_x + cell_x].push_back(i);
         }
 
+        const float width = evd.first;
+        const float height = evd.second;
+
         for (int i = 0; i < NUM_BALLS; ++i)
         {
             int cell_x = static_cast<int>(ball_positions[i].x) / cellSize;
@@ -274,71 +297,7 @@ namespace zc_app
                             continue;
                         }
 
-                        const glm::vec2 delta = ball_positions[i] - ball_positions[j];
-                        const float distance_squared = glm::dot(delta, delta);
-                        const float search_radius_squared = searchRadius * searchRadius;
-                        const float line_radius_squared = searchRadius * 5 * searchRadius * 5;
-
-                        if (i < j)
-                        {
-                            if (distance_squared > 0.0f && distance_squared < line_radius_squared)
-                            {
-                                const float distance = sqrt(distance_squared);
-
-                                line_start_points.push_back(ball_positions[i]);
-                                line_end_points.push_back(ball_positions[j]);
-
-                                float normalized_distance = distance / (searchRadius * 5);
-                                float distance_alpha = 1.0f - normalized_distance;
-                                distance_alpha = std::clamp(distance_alpha * 0.9f + 0.1f, 0.1f, 1.0f);
-
-                                line_alphas.push_back(distance_alpha);
-                            }
-                        }
-
-                        if (distance_squared > 0.0f && distance_squared < search_radius_squared)
-                        {
-                            const float distance = sqrt(distance_squared);
-
-                            glm::vec2 normal = delta / distance;
-                            const float overlap = searchRadius - distance;
-
-                            ball_positions[i] += normal * overlap * 0.5f;
-                            ball_positions[j] -= normal * overlap * 0.5f;
-
-                            const float v1 = glm::dot(ball_velocities[i], normal);
-                            const float v2 = glm::dot(ball_velocities[j], normal);
-
-                            constexpr float m1 = 1.0F;
-                            constexpr float m2 = 1.0F;
-
-                            const float p = 2.0F * (v1 - v2) / (m1 + m2);
-
-                            ball_velocities[i] = ball_velocities[i] - p * m2 * normal;
-                            ball_velocities[j] = ball_velocities[j] + p * m1 * normal;
-
-                            constexpr float collisionSpeedBoost = 2.0f;
-
-                            ball_velocities[i] += normal * collisionSpeedBoost;
-                            ball_velocities[j] -= normal * collisionSpeedBoost;
-
-                            constexpr float new_target_distance = 100.0f;
-
-                            constexpr float x = 0.0f;
-                            constexpr float y = 0.0f;
-
-                            const float width = evd.first;
-                            const float height = evd.second;
-
-                            glm::vec2 dir_i = glm::normalize(ball_target_positions[i] - ball_positions[i]);
-                            ball_target_positions[i] = ball_positions[i] - dir_i * new_target_distance;
-
-                            glm::vec2 dir_j = glm::normalize(ball_target_positions[j] - ball_positions[j]);
-                            ball_target_positions[j] = ball_positions[j] - dir_j * new_target_distance;
-
-                            ball_target_positions[i].x = glm::clamp(ball_target_positions[i].x, x, width);
-                            ball_target_positions[i].y = glm::clamp(ball_target_positions[i].y, y, height);
-                        }
+                        nearby_update(ball_positions[i], ball_positions[j], i, j, width, height, buffer);
                     }
                 }
             }
@@ -370,16 +329,94 @@ namespace zc_app
                 ball_target_positions[i] = glm::vec2(dist_x(random), dist_y(random));
             }
         }
+
+        buffer.count = buffer.start_points.size();
     }
 
-    void background::draw_quad()
+    /**
+     * @param b_1 is ball_positions[i]
+     * @param b_2 is ball_positions[j]
+     */
+    void background::nearby_update(glm::vec2 &b_1, glm::vec2 &b_2, int i, int j, float width, float height, line_buffer_set &buffer)
+    {
+        const glm::vec2 delta = b_1 - b_2;
+        const float distance_squared = glm::dot(delta, delta);
+        const float search_radius_squared = searchRadius * searchRadius;
+        const float line_radius_squared = searchRadius * 5 * searchRadius * 5;
+
+        if (i < j)
+        {
+            if (distance_squared > 0.0f && distance_squared < line_radius_squared)
+            {
+                const float distance = sqrt(distance_squared);
+
+                buffer.start_points.push_back(b_1);
+                buffer.end_points.push_back(b_2);
+
+                const float normalized_distance = distance / (searchRadius * 5);
+                float distance_alpha = 1.0f - normalized_distance;
+                distance_alpha = std::clamp(distance_alpha * 0.9f + 0.1f, 0.1f, 1.0f);
+
+                buffer.alphas.push_back(distance_alpha);
+            }
+        }
+
+        if (distance_squared > 0.0f && distance_squared < search_radius_squared)
+        {
+            const float distance = sqrt(distance_squared);
+
+            const glm::vec2 normal = delta / distance;
+            const float overlap = searchRadius - distance;
+
+            b_1 += normal * overlap * 0.5f;
+            b_2 -= normal * overlap * 0.5f;
+
+            auto &b_1_velocity = ball_velocities[i];
+            auto &b_2_velocity = ball_velocities[j];
+
+            auto &b_1_target = ball_target_positions[i];
+            auto &b_2_target = ball_target_positions[j];
+
+            const float v1 = glm::dot(b_1_velocity, normal);
+            const float v2 = glm::dot(b_2_velocity, normal);
+
+            constexpr float m1 = 1.0F;
+            constexpr float m2 = 1.0F;
+
+            const float p = 2.0F * (v1 - v2) / (m1 + m2);
+
+            b_1_velocity = b_1_velocity - p * m2 * normal;
+            b_2_velocity = b_2_velocity + p * m1 * normal;
+
+            constexpr float collisionSpeedBoost = 2.0f;
+
+            b_1_velocity += normal * collisionSpeedBoost;
+            b_2_velocity -= normal * collisionSpeedBoost;
+
+            constexpr float new_target_distance = 100.0f;
+
+            constexpr float x = 0.0f;
+            constexpr float y = 0.0f;
+
+            const glm::vec2 dir_i = glm::normalize(b_1_target - b_1);
+            b_1_target = b_1 - dir_i * new_target_distance;
+
+            const glm::vec2 dir_j = glm::normalize(b_2_target - b_2);
+            b_2_target = b_2 - dir_j * new_target_distance;
+
+            b_1_target.x = glm::clamp(b_1_target.x, x, width);
+            b_1_target.y = glm::clamp(b_1_target.y, y, height);
+        }
+    }
+
+    void background::draw_quad() const
     {
         glBindVertexArray(blur_vao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
         glBindVertexArray(0);
     }
 
-    void background::draw(int width, int height)
+    void background::draw(const int width, const int height)
     {
         GLint original_fbo;
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, &original_fbo);
@@ -388,58 +425,88 @@ namespace zc_app
         fbo_2.setup(width, height);
 
         fbo_1.bind();
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         render();
+
         fbo_1.unbind();
 
         glUseProgram(blur_program);
 
         if (blur_need_update)
         {
-            glUniform1i(u_blur_texture, 0);
-            glUniform1f(u_blur_radius, 20.0f);
-            glUniform2f(u_blur_size, width, height);
             glUniform3f(u_blur_tint_color, 1.0f, 0.2f, 0.2f);
+            glUniform2f(u_blur_size, static_cast<float>(width), static_cast<float>(height));
+            glUniform1f(u_blur_radius, 20.0f);
             glUniform1f(u_blur_tint_strength, 0.05f);
+            glUniform1i(u_blur_texture, 0);
             glUniform1i(u_blur_quality, 20);
         }
 
         fbo_2.bind();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, fbo_1.get_texture());
+
         draw_quad();
         fbo_2.unbind();
 
         glBindFramebuffer(GL_FRAMEBUFFER, original_fbo);
-
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         glUseProgram(passthrough_program);
         glUniform1i(u_passthrough_screen_texture, 0);
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, fbo_2.get_texture());
+
         draw_quad();
+
         glUseProgram(0);
 
         blur_need_update = false;
     }
 
+    void background::setup_buffers(const line_buffer_set &lbs)
+    {
+        const auto lb_start_points_size = GL_SIZEI_PTR(lbs.start_points.size());
+        const auto lb_end_points_size = GL_SIZEI_PTR(lbs.end_points.size());
+        const auto lb_alphas_size = GL_SIZEI_PTR(lbs.alphas.size());
+
+        constexpr auto float_size = GL_SIZEI_PTR(sizeof(float));
+        constexpr auto vec_size = GL_SIZEI_PTR(sizeof(glm::vec2));
+
+        glBindBuffer(GL_ARRAY_BUFFER, lbs.start_vbo);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, lb_start_points_size * vec_size, lbs.start_points.data());
+
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+        glEnableVertexAttribArray(1);
+
+        glVertexAttribDivisor(1, 1);
+
+        glBindBuffer(GL_ARRAY_BUFFER, lbs.end_vbo);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, lb_end_points_size * vec_size, lbs.end_points.data());
+
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+        glEnableVertexAttribArray(2);
+
+        glVertexAttribDivisor(2, 1);
+
+        glBindBuffer(GL_ARRAY_BUFFER, lbs.alpha_vbo);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, lb_alphas_size * float_size, lbs.alphas.data());
+
+        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 0, nullptr);
+        glEnableVertexAttribArray(3);
+
+        glVertexAttribDivisor(3, 1);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+
     void background::render()
     {
         glUseProgram(point_program);
-
-        glm::vec2 local_ball_positions[NUM_BALLS];
-        std::vector<glm::vec2> local_line_starts, local_line_ends;
-        std::vector<float> local_line_alphas;
-
-        {
-            std::lock_guard lock(data_mutex);
-            memcpy(local_ball_positions, ball_positions, NUM_BALLS * sizeof(glm::vec2));
-            local_line_starts = line_start_points;
-            local_line_ends = line_end_points;
-            local_line_alphas = line_alphas;
-        }
 
         glBindBuffer(GL_ARRAY_BUFFER, point_instanced_vbo);
 
@@ -448,7 +515,7 @@ namespace zc_app
             memcpy(ptr, ball_positions, NUM_BALLS * sizeof(glm::vec2));
             glUnmapBuffer(GL_ARRAY_BUFFER);
         }
-
+        
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         if (effect_need_update)
@@ -460,50 +527,42 @@ namespace zc_app
 
         glBindVertexArray(point_vao);
         glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, 100);
-
         glBindVertexArray(0);
+
         glUseProgram(line_program);
 
-        glBindBuffer(GL_ARRAY_BUFFER, line_start_vbo);
-        if (auto *ptr = static_cast<glm::vec2 *>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY)))
+        const int current = render_buffer.load();
+
+        if (const int next_render = (current + 1) % 3; next_render != physics_buffer.load())
         {
-            memcpy(ptr, line_start_points.data(), line_start_points.size() * sizeof(glm::vec2));
-            glUnmapBuffer(GL_ARRAY_BUFFER);
+            render_buffer.store(next_render);
         }
 
-        glBindBuffer(GL_ARRAY_BUFFER, line_end_vbo);
-        if (auto *ptr = static_cast<glm::vec2 *>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY)))
-        {
-            memcpy(ptr, line_end_points.data(), line_end_points.size() * sizeof(glm::vec2));
-            glUnmapBuffer(GL_ARRAY_BUFFER);
-        }
+        glBindVertexArray(line_vao);
 
-        glBindBuffer(GL_ARRAY_BUFFER, line_alpha_vbo);
-        if (auto *ptr = static_cast<float *>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY)))
-        {
-            memcpy(ptr, line_alphas.data(), line_alphas.size() * sizeof(float));
-            glUnmapBuffer(GL_ARRAY_BUFFER);
-        }
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        const auto &current_buffer = line_buffers[current];
+        setup_buffers(current_buffer);
 
         if (effect_need_update)
         {
             glUniformMatrix4fv(u_line_projection, 1, GL_FALSE, perspective_util::get_projection_matrix());
-            glUniform1f(u_line_ball_radius, 5.0f);
+
             glUniform3f(u_line_color, 1.0f, 1.0f, 1.0f);
+
+            glUniform1f(u_line_ball_radius, 5.0f);
             glUniform1f(u_line_width, 2.0f);
         }
 
-        glBindVertexArray(line_vao);
-        glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, line_start_points.size());
+        const auto lb_count = GL_SIZEI(current_buffer.count);
+        glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, lb_count);
+
         glBindVertexArray(0);
         glUseProgram(0);
 
         effect_need_update = false;
     }
 
-    void background::reshape(int width, int height) const
+    void background::reshape(const int width, const int height) const
     {
         glUseProgram(point_program);
         glUniformMatrix4fv(u_point_projection, 1, GL_FALSE, perspective_util::get_projection_matrix());

@@ -16,19 +16,6 @@ namespace zc_app
 {
     class background
     {
-        static std::uniform_real_distribution<float> alpha;
-
-        static constexpr int NUM_BALLS = 150;
-
-        glm::vec2 ball_target_positions[NUM_BALLS];
-        glm::vec2 ball_positions[NUM_BALLS];
-        glm::vec2 ball_velocities[NUM_BALLS];
-
-        std::thread physics_thread;
-        std::atomic<bool> physics_running{false};
-        std::mutex data_mutex;
-
-
         struct line_buffer_set {
             GLuint start_vbo;
             GLuint end_vbo;
@@ -45,10 +32,24 @@ namespace zc_app
             size_t count;
         };
 
+        static std::uniform_real_distribution<float> alpha;
+
+        static constexpr int NUM_BALLS = 150;
+
+        glm::vec2 ball_target_positions[NUM_BALLS]{};
+        glm::vec2 ball_positions[NUM_BALLS]{};
+        glm::vec2 ball_velocities[NUM_BALLS]{};
+
+        std::atomic<bool> physics_running{false};
+        std::thread physics_thread;
+        std::mutex data_mutex;
+
+        std::atomic<int> physics_buffer{0};
+        std::atomic<int> render_buffer{1};
+
         line_buffer_set line_buffers[3];
 
-        GLuint point_vbo{}, point_instanced_vbo{}, line_vbo{},
-               blur_vbo{};
+        GLuint point_vbo{}, point_instanced_vbo{}, line_vbo{}, blur_vbo{};
         GLuint point_vao{}, line_vao{}, blur_vao{};
         GLuint point_ebo{}, line_ebo{}, blur_ebo{};
 
@@ -97,16 +98,19 @@ namespace zc_app
 
         void fetch_uniforms();
 
-        void update();
+        void update(int buffer_idx);
 
-        void draw_quad();
+        void nearby_update(glm::vec2 & b_1, glm::vec2 & b_2, int i, int j, float width, float height, line_buffer_set &buffer);
 
+        void draw_quad() const;
+
+        void render();
     public:
         background() = default;
 
         void setup();
         void draw(int width, int height);
-        void render();
+        void setup_buffers(const line_buffer_set &lbs);
         void reshape(int width, int height) const;
 
         ~background();
