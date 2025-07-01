@@ -4,9 +4,13 @@
 
 #pragma once
 
+#include <atomic>
+#include <mutex>
 #include <random>
+#include <thread>
 #include <utility>
 #include <OpenGL/gl3.h>
+#include <glm/glm.hpp>
 
 namespace zc_app
 {
@@ -14,7 +18,37 @@ namespace zc_app
     {
         static std::uniform_real_distribution<float> alpha;
 
-        GLuint point_vbo{}, point_instanced_vbo{}, line_vbo{}, line_start_vbo{}, line_end_vbo{}, line_alpha_vbo{}, blur_vbo{};
+        static constexpr int NUM_BALLS = 150;
+
+        glm::vec2 ball_target_positions[NUM_BALLS];
+        glm::vec2 ball_positions[NUM_BALLS];
+        glm::vec2 ball_velocities[NUM_BALLS];
+
+        std::thread physics_thread;
+        std::atomic<bool> physics_running{false};
+        std::mutex data_mutex;
+
+
+        struct line_buffer_set {
+            GLuint start_vbo;
+            GLuint end_vbo;
+            GLuint alpha_vbo;
+
+            glm::vec2* start_ptr;
+            glm::vec2* end_ptr;
+            float* alpha_ptr;
+
+            std::vector<glm::vec2> start_points;
+            std::vector<glm::vec2> end_points;
+            std::vector<float> alphas;
+
+            size_t count;
+        };
+
+        line_buffer_set line_buffers[3];
+
+        GLuint point_vbo{}, point_instanced_vbo{}, line_vbo{},
+               blur_vbo{};
         GLuint point_vao{}, line_vao{}, blur_vao{};
         GLuint point_ebo{}, line_ebo{}, blur_ebo{};
 
@@ -59,8 +93,12 @@ namespace zc_app
         int cells_count_x{};
         int cells_count_y{};
 
+        void physics_thread_function();
+
         void fetch_uniforms();
+
         void update();
+
         void draw_quad();
 
     public:

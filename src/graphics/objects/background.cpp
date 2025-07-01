@@ -16,17 +16,7 @@
 
 namespace zc_app
 {
-    constexpr int NUM_BALLS = 100;
-
     std::uniform_real_distribution<float> background::alpha = std::uniform_real_distribution(0.1F, 1.0F);
-
-    glm::vec2 ball_target_positions[NUM_BALLS];
-    glm::vec2 ball_positions[NUM_BALLS];
-    glm::vec2 ball_velocities[NUM_BALLS];
-
-    std::vector<glm::vec2> line_start_points;
-    std::vector<glm::vec2> line_end_points;
-    std::vector<float> line_alphas;
 
     framebuffer fbo_1, fbo_2;
 
@@ -87,7 +77,7 @@ namespace zc_app
             0.0F, 1.0F
         };
 
-        constexpr float vertices_blur[] {
+        constexpr float vertices_blur[]{
             0.0F, 0.0F, 0.0F, 1.0F,
             1.0F, 0.0F, 1.0F, 1.0F,
             1.0F, 1.0F, 1.0F, 0.0F,
@@ -190,6 +180,27 @@ namespace zc_app
 
         glBindVertexArray(0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+        constexpr int max_possible_lines = (NUM_BALLS * NUM_BALLS) / 2;
+        line_start_points.reserve(max_possible_lines);
+        line_end_points.reserve(max_possible_lines);
+        line_alphas.reserve(max_possible_lines);
+
+        physics_running = true;
+        physics_thread = std::thread(&background::physics_thread_function, this);
+    }
+
+    void background::physics_thread_function()
+    {
+        while (physics_running)
+        {
+            {
+                std::lock_guard lock(data_mutex);
+                update();
+            }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(16));
+        }
     }
 
     void background::update()
@@ -263,13 +274,17 @@ namespace zc_app
                             continue;
                         }
 
-                        glm::vec2 delta = ball_positions[i] - ball_positions[j];
-                        const float distance = glm::length(delta);
+                        const glm::vec2 delta = ball_positions[i] - ball_positions[j];
+                        const float distance_squared = glm::dot(delta, delta);
+                        const float search_radius_squared = searchRadius * searchRadius;
+                        const float line_radius_squared = searchRadius * 5 * searchRadius * 5;
 
                         if (i < j)
                         {
-                            if (distance > 0.0f && distance < searchRadius * 5)
+                            if (distance_squared > 0.0f && distance_squared < line_radius_squared)
                             {
+                                const float distance = sqrt(distance_squared);
+
                                 line_start_points.push_back(ball_positions[i]);
                                 line_end_points.push_back(ball_positions[j]);
 
@@ -281,8 +296,10 @@ namespace zc_app
                             }
                         }
 
-                        if (distance > 0.0f && distance < searchRadius)
+                        if (distance_squared > 0.0f && distance_squared < search_radius_squared)
                         {
+                            const float distance = sqrt(distance_squared);
+
                             glm::vec2 normal = delta / distance;
                             const float overlap = searchRadius - distance;
 
@@ -379,13 +396,12 @@ namespace zc_app
 
         if (blur_need_update)
         {
-
             glUniform1i(u_blur_texture, 0);
             glUniform1f(u_blur_radius, 20.0f);
             glUniform2f(u_blur_size, width, height);
             glUniform3f(u_blur_tint_color, 1.0f, 0.2f, 0.2f);
             glUniform1f(u_blur_tint_strength, 0.05f);
-            glUniform1i(u_blur_quality, 28);
+            glUniform1i(u_blur_quality, 20);
         }
 
         fbo_2.bind();
@@ -413,7 +429,17 @@ namespace zc_app
     {
         glUseProgram(point_program);
 
-        update();
+        glm::vec2 local_ball_positions[NUM_BALLS];
+        std::vector<glm::vec2> local_line_starts, local_line_ends;
+        std::vector<float> local_line_alphas;
+
+        {
+            std::lock_guard lock(data_mutex);
+            memcpy(local_ball_positions, ball_positions, NUM_BALLS * sizeof(glm::vec2));
+            local_line_starts = line_start_points;
+            local_line_ends = line_end_points;
+            local_line_alphas = line_alphas;
+        }
 
         glBindBuffer(GL_ARRAY_BUFFER, point_instanced_vbo);
 
@@ -489,6 +515,16 @@ namespace zc_app
 
     background::~background()
     {
+        if (physics_running)
+        {
+            physics_running = false;
+
+            if (physics_thread.joinable())
+            {
+                physics_thread.join();
+            }
+        }
+
         if (zcg_kit::external::is_context_valid())
         {
             glDeleteProgram(point_program);

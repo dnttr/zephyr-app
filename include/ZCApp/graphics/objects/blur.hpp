@@ -38,7 +38,7 @@ namespace zc_app
         bool need_update = true;
 
         colour tint_color{224, 234, 255, 50};
-        rectangle rectangle{container(250.0F, 250.0F, 100.0F, 100.0F), tint_color, 10.0F};
+        rectangle rectangle{container(5.0F, 5.0F, 160.0F, 525.0F), tint_color, 15.0F};
 
         void setup()
         {
@@ -131,7 +131,7 @@ namespace zc_app
             {
                 glUniform1i(u_blur_texture, 0);
                 glUniform1i(u_blur_mask_texture, 1);
-                glUniform1f(u_blur_radius, 100.0f);
+                glUniform1f(u_blur_radius, 90.0f);
                 glUniform2f(u_blur_size, static_cast<float>(width), static_cast<float>(height));
                 glUniform1f(u_blur_tint_strength, 0.08f);
                 glUniform3f(u_blur_tint_color, tint_color.get_red_direct(), tint_color.get_green_direct(),
