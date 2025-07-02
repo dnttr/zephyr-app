@@ -94,12 +94,15 @@ namespace zc_app
                 auto [tex_id, tex_info] = texture_loader::get(m_name, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_TRUE,
                                                               MAX_ANISOTROPIC);
 
+                const float scaled_width = m_container.get_width() > 0
+                                               ? m_container.get_width() / m_scale
+                                               : tex_info.width / m_scale;
+                const float scaled_height = m_container.get_height() > 0
+                                                ? m_container.get_height() / m_scale
+                                                : tex_info.height / m_scale;
 
-                const float scaled_width = m_container.get_width() > 0 ? m_container.get_width() / m_scale : tex_info.width / m_scale;
-                const float scaled_height = m_container.get_height() > 0 ? m_container.get_height() / m_scale: tex_info.height / m_scale;
-
-                m_container.set_x(m_container.get_x() - (m_container.get_width() - scaled_width));
-                m_container.set_y(m_container.get_y() - (m_container.get_height() - scaled_height));
+                m_container.set_x(m_container.get_x() + (m_container.get_width() / 2));
+                m_container.set_y(m_container.get_y() + (m_container.get_height() / 2));
 
                 m_container.set_width(scaled_width);
                 m_container.set_height(scaled_height);

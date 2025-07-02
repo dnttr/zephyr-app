@@ -51,7 +51,7 @@ namespace zc_app
 
             if (pair == fonts_map.end())
             {
-                throw std::runtime_error("Font not found");
+                throw std::runtime_error("Font not found " + name);
             }
 
             return pair->second;

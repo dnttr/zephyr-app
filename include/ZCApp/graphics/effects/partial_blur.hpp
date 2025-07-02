@@ -36,6 +36,8 @@ namespace zc_app
         GLint u_pass_screen_texture{};
         GLint u_blur_alpha{};
         GLint u_blur_time{};
+        GLint u_blur_outline_effect_color{};
+        GLint u_blur_outline_effect_strength{};
 
         bool need_update = true;
 
@@ -46,7 +48,8 @@ namespace zc_app
         void render_with_sources(GLuint background_texture, GLuint mask_texture, int width, int height,
                                  const colour &tint_color, colour colour);
 
-        void capture_and_blur(int width, int height, const colour &tint_color, const std::function<void()> &draw_background,
+        void capture_and_blur(int width, int height, const colour &tint_color,
+                              const std::function<void()> &draw_background,
                               const std::function<void()> &draw_mask, colour colour);
 
         void reshape(int width, int height);

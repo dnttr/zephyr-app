@@ -20,7 +20,6 @@
 #include "ZCApp/app/scenes/main/main_scene.hpp"
 #include "ZCApp/graphics/fonts/font_loader.hpp"
 #include "ZCApp/graphics/fonts/font_manager.hpp"
-#include "ZCApp/graphics/objects/background.hpp"
 #include "ZCApp/graphics/objects/text/text.hpp"
 #include "ZCApp/graphics/utils/perspective_util.hpp"
 
@@ -34,24 +33,9 @@ namespace zc_app
     {
         font_manager::initialize();
         font_loader::load_font("Roboto-Regular", 128);
+        font_loader::load_font("Roboto-Medium", 128);
         font_manager::font font = font_manager::get_font("Roboto-Regular");
-        text_style style;
-        style.text_size_magnification = 0.1;
-        style.rainbow_enable = true;
-        style.rainbow_saturation = 0.2F;
-        style.rainbow_variation = 0.1F;
-        style.rainbow_speed = 2.0F;
-        style.shadow_enable = true;
-        style.shadow_offset = {4.0F, 4.0F};
 
-        tx.initialize(
-            "Hello, World! This is a test of the text rendering system.\nIt should be able to handle long lines and multiple lines of text without any issues.",
-            container{100.0, 100.0}, font, style);
-
-        colour color = colour(17, 17, 21);
-
-        glClearColor(color.get_red_direct(), color.get_green_direct(),
-                     color.get_blue_direct(), color.get_alpha_direct());
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

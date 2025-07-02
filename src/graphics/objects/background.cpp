@@ -428,7 +428,7 @@ namespace zc_app
         if (effect_need_update)
         {
             glUniform1f(u_point_ball_radius, 5.0f);
-            glUniform3f(u_point_color, 0.5f, 0.5f, 0.5f);
+            glUniform3f(u_point_color, 1.0f, 1.0f, 1.0f);
             glUniformMatrix4fv(u_point_projection, 1, GL_FALSE, perspective_util::get_projection_matrix());
         }
 
@@ -454,7 +454,7 @@ namespace zc_app
         {
             glUniformMatrix4fv(u_line_projection, 1, GL_FALSE, perspective_util::get_projection_matrix());
 
-            glUniform3f(u_line_color, 0.5f, 0.5f, 0.5f);
+            glUniform3f(u_line_color, 1.0f, 1.0f, 1.0f);
 
             glUniform1f(u_line_ball_radius, 5.0f);
             glUniform1f(u_line_width, 2.0f);

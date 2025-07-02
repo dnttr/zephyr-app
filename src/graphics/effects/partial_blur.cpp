@@ -6,7 +6,6 @@
 
 #include <fstream>
 #include <functional>
-#include <iostream>
 
 #include "ZCApp/graphics/utils/time_util.hpp"
 
@@ -26,6 +25,8 @@ namespace zc_app
         u_blur_alpha = glGetUniformLocation(blur_program, "effect_alpha");
         u_blur_time = glGetUniformLocation(blur_program, "time");
         u_pass_screen_texture = glGetUniformLocation(pass_program, "screenTexture");
+        u_blur_outline_effect_color = glGetUniformLocation(blur_program, "outline_effect_color");
+        u_blur_outline_effect_strength = glGetUniformLocation(blur_program, "outline_effect_strength");
 
         constexpr float vertices_blur[]{
             0.0F, 0.0F, 0.0F, 0.0F,
@@ -71,17 +72,19 @@ namespace zc_app
         glBindVertexArray(0);
     }
 
-    void partial_blur::render_with_sources(const GLuint background_texture, const GLuint mask_texture,
+   void partial_blur::render_with_sources(const GLuint background_texture, const GLuint mask_texture,
                                    const int width, const int height, const colour &tint_color, const colour colour)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
         glViewport(0, 0, width, height);
+
         glClearColor(colour.get_red_direct(), colour.get_green_direct(), colour.get_blue_direct(), 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(blur_program);
 
-        float deltaTime = time_util::get_delta_time();
+        const float deltaTime = time_util::get_delta_time();
 
         glUniform1f(u_blur_time, deltaTime);
 
@@ -94,7 +97,10 @@ namespace zc_app
             glUniform1f(u_blur_tint_strength, 0.4f);
             glUniform3f(u_blur_tint_color, tint_color.get_red_direct(), tint_color.get_green_direct(),
                         tint_color.get_blue_direct());
-            glUniform1f(u_blur_alpha, 0.01f);
+            glUniform1f(u_blur_alpha, 0.4f);
+            glUniform3f(u_blur_outline_effect_color, 0.0f, 0.0f, 0.0f);
+            glUniform1f(u_blur_outline_effect_strength, 0.5f);
+
             need_update = false;
         }
 
@@ -114,19 +120,22 @@ namespace zc_app
         glEnable(GL_BLEND);
 
         multi_fbo.setup(width, height, 2);
-
         multi_fbo.bind(0);
+
         glViewport(0, 0, width, height);
+
         glClearColor(colour.get_red_direct(), colour.get_green_direct(), colour.get_blue_direct(), 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        draw_background();
-        multi_fbo.bind(1);
 
+        draw_background();
+
+        multi_fbo.bind(1);
         glViewport(0, 0, width, height);
+
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        draw_mask();
 
+        draw_mask();
         multi_fbo.unbind();
 
         render_with_sources(multi_fbo.get_texture(0), multi_fbo.get_texture(1),
@@ -134,7 +143,6 @@ namespace zc_app
 
         glDisable(GL_BLEND);
     }
-
     void partial_blur::reshape(const int width, const int height)
     {
         multi_fbo.resize(width, height);
