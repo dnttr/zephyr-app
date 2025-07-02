@@ -11,7 +11,7 @@ namespace zc_app
         static scene *current;
 
     public:
-        virtual void initialize() = 0;
+        virtual void initialize(int width, int height) = 0;
 
         virtual void render() = 0;
 

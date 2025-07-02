@@ -112,10 +112,10 @@ namespace zc_app
 
         if (need_update)
         {
-            glUniform3f(u_blur_tint_color, 1.0f, 0.2f, 0.2f);
+            glUniform3f(u_blur_tint_color, 0.2f, 0.2f, 0.2f);
             glUniform2f(u_blur_size, static_cast<float>(width), static_cast<float>(height));
-            glUniform1f(u_blur_radius, 20.0f);
-            glUniform1f(u_blur_tint_strength, 0.05f);
+            glUniform1f(u_blur_radius, 10.0f);
+            glUniform1f(u_blur_tint_strength, 0.5f);
             glUniform1i(u_blur_texture, 0);
             glUniform1i(u_blur_quality, 20);
         }

@@ -48,14 +48,19 @@ namespace zc_app
             "Hello, World! This is a test of the text rendering system.\nIt should be able to handle long lines and multiple lines of text without any issues.",
             container{100.0, 100.0}, font, style);
 
-        glClearColor(0.2F, 0.2F, 0.2F, 1.0F);
+        colour color = colour(17, 17, 21);
+
+        glClearColor(color.get_red_direct(), color.get_green_direct(),
+                     color.get_blue_direct(), color.get_alpha_direct());
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         glEnable(GL_MULTISAMPLE);
 
-        ms.initialize();
+        auto [width, height] = perspective_util::get_effective_virtual_dimensions();
+
+        ms.initialize(width / 2, height / 2);
     }
 
     void renderer::render() const
@@ -72,8 +77,6 @@ namespace zc_app
 
     void renderer::reshape(const int width, const int height)
     {
-        const auto &cfg = perspective_util::get_current_display_config();
-
         ms.resize(width, height);
     }
 

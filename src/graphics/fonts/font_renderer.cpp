@@ -7,6 +7,7 @@
 #include <chrono>
 
 #include "ZCApp/graphics/fonts/font_loader.hpp"
+#include "ZCApp/graphics/objects/shapes/container.hpp"
 #include "ZCApp/graphics/utils/perspective_util.hpp"
 #include "ZCApp/graphics/utils/time_util.hpp"
 #include "ZCGKit/external.hpp"
@@ -179,12 +180,14 @@ void zc_app::font_renderer::render(properties &props, text_properties &text_prop
     indices.reserve(props.total_characters * 6);
 
     unsigned int vertex_offset = 0;
-    float base_y = props.y;
+    float base_y = props.y / transform_props.text_magnification + 96.0f;
+
+    int line_height = 0;
 
     for (const auto &line : props.lines)
     {
-        float cursor_x = props.x;
-        float cursor_y = base_y;
+        float cursor_y = base_y + line_height;
+        float cursor_x = props.x / transform_props.text_magnification;
 
         auto *buf = hb_buffer_create();
 
@@ -199,8 +202,6 @@ void zc_app::font_renderer::render(properties &props, text_properties &text_prop
 
         const auto *glyph_info = hb_buffer_get_glyph_infos(buf, &glyph_count);
         const auto *glyph_pos = hb_buffer_get_glyph_positions(buf, &glyph_count);
-
-        int line_height = 0;
 
         for (int i = 0; i < glyph_count; i++)
         {
@@ -228,10 +229,9 @@ void zc_app::font_renderer::render(properties &props, text_properties &text_prop
 
             const float x_advance = static_cast<float>(glyph_pos[i].x_advance) / 64.0f;
             const float y_advance = static_cast<float>(glyph_pos[i].y_advance) / 64.0f;
-            line_height = (size_ypos + bearing_ypos) * 2 + SPACE;
 
-            const float xpos = cursor_x + glyph_xpos * props.text_scale + bearing_xpos * props.text_scale;
-            const float ypos = cursor_y - (bearing_ypos - glyph_ypos) * props.text_scale;
+            const float xpos = cursor_x - glyph_xpos * props.text_scale + bearing_xpos * props.text_scale;
+            const float ypos = cursor_y - (bearing_ypos + glyph_ypos) * props.text_scale;
 
             const float width = size_xpos * props.text_scale;
             const float height = size_ypos * props.text_scale;
@@ -261,7 +261,7 @@ void zc_app::font_renderer::render(properties &props, text_properties &text_prop
             vertex_offset += 4;
         }
 
-        base_y += line_height;
+        line_height += (SPACE * 1.5) / transform_props.text_magnification;
 
         hb_buffer_destroy(buf);
     }

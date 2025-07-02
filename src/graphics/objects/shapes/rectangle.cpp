@@ -25,13 +25,9 @@ namespace zc_app
     {
         u_size = glGetUniformLocation(program, "shape_size");
         u_radius = glGetUniformLocation(program, "shape_radius");
-
-        if (u_projection == -1) std::cerr << "ERROR: Uniform 'projection_matrix' not found in rectangle shader!\n";
-        if (u_position == -1) std::cerr << "ERROR: Uniform 'u_position' not found in rectangle shader!\n";
-        if (u_size == -1) std::cerr << "ERROR: Uniform 'u_size' not found in rectangle shader!\n";
-        if (u_radius == -1) std::cerr << "ERROR: Uniform 'shape_radius' not found in rectangle shader!\n";
-        if (u_color == -1) std::cerr << "ERROR: Uniform 'shape_color' not found in rectangle shader!\n";
-        if (u_opacity == -1) std::cerr << "ERROR: Uniform 'shape_opacity' not found in rectangle shader!\n";
+        u_outline_color = glGetUniformLocation(program, "outline_color");
+        u_outline_opacity = glGetUniformLocation(program, "outline_opacity");
+        u_outline_width = glGetUniformLocation(program, "outline_width");
     }
 
     void rectangle::setup_shape()
@@ -77,6 +73,10 @@ namespace zc_app
         glUniform1f(this->u_radius, radius);
         glUniform3f(u_color, color.get_red_direct(), color.get_green_direct(), color.get_blue_direct());
         glUniform1f(u_opacity, color.get_alpha_direct());
+        glUniform3f(u_outline_color, outline_color.get_red_direct(), outline_color.get_green_direct(),
+                    outline_color.get_blue_direct());
+        glUniform1f(u_outline_opacity, outline_color.get_alpha_direct());
+        glUniform1f(u_outline_width, outline_width);
 
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);

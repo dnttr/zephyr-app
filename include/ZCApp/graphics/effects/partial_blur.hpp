@@ -44,10 +44,10 @@ namespace zc_app
         void draw_quad() const;
 
         void render_with_sources(GLuint background_texture, GLuint mask_texture, int width, int height,
-                                 const colour &tint_color);
+                                 const colour &tint_color, colour colour);
 
         void capture_and_blur(int width, int height, const colour &tint_color, const std::function<void()> &draw_background,
-                              const std::function<void()> &draw_mask);
+                              const std::function<void()> &draw_mask, colour colour);
 
         void reshape(int width, int height);
     };

@@ -31,7 +31,7 @@ namespace zc_app
 
     public:
 
-        void initialize(const std::string &str, zc_app::container container, font_manager::font font, const text_style &style);
+        void initialize(const std::string &str, container container, font_manager::font font, const text_style &style);
 
         void render();
 

@@ -19,6 +19,11 @@ namespace zc_app
         {
         }
 
+        fan_texture(std::string name, const float radius, const int segments) : texture(name), segments(segments),
+            radius(radius)
+        {
+        }
+
         void setup() override;
 
         void render() override;

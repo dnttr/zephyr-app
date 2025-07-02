@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <iostream>
+
 #include <string>
 #include <utility>
 #include <OpenGL/gl3.h>
@@ -36,7 +38,7 @@ namespace zc_app
         GLuint m_texture{};
         GLuint program{};
 
-        container m_container;
+        container m_container{};
 
         std::string m_name;
 
@@ -67,6 +69,22 @@ namespace zc_app
         {
         }
 
+        explicit texture(std::string name) : m_name(std::move(name))
+        {
+        }
+
+        void set_container(const container &new_container)
+        {
+            m_container = new_container;
+            update = true;
+        }
+
+        [[nodiscard]] const container &get_container() const
+        {
+            return m_container;
+        }
+
+
         void draw()
         {
             if (m_texture == 0 || program == 0)
@@ -76,11 +94,15 @@ namespace zc_app
                 auto [tex_id, tex_info] = texture_loader::get(m_name, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_TRUE,
                                                               MAX_ANISOTROPIC);
 
-                const int scaled_width = tex_info.width / m_scale;
-                const int scaled_height = tex_info.height / m_scale;
 
-                m_container.set_width(static_cast<float>(scaled_width));
-                m_container.set_height(static_cast<float>(scaled_height));
+                const float scaled_width = m_container.get_width() > 0 ? m_container.get_width() / m_scale : tex_info.width / m_scale;
+                const float scaled_height = m_container.get_height() > 0 ? m_container.get_height() / m_scale: tex_info.height / m_scale;
+
+                m_container.set_x(m_container.get_x() - (m_container.get_width() - scaled_width));
+                m_container.set_y(m_container.get_y() - (m_container.get_height() - scaled_height));
+
+                m_container.set_width(scaled_width);
+                m_container.set_height(scaled_height);
 
                 m_texture = tex_id;
                 program = shaders::create_program("texture_vert", "texture_frag");
