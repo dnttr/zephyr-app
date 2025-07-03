@@ -24,6 +24,8 @@ namespace zc_app
         rectangle input_area_glass{glass_tint, glass_border, 1, BORDER_RADIUS};
         rectangle message_input{colour(255, 255, 255, 30), accent_color, 2, 25.0F};
 
+        std::vector<int> characters_per_line{};
+
         text input_placeholder{};
         text input_text{};
 
@@ -34,6 +36,11 @@ namespace zc_app
         float target_animated_default_text_pos_y = 0.0f;
         float animated_default_text_pos_y = 0.0f;
         float vertical_entry_animation_speed = 300.0f;
+
+        int characters_total = 0;
+        int character_total_max = 120;
+        int characters_per_line_max = 30;
+        int current_line = 0;
 
         float default_text_pos_x = 0.0f;
         constexpr static float ORIGINAL_FONT_SIZE_OFFSET = 128.0f * 0.1f / 2.0f;
@@ -49,7 +56,7 @@ namespace zc_app
         bool is_hovered = false;
         bool is_typing = false;
 
-        std::string current_text;
+        std::string current_text = "";
 
         float cursor_blink_timer = 0.0f;
         float cursor_blink_speed = 0.5f;
@@ -133,7 +140,6 @@ namespace zc_app
             animated_default_text_pos_y = message_input.get_container().get_y() + message_input.get_container().
                 get_height() / 2 - ORIGINAL_FONT_SIZE_OFFSET;
             target_animated_default_text_pos_y = animated_default_text_pos_y;
-
 
             input_placeholder.initialize(
                 "Type a message...",
@@ -318,20 +324,84 @@ namespace zc_app
                 return;
             }
 
+            const auto length = static_cast<int>(current_text.length());
+
             if (key_event.key_code == ZCG_KEY_BACKSPACE)
             {
                 if (!current_text.empty())
                 {
                     current_text.pop_back();
+
+                    if (current_text.empty())
+                    {
+                        current_line = 0;
+                        characters_per_line.assign(1, 0);
+                        characters_total = 0;
+                    } else if (current_text.back() == '\n')
+                    {
+                        if (current_line > 0)
+                        {
+                            current_line--;
+                            if (!characters_per_line.empty())
+                            {
+                                characters_per_line.pop_back();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (characters_per_line[current_line] > 0 && characters_total > 0)
+                        {
+                            characters_total--;
+                            characters_per_line[current_line]--;
+                        }
+                    }
                 }
             }
             else if (key_event.key_code == ZCG_KEY_ENTER)
             {
-                current_text += '\n';
+                if (count_lines(current_text) > 3 || length == character_total_max)
+                {
+                    return; //unsupported
+                }
+
+                current_text += '\n'; //debug it
+                current_line++;
+                characters_per_line.push_back(0);
             }
             else if (key_event.key_code >= 32 && key_event.key_code <= 126)
             {
+                if (characters_per_line.size() == 0)
+                {
+                    characters_per_line.push_back(0);
+                    current_line = 0;
+                }
+
+                if (characters_total + 1 > character_total_max)
+                {
+                    return; //duh
+                }
+
+                if (current_line < characters_per_line.size() && characters_per_line[current_line] >= characters_per_line_max)
+                {
+                     if (count_lines(current_text) >= max_lines_visible || characters_total == character_total_max)
+                    {
+                        return; //unsupported
+                    }
+
+                    current_text += '\n'; //no idea if it is classified as two or one lol
+                    current_line++;
+                    characters_per_line.push_back(0);
+                }
+
                 current_text += static_cast<char>(key_event.key_code);
+
+                characters_total++;
+
+                if (current_line < characters_per_line.size())
+                {
+                    characters_per_line[current_line]++;
+                }
             }
 
             cursor_blink_timer = 0.0f;
