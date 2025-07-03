@@ -13,7 +13,6 @@
 
 namespace zc_app
 {
-
     class main_scene final : public scene
     {
         colour glass_tint{255, 255, 255, 25};
@@ -342,7 +341,7 @@ namespace zc_app
             user_avatar.draw();
             chat_avatar.draw();
 
-          //  glDisable(GL_SCISSOR_TEST);
+            //  glDisable(GL_SCISSOR_TEST);
 
             username_text.render();
             user_status_text.render();

@@ -51,8 +51,8 @@ namespace zc_app
                 container.set_height(increment);
             }
         }
-    public:
 
+    public:
         void initialize(const float begin_y, const float sidebar_width)
         {
             create_friends_list(begin_y, sidebar_width);
@@ -62,9 +62,12 @@ namespace zc_app
         {
             glEnable(GL_SCISSOR_TEST);
 
-            const float scale = (perspective_util::get_current_display_config().dpi_scale * perspective_util::get_current_display_config().scale) / 2;
+            const float scale = (perspective_util::get_current_display_config().dpi_scale *
+                perspective_util::get_current_display_config().scale) / 2;
 
-            glScissor(friends_container.get_x() * scale, (sidebar_glass_y + PADDING) * scale, friends_container.get_width() * scale, (friends_container.get_y() + friends_container.get_height() + PADDING) * scale);
+            glScissor(friends_container.get_x() * scale, (sidebar_glass_y + PADDING) * scale,
+                      friends_container.get_width() * scale,
+                      (friends_container.get_y() + friends_container.get_height() + PADDING) * scale);
 
             for (auto &friend_btn : friends_list)
             {
