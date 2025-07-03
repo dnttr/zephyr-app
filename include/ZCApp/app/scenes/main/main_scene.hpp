@@ -152,7 +152,7 @@ namespace zc_app
             user_avatar.setup();
             chat_avatar.setup();
 
-            f_list.initialize(friends_header.get_container().get_y() + 50, sidebar_width);
+            f_list.initialize(friends_header.get_container().get_y() + 50, sidebar_width, sidebar_glass.get_container().get_height());
         }
 
         void setup_text_styles()
