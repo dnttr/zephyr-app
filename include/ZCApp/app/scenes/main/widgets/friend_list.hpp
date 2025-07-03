@@ -13,6 +13,8 @@
 #include "ZCApp/graphics/utils/perspective_util.hpp"
 #include "ZCApp/graphics/utils/time_util.hpp"
 
+#define SCROLLBAR_WIDTH 2.0F
+
 namespace zc_app
 {
     class friend_list
@@ -30,6 +32,11 @@ namespace zc_app
         float scroll_animation_timer = 0.0f;
         float scroll_start_offset_y = 0.0f;
         float scroll_sensitivity_multiplier = 2.0f;
+
+        rectangle scrollbar_thumb_rect{colour(130, 130, 130, 40), colour(0, 0, 0, 200), 1, 7.5F};
+        rectangle scrollbar_track_rect{colour(130, 0, 240, 100), 7.5f };
+
+        const float min_thumb_height = 20.0f;
 
         container friends_container{};
 
@@ -106,14 +113,6 @@ namespace zc_app
 
         void draw(const float sidebar_glass_y)
         {
-            const float container_top_y = friends_container.get_y();
-            const float container_bottom_y = friends_container.get_y() + friends_container.get_height();
-            const float container_left_x = friends_container.get_x();
-            const float container_right_x = friends_container.get_x() + friends_container.get_width();
-
-            rect.set_container(container(container_left_x, container_top_y, container_right_x, container_bottom_y));
-            rect.draw(); //TODO: add line for the information
-
             glEnable(GL_SCISSOR_TEST);
 
             const float scale = (perspective_util::get_current_display_config().dpi_scale *
@@ -141,6 +140,48 @@ namespace zc_app
             }
 
             glDisable(GL_SCISSOR_TEST);
+
+            const float content_height = get_total_content_height();
+            const float viewport_height = friends_container.get_height();
+
+            if (content_height > viewport_height)
+            {
+                scrollbar_track_rect.get_container().set_x(friends_container.get_x() + friends_container.get_width() + 2);
+                scrollbar_track_rect.get_container().set_y(friends_container.get_y());
+                scrollbar_track_rect.get_container().set_width(SCROLLBAR_WIDTH);
+                scrollbar_track_rect.get_container().set_height(friends_container.get_height());
+
+                scrollbar_track_rect.draw();
+
+                const float thumb_proportional_height = viewport_height / content_height;
+                float thumb_height = viewport_height * thumb_proportional_height;
+
+                thumb_height = std::max(thumb_height, min_thumb_height);
+
+                constexpr float scroll_boundary_top = 0;
+                const float scroll_boundary_bottom = viewport_height - PADDING - content_height;
+
+                const float scroll_range = scroll_boundary_top - scroll_boundary_bottom;
+                const float current_scroll_from_top = scroll_boundary_top - current_scroll_offset_y;
+
+                float normalized_scroll = 0.0f;
+
+                if (scroll_range > 0.0f)
+                {
+                    normalized_scroll = current_scroll_from_top / scroll_range;
+                }
+
+                normalized_scroll = std::max(0.0f, std::min(1.0f, normalized_scroll));
+
+                const float thumb_movable_range = friends_container.get_height() - thumb_height;
+                const float thumb_y_offset_in_track = normalized_scroll * thumb_movable_range;
+
+                scrollbar_thumb_rect.get_container().set_x(scrollbar_track_rect.get_container().get_x());
+                scrollbar_thumb_rect.get_container().set_y(scrollbar_track_rect.get_container().get_y() + thumb_y_offset_in_track);
+                scrollbar_thumb_rect.get_container().set_width(scrollbar_track_rect.get_container().get_width());
+                scrollbar_thumb_rect.get_container().set_height(thumb_height + static_cast<float>(PADDING) / 2.0F);
+                scrollbar_thumb_rect.draw();
+            }
         }
 
         [[nodiscard]] float get_total_content_height() const
@@ -166,12 +207,12 @@ namespace zc_app
                 return 0.0F;
             }
 
-            return -(content_height - viewport_height + PADDING);
+            return -(content_height - viewport_height);
         }
 
         [[nodiscard]] float get_min_scroll_y()
         {
-            return PADDING;
+            return 0;
         }
 
         [[nodiscard]] bool is_in_scrollable_area(const float x, const float y) const
@@ -203,7 +244,7 @@ namespace zc_app
             const float immediate_desired_offset_y = current_scroll_offset_y + scroll_event.delta_y *
                 scroll_sensitivity_multiplier;
 
-            constexpr float scroll_boundary_top = PADDING;
+            constexpr float scroll_boundary_top = 0;
             const float content_height = get_total_content_height() - PADDING;
             const float viewport_height = friends_container.get_height();
             float scroll_boundary_bottom = content_height <= viewport_height

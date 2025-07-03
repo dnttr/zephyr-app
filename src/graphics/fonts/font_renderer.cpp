@@ -196,7 +196,11 @@ void zc_app::font_renderer::render(properties &props, text_properties &text_prop
         hb_buffer_set_script(buf, HB_SCRIPT_LATIN);
         hb_buffer_set_language(buf, hb_language_from_string("en", -1));
 
-        hb_shape(props.font.hb_font, buf, nullptr, 0);
+        hb_feature_t features[2];
+        hb_feature_from_string("liga=0", -1, &features[0]);
+        hb_feature_from_string("clig=0", -1, &features[1]);
+
+        hb_shape(props.font.hb_font, buf, features, 2);
 
         unsigned int glyph_count;
 
@@ -210,7 +214,8 @@ void zc_app::font_renderer::render(properties &props, text_properties &text_prop
 
             if (it == props.font.characters_map.end())
             {
-                continue;
+                std::cerr << line << " - Glyph index: " << glyph_index << " not found in font characters map." << std::endl;
+                throw std::runtime_error("Glyph not found in font characters map: " + std::to_string(glyph_index));
             }
 
             const auto character = it->second;

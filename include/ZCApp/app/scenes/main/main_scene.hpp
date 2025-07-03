@@ -253,7 +253,7 @@ namespace zc_app
             std::vector<std::pair<std::string, bool>> messages = {
                 {"Hey! How was your weekend?", false},
                 {"It was great! Went hiking with friends. How about you?", true},
-                {"Nice! I stayed home and binged Netflix", false}, //i need to add suport for emojis
+                {"Nice! I stayed home and binged Netflix", false},
                 {"Haha, sometimes that's exactly what you need!", true},
                 {"Absolutely! Any show recommendations?", false}
             };
