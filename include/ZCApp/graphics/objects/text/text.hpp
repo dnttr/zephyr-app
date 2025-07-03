@@ -27,6 +27,8 @@ namespace zc_app
 
         bool is_initialized = false;
 
+        std::string str;
+
         static void initialize_shader();
 
     public:
@@ -36,5 +38,7 @@ namespace zc_app
         void render();
 
         ~text();
+
+        std::string get_text();
     };
 }

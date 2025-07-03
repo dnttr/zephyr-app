@@ -54,7 +54,7 @@ namespace zc_app
         std::vector<friend_button> friends_list;
 
         std::vector<rectangle> message_bubbles;
-        std::vector<text> message_texts;
+        std::vector<std::unique_ptr<text>> message_texts;
 
         int scene_width = 0;
         int scene_height = 0;
@@ -222,7 +222,7 @@ namespace zc_app
             );
 
             input_placeholder.initialize(
-            "Type a message...",
+                "Type a message...",
                 container(message_input.get_container().get_x() + 20, message_input.get_container().get_y() + 15),
                 font_manager::get_font("Roboto-Regular"),
                 placeholder_style
@@ -245,10 +245,20 @@ namespace zc_app
             );
         }
 
+        const float default_item_height = 65.0f;
+        const float default_item_spacing = 8.0f;
+
+        container friends_container{};
+
         void create_friends_list(float sidebar_width)
         {
             float start_y = friends_header.get_container().get_y() + 50;
-            float item_height = 65.0f;
+            float item_height = default_item_height;
+
+            friends_container.set_x(PADDING * 2);
+            friends_container.set_y(start_y);
+            friends_container.set_width(sidebar_width - PADDING * 4);
+            friends_container.set_height(item_height);
 
             std::vector<std::string> friend_names = {
                 "Sarah Wilson", "Mike Chen", "Emma Davis",
@@ -259,14 +269,14 @@ namespace zc_app
             for (int i = 0; i < friend_names.size() && i < 8; ++i)
             {
                 friend_button button;
-                container friend_container(
-                    PADDING * 2,
-                    start_y + i * (item_height + 8),
-                    sidebar_width - PADDING * 4,
-                    item_height
-                );
-                button.setup(friend_container);
+
+                container container = friends_container;
+                float increment = friends_container.get_y() + i * (item_height + default_item_spacing);
+                container.set_y(increment);
+
+                button.setup(container);
                 friends_list.push_back(button);
+                container.set_height(increment);
             }
         }
 
@@ -279,16 +289,17 @@ namespace zc_app
             std::vector<std::pair<std::string, bool>> messages = {
                 {"Hey! How was your weekend?", false},
                 {"It was great! Went hiking with friends. How about you?", true},
-                {"Nice! I stayed home and binged Netflix 😅", false}, //i need to add suport for emojis
+                {"Nice! I stayed home and binged Netflix", false}, //i need to add suport for emojis
                 {"Haha, sometimes that's exactly what you need!", true},
                 {"Absolutely! Any show recommendations?", false}
             };
 
             text_style message_style;
             message_style.text_size_magnification = 0.06F;
+            message_style.text_color = colour(0, 0, 0, 255);
             message_style.shadow_enable = true;
             message_style.shadow_offset = {1.0F, 1.0F};
-            message_style.shadow_color = colour(0, 0, 0, 80);
+            message_style.shadow_color = colour(0, 0, 0, 0);
 
             for (int i = 0; i < messages.size(); ++i)
             {
@@ -301,31 +312,32 @@ namespace zc_app
                                      : chat_content_x + 20;
 
                 rectangle bubble(
-                    is_sent ? accent_color : colour(255, 255, 255, 40),
+                    is_sent ? accent_color : colour(255, 255, 255, 80),
                     is_sent ? colour(255, 255, 255, 100) : colour(255, 255, 255, 60),
                     1, 18.0f
                 );
                 bubble.set_container(container(bubble_x, message_y + i * 60, bubble_width, bubble_height));
                 message_bubbles.push_back(bubble);
 
-                message_style.text_color = is_sent ? colour(255, 255, 255) : colour(220, 220, 220);
+                message_style.text_color = is_sent ? colour(0, 0, 0) : colour(0, 0, 0);
                 text msg_text;
 
-                msg_text.initialize(
+                auto msg_text_ptr = std::make_unique<text>();
+                msg_text_ptr->initialize(
                     messages[i].first,
                     container(bubble_x + 15, message_y + i * 60 + 12),
                     font_manager::get_font("Roboto-Regular"),
                     message_style
                 );
-
-                message_texts.push_back(msg_text);
+                message_texts.push_back(std::move(msg_text_ptr));
             }
         }
 
         void setup_typing_animation(float chat_x)
         {
-
         }
+
+        rectangle rect{colour(0, 0, 0, 255), colour(0, 0, 0, 0), 1, 0.0F};
 
         void render() override
         {
@@ -367,15 +379,25 @@ namespace zc_app
                 bubble.draw();
             }
 
-            glDisable(GL_BLEND);
-
             user_avatar.draw();
             chat_avatar.draw();
+
+
+            glEnable(GL_SCISSOR_TEST);
+            int width = scene_width;
+            int height = scene_height;
+            rect.set_container(container(0, 0, width, height));
+            float scale = (perspective_util::get_current_display_config().dpi_scale * perspective_util::get_current_display_config().scale) / 2;
+            glScissor(friends_container.get_x() * scale, (sidebar_glass.get_container().get_y() + PADDING) * scale, friends_container.get_width() * scale, (friends_container.get_y() + friends_container.get_height() + PADDING) * scale);
 
             for (auto &friend_btn : friends_list)
             {
                 friend_btn.render();
             }
+
+            glDisable(GL_SCISSOR_TEST);
+
+          //  glDisable(GL_SCISSOR_TEST);
 
             username_text.render();
             user_status_text.render();
@@ -389,12 +411,15 @@ namespace zc_app
 
             for (auto &msg_text : message_texts)
             {
-                msg_text.render();
+                if (msg_text)
+                {
+                    msg_text->render();
+                }
             }
         }
 
         void update() override
-        {//should i use delta time here?
+        {
             typing_animation += 0.1f;
 
             if (typing_animation > 6.28f) typing_animation = 0.0f;

@@ -38,6 +38,7 @@ namespace zc_app
         properties.startTime = std::chrono::steady_clock::now();
 
         this->style = style;
+        this->str = str;
 
         font_renderer::set_parameters(this->style, text_props, transform_props, properties);
 
@@ -66,5 +67,10 @@ namespace zc_app
 
             is_initialized = false;
         }
+    }
+
+    std::string text::get_text()
+    {
+        return str;
     }
 }
