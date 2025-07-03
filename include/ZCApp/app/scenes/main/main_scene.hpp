@@ -1,6 +1,7 @@
 #pragma once
 
 #include "widgets/friend_button.hpp"
+#include "ZCApp/app/scenes/apperance.hpp"
 #include "ZCApp/graphics/effects/partial_blur.hpp"
 #include "ZCApp/graphics/objects/background.hpp"
 #include "ZCApp/graphics/objects/shapes/rectangle.hpp"
@@ -10,11 +11,9 @@
 #include "ZCApp/graphics/textures/texture.hpp"
 #include "ZCApp/graphics/utils/perspective_util.hpp"
 
-#define PADDING 12
-#define BORDER_RADIUS 16.0F
-
 namespace zc_app
 {
+
     class main_scene final : public scene
     {
         colour glass_tint{255, 255, 255, 25};
@@ -50,8 +49,6 @@ namespace zc_app
 
         rectangle friends_header{dark_glass, colour(255, 255, 255, 60), 1, 8.0F};
         rectangle chat_header{dark_glass, glass_border, 1, BORDER_RADIUS};
-
-        std::vector<friend_button> friends_list;
 
         std::vector<rectangle> message_bubbles;
         std::vector<std::unique_ptr<text>> message_texts;
@@ -144,8 +141,6 @@ namespace zc_app
             ));
 
             setup_text_styles();
-
-            create_friends_list(sidebar_width);
 
             create_test_messages(chat_x);
 
@@ -243,41 +238,6 @@ namespace zc_app
                 font_manager::get_font("Roboto-Regular"),
                 icon_style
             );
-        }
-
-        const float default_item_height = 65.0f;
-        const float default_item_spacing = 8.0f;
-
-        container friends_container{};
-
-        void create_friends_list(float sidebar_width)
-        {
-            float start_y = friends_header.get_container().get_y() + 50;
-            float item_height = default_item_height;
-
-            friends_container.set_x(PADDING * 2);
-            friends_container.set_y(start_y);
-            friends_container.set_width(sidebar_width - PADDING * 4);
-            friends_container.set_height(item_height);
-
-            std::vector<std::string> friend_names = {
-                "Sarah Wilson", "Mike Chen", "Emma Davis",
-                "Alex Turner", "Lisa Park", "David Kim",
-                "Rachel Green", "Tom Brown"
-            };
-
-            for (int i = 0; i < friend_names.size() && i < 8; ++i)
-            {
-                friend_button button;
-
-                container container = friends_container;
-                float increment = friends_container.get_y() + i * (item_height + default_item_spacing);
-                container.set_y(increment);
-
-                button.setup(container);
-                friends_list.push_back(button);
-                container.set_height(increment);
-            }
         }
 
         void create_test_messages(float chat_x)
@@ -381,21 +341,6 @@ namespace zc_app
 
             user_avatar.draw();
             chat_avatar.draw();
-
-
-            glEnable(GL_SCISSOR_TEST);
-            int width = scene_width;
-            int height = scene_height;
-            rect.set_container(container(0, 0, width, height));
-            float scale = (perspective_util::get_current_display_config().dpi_scale * perspective_util::get_current_display_config().scale) / 2;
-            glScissor(friends_container.get_x() * scale, (sidebar_glass.get_container().get_y() + PADDING) * scale, friends_container.get_width() * scale, (friends_container.get_y() + friends_container.get_height() + PADDING) * scale);
-
-            for (auto &friend_btn : friends_list)
-            {
-                friend_btn.render();
-            }
-
-            glDisable(GL_SCISSOR_TEST);
 
           //  glDisable(GL_SCISSOR_TEST);
 
