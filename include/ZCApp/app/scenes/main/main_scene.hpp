@@ -358,7 +358,7 @@ namespace zc_app
             send_icon.render();
             attach_icon.render();
 
-            f_list.draw(sidebar_glass.get_container().get_y(), scene_width, scene_height);
+            f_list.draw(sidebar_glass.get_container().get_y());
 
             for (auto &msg_text : message_texts)
             {
@@ -382,6 +382,8 @@ namespace zc_app
             {
                 show_typing = !show_typing;
             }
+
+            f_list.update(time_util::get_delta_time());
         }
 
         void scroll(const zcg_scroll_event_t &scroll_event)

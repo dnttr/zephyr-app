@@ -377,12 +377,12 @@ namespace zc_app
 
     void background::setup_buffers(const line_buffer_set &lbs)
     {
-        const auto lb_start_points_size = GL_SIZEI_PTR(lbs.start_points.size());
-        const auto lb_end_points_size = GL_SIZEI_PTR(lbs.end_points.size());
-        const auto lb_alphas_size = GL_SIZEI_PTR(lbs.alphas.size());
+        const auto lb_start_points_size = GL_SIZEI_PTR_C(lbs.start_points.size());
+        const auto lb_end_points_size = GL_SIZEI_PTR_C(lbs.end_points.size());
+        const auto lb_alphas_size = GL_SIZEI_PTR_C(lbs.alphas.size());
 
-        constexpr auto float_size = GL_SIZEI_PTR(sizeof(float));
-        constexpr auto vec_size = GL_SIZEI_PTR(sizeof(glm::vec2));
+        constexpr auto float_size = GL_SIZEI_PTR_C(sizeof(float));
+        constexpr auto vec_size = GL_SIZEI_PTR_C(sizeof(glm::vec2));
 
         glBindBuffer(GL_ARRAY_BUFFER, lbs.start_vbo);
         glBufferSubData(GL_ARRAY_BUFFER, 0, lb_start_points_size * vec_size, lbs.start_points.data());
@@ -462,7 +462,7 @@ namespace zc_app
 
         glEnable(GL_BLEND);
 
-        const auto lb_count = GL_SIZEI(current_buffer.count);
+        const auto lb_count = GL_SIZEI_C(current_buffer.count);
         glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr, lb_count);
 
         glBindVertexArray(0);

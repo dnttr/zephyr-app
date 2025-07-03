@@ -270,7 +270,7 @@ namespace zc_app
             buffers[i] = GL_COLOR_ATTACHMENT0 + i;
         }
 
-        glDrawBuffers(GL_SIZEI(textures.size()), buffers.data());
+        glDrawBuffers(GL_SIZEI_C(textures.size()), buffers.data());
     }
 
     void multi_attachment_framebuffer::resize(const int width, const int height)
@@ -331,7 +331,7 @@ namespace zc_app
         {
             glDeleteFramebuffers(1, &fbo);
             glDeleteRenderbuffers(1, &rbo);
-            glDeleteTextures(GL_SIZEI(textures.size()), textures.data());
+            glDeleteTextures(GL_SIZEI_C(textures.size()), textures.data());
 
             fbo = 0;
             rbo = 0;
