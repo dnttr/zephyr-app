@@ -15,6 +15,30 @@ namespace zc_app
 {
     static renderer *current_renderer = nullptr;
 
+    void on_mouse_move(zcg_mouse_pos_t mouse_pos)
+    {
+    }
+
+    void on_mouse_enter(zcg_mouse_pos_t mouse_pos)
+    {
+    }
+
+    void on_mouse_exit(zcg_mouse_pos_t mouse_pos)
+    {
+    }
+
+    void on_mouse_down(zcg_mouse_pos_t mouse_pos, int button)
+    {
+    }
+
+    void on_mouse_up(zcg_mouse_pos_t mouse_pos, int button)
+    {
+    }
+
+    void on_scroll(zcg_scroll_event_t scroll_event)
+    {
+    }
+
     static void destroy_callback()
     {
         if (current_renderer)
@@ -75,7 +99,13 @@ namespace zc_app
             .on_render_callback = render_callback,
             .on_reshape_callback = reshape_callback,
             .on_init_callback = initialize_callback,
-            .on_update_callback = update_callback
+            .on_update_callback = update_callback,
+            .on_mouse_move_callback = on_mouse_move,
+            .on_mouse_enter_callback = on_mouse_enter,
+            .on_mouse_exit_callback = on_mouse_exit,
+            .on_mouse_down_callback = on_mouse_down,
+            .on_mouse_up_callback = on_mouse_up,
+            .on_scroll_callback = on_scroll,
         };
 
         if (cfg.window_width == 0 || cfg.window_height == 0)
@@ -97,7 +127,7 @@ namespace zc_app
             .min_width = static_cast<int>(cfg.window_width / min_width_factor),
             .min_height = static_cast<int>(cfg.window_height / min_height_factor),
             .max_width = 0,
-            .max_height =  0,
+            .max_height = 0,
         };
 
         perspective_util::set_current_display_config(cfg);
@@ -113,7 +143,8 @@ namespace zc_app
         }
 
         if (m_callback_handle.on_init_callback == nullptr || m_callback_handle.on_render_callback == nullptr ||
-            m_callback_handle.on_reshape_callback == nullptr || m_callback_handle.on_update_callback == nullptr || m_callback_handle.on_exit_callback == nullptr)
+            m_callback_handle.on_reshape_callback == nullptr || m_callback_handle.on_update_callback == nullptr ||
+            m_callback_handle.on_exit_callback == nullptr)
         {
             throw std::runtime_error("Initialization callback is not set.");
         }
