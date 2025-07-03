@@ -2,6 +2,7 @@
 
 #include "widgets/friend_button.hpp"
 #include "widgets/friend_list.hpp"
+#include "widgets/input_message_button.hpp"
 #include "ZCApp/app/scenes/apperance.hpp"
 #include "ZCApp/graphics/effects/partial_blur.hpp"
 #include "ZCApp/graphics/objects/background.hpp"
@@ -16,23 +17,13 @@ namespace zc_app
 {
     class main_scene final : public scene
     {
-        colour glass_tint{255, 255, 255, 25};
-        colour glass_border{255, 255, 255, 40};
-        colour dark_glass{0, 0, 0, 120};
-        colour accent_color{106, 156, 234};
-
-        colour bg_gradient_start{102, 126, 234};
-        colour bg_gradient_end{118, 75, 162};
-
         partial_blur blur_effect{};
         background bg{};
 
         rectangle sidebar_glass{glass_tint, glass_border, 1, BORDER_RADIUS};
         rectangle chat_area_glass{glass_tint, glass_border, 1, BORDER_RADIUS};
-        rectangle input_area_glass{glass_tint, glass_border, 1, BORDER_RADIUS};
         rectangle top_bar_glass{dark_glass, glass_border, 1, BORDER_RADIUS};
         rectangle profile_section{dark_glass, glass_border, 1, BORDER_RADIUS};
-        rectangle message_input{colour(255, 255, 255, 30), accent_color, 2, 25.0F};
         rectangle send_button{accent_color, colour(255, 255, 255, 100), 1, 20.0F};
         rectangle attach_button{glass_tint, glass_border, 1, 20.0F};
 
@@ -41,7 +32,7 @@ namespace zc_app
         fan_texture user_avatar{"avatar.png", 2.0F, 32};
         fan_texture chat_avatar{"avatar.png", 2.0F, 32};
 
-        text input_placeholder, send_icon, attach_icon;
+        text send_icon, attach_icon;
         text search_placeholder, search_icon;
         text username_text, user_status_text;
         text chat_title, last_seen_text;
@@ -60,6 +51,7 @@ namespace zc_app
         bool show_typing = false;
 
         friend_list f_list;
+        input_message_button input_button;
 
     public:
         void initialize(int scene_width, int scene_height) override
@@ -118,17 +110,8 @@ namespace zc_app
                 40.0f, 40.0f
             ));
 
-            input_area_glass.set_container(container(
-                chat_x, scene_height - input_height - PADDING,
-                scene_width - chat_x - PADDING,
-                input_height
-            ));
-
-            message_input.set_container(container(
-                chat_x + PADDING * 2, scene_height - input_height - PADDING + input_height / 2 - 25,
-                scene_width - chat_x - PADDING * 6 - 120,
-                50.0f
-            ));
+            //INPUT_AREA_GLASS
+            input_button.initialize(chat_x, input_height, scene_height, scene_width);
 
             send_button.set_container(container(
                 scene_width - PADDING * 3 - 50,
@@ -218,13 +201,6 @@ namespace zc_app
                 container(chat_header.get_container().get_x() + 60, chat_header.get_container().get_y() + 35),
                 font_manager::get_font("Roboto-Regular"),
                 status_style
-            );
-
-            input_placeholder.initialize(
-                "Type a message...",
-                container(message_input.get_container().get_x() + 20, message_input.get_container().get_y() + 15),
-                font_manager::get_font("Roboto-Regular"),
-                placeholder_style
             );
 
             text_style icon_style = default_style;
@@ -322,7 +298,7 @@ namespace zc_app
                 {
                     sidebar_glass.draw();
                     chat_area_glass.draw();
-                    input_area_glass.draw();
+                    input_button.draw_glassy();
                 },
                 bg_gradient_start
             );
@@ -334,7 +310,7 @@ namespace zc_app
             search_bar.draw();
             friends_header.draw();
             chat_header.draw();
-            message_input.draw();
+            input_button.draw();
             send_button.draw();
             attach_button.draw();
 
@@ -354,7 +330,6 @@ namespace zc_app
             friends_title.render();
             chat_title.render();
             last_seen_text.render();
-            input_placeholder.render();
             send_icon.render();
             attach_icon.render();
 
@@ -389,6 +364,11 @@ namespace zc_app
         void scroll(const zcg_scroll_event_t &scroll_event)
         {
             f_list.scroll(scroll_event);
+        }
+
+        void on_mouse_move(const zcg_mouse_pos_t &mouse_pos)
+        {
+            input_button.on_mouse_move(mouse_pos);
         }
 
         void resize(int width, int height) override

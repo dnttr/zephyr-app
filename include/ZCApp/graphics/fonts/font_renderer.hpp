@@ -64,9 +64,6 @@ namespace zc_app
         static inline GLuint text_ubo;
         static inline GLuint transform_ubo;
 
-        static void update_text_properties(const text_properties &properties);
-        static void update_transform_properties(const transform_properties &properties);
-
         static void setup_ubo();
 
     public:
@@ -106,6 +103,10 @@ namespace zc_app
                                    text_properties &text_props,
                                    transform_properties &transform_props,
                                    const properties &props);
+
+        static void update_text_properties(const text_properties &properties);
+
+        static void update_transform_properties(const transform_properties &properties);
 
         static void render(properties &props,
                            text_properties &text_props,

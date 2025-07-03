@@ -32,12 +32,14 @@ namespace zc_app
         static void initialize_shader();
 
     public:
+        ~text();
 
         void initialize(const std::string &str, container container, font_manager::font font, const text_style &style);
 
         void render();
 
-        ~text();
+        void set_properties_position(float x, float y);
+        void increment_text_position(float x, float y);
 
         std::string get_text();
     };

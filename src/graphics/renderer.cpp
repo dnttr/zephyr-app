@@ -88,6 +88,7 @@ namespace zc_app
 
     void renderer::on_mouse_move(const zcg_mouse_pos_t &mouse_pos)
     {
+        ms.on_mouse_move(mouse_pos);
     }
 
     void renderer::on_mouse_enter(const zcg_mouse_pos_t &mouse_pos)

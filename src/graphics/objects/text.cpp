@@ -16,7 +16,8 @@ namespace zc_app
         is_shader_initialized = true;
     }
 
-    void text::initialize(const std::string &str, const container container, font_manager::font font, const text_style &style)
+    void text::initialize(const std::string &str, const container container, font_manager::font font,
+                          const text_style &style)
     {
         const auto [lines, size] = string_util::get_lines(str);
 
@@ -67,6 +68,28 @@ namespace zc_app
 
             is_initialized = false;
         }
+    }
+
+    void text::set_properties_position(float x, float y)
+    {
+        text_props.text_position.x = x;
+        text_props.text_position.y = y;
+
+        properties.x = x;
+        properties.y = y;
+
+        font_renderer::set_parameters(this->style, text_props, transform_props, properties);
+    }
+
+    void text::increment_text_position(const float x, const float y)
+    {
+        text_props.text_position.x += x;
+        text_props.text_position.y += y;
+
+        properties.x += x;
+        properties.y += y;
+
+        font_renderer::set_parameters(this->style, text_props, transform_props, properties);
     }
 
     std::string text::get_text()
