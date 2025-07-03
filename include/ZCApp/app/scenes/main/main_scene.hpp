@@ -1,6 +1,7 @@
 #pragma once
 
 #include "widgets/friend_button.hpp"
+#include "widgets/friend_list.hpp"
 #include "ZCApp/app/scenes/apperance.hpp"
 #include "ZCApp/graphics/effects/partial_blur.hpp"
 #include "ZCApp/graphics/objects/background.hpp"
@@ -57,6 +58,8 @@ namespace zc_app
 
         float typing_animation = 0.0f;
         bool show_typing = false;
+
+        friend_list f_list;
 
     public:
         void initialize(int scene_width, int scene_height) override
@@ -148,6 +151,8 @@ namespace zc_app
             bg.setup();
             user_avatar.setup();
             chat_avatar.setup();
+
+            f_list.initialize(friends_header.get_container().get_y() + 50, sidebar_width);
         }
 
         void setup_text_styles()
@@ -353,6 +358,8 @@ namespace zc_app
             send_icon.render();
             attach_icon.render();
 
+            f_list.draw(sidebar_glass.get_container().get_y(), scene_width, scene_height);
+
             for (auto &msg_text : message_texts)
             {
                 if (msg_text)
@@ -375,6 +382,11 @@ namespace zc_app
             {
                 show_typing = !show_typing;
             }
+        }
+
+        void scroll(const zcg_scroll_event_t &scroll_event)
+        {
+            f_list.scroll(scroll_event);
         }
 
         void resize(int width, int height) override

@@ -15,28 +15,52 @@ namespace zc_app
 {
     static renderer *current_renderer = nullptr;
 
-    void on_mouse_move(zcg_mouse_pos_t mouse_pos)
+    void mouse_move_callback(zcg_mouse_pos_t mouse_pos)
     {
+        if (current_renderer)
+        {
+            current_renderer->on_mouse_move(mouse_pos);
+        }
     }
 
-    void on_mouse_enter(zcg_mouse_pos_t mouse_pos)
+    void mouse_enter_callback(zcg_mouse_pos_t mouse_pos)
     {
+        if (current_renderer)
+        {
+            current_renderer->on_mouse_enter(mouse_pos);
+        }
     }
 
-    void on_mouse_exit(zcg_mouse_pos_t mouse_pos)
+    void mouse_exit_callback(zcg_mouse_pos_t mouse_pos)
     {
+        if (current_renderer)
+        {
+            current_renderer->on_mouse_exit(mouse_pos);
+        }
     }
 
-    void on_mouse_down(zcg_mouse_pos_t mouse_pos, int button)
+    void mouse_down_callback(zcg_mouse_pos_t mouse_pos, const int button)
     {
+        if (current_renderer)
+        {
+            current_renderer->on_mouse_down(mouse_pos, button);
+        }
     }
 
-    void on_mouse_up(zcg_mouse_pos_t mouse_pos, int button)
+    void mouse_up_callback(zcg_mouse_pos_t mouse_pos, const int button)
     {
+        if (current_renderer)
+        {
+            current_renderer->on_mouse_up(mouse_pos, button);
+        }
     }
 
-    void on_scroll(zcg_scroll_event_t scroll_event)
+    void scroll_callback(zcg_scroll_event_t scroll_event)
     {
+        if (current_renderer)
+        {
+            current_renderer->on_scroll(scroll_event);
+        }
     }
 
     static void destroy_callback()
@@ -100,12 +124,12 @@ namespace zc_app
             .on_reshape_callback = reshape_callback,
             .on_init_callback = initialize_callback,
             .on_update_callback = update_callback,
-            .on_mouse_move_callback = on_mouse_move,
-            .on_mouse_enter_callback = on_mouse_enter,
-            .on_mouse_exit_callback = on_mouse_exit,
-            .on_mouse_down_callback = on_mouse_down,
-            .on_mouse_up_callback = on_mouse_up,
-            .on_scroll_callback = on_scroll,
+            .on_mouse_move_callback = mouse_move_callback,
+            .on_mouse_enter_callback = mouse_enter_callback,
+            .on_mouse_exit_callback = mouse_exit_callback,
+            .on_mouse_down_callback = mouse_down_callback,
+            .on_mouse_up_callback = mouse_up_callback,
+            .on_scroll_callback = scroll_callback,
         };
 
         if (cfg.window_width == 0 || cfg.window_height == 0)

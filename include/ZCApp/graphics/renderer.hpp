@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "ZCGKit/zcg_interface.h"
 
 namespace zc_app
 {
@@ -21,5 +22,17 @@ namespace zc_app
         void reshape(int width, int height);
 
         void run();
+
+        void on_mouse_up(const zcg_mouse_pos_t &mouse_pos, int button);
+
+        void on_mouse_down(const zcg_mouse_pos_t &mouse_pos, int button);
+
+        void on_mouse_move(const zcg_mouse_pos_t &mouse_pos);
+
+        void on_mouse_enter(const zcg_mouse_pos_t &mouse_pos);
+
+        void on_mouse_exit(const zcg_mouse_pos_t &mouse_pos);
+
+        void on_scroll(const zcg_scroll_event_t &scroll_event);
     };
 }

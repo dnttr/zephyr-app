@@ -22,6 +22,11 @@ namespace zc_app
             button_shape.draw();
         }
 
+        container &get_container()
+        {
+            return button_shape.get_container();
+        }
+
         void on_click()
         {
         }

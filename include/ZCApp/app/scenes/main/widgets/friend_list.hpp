@@ -19,11 +19,13 @@ namespace zc_app
         const float default_item_height = 65.0f;
         const float default_item_spacing = 8.0f;
 
+        float scroll_offset = 0.0f;
+
         container friends_container{};
 
         void create_friends_list(float begin_y, float sidebar_width)
         {
-            float start_y = begin_y + 50;
+            float start_y = begin_y;
             float item_height = default_item_height;
 
             friends_container.set_x(PADDING * 2);
@@ -75,6 +77,16 @@ namespace zc_app
             }
 
             glDisable(GL_SCISSOR_TEST);
+        }
+
+        void scroll(zcg_scroll_event_t scroll_event)
+        {
+            std::cout << "Scroll event: delta_y = " << scroll_event.delta_y << std::endl;
+            for (auto &friend_btn : friends_list)
+            {
+                auto &container = friend_btn.get_container();
+                container.set_y(container.get_y() + scroll_event.delta_y);
+            }
         }
     };
 }

@@ -77,4 +77,29 @@ namespace zc_app
     void renderer::run()
     {
     }
+
+    void renderer::on_mouse_up(const zcg_mouse_pos_t &mouse_pos, const int button)
+    {
+    }
+
+    void renderer::on_mouse_down(const zcg_mouse_pos_t &mouse_pos, int button)
+    {
+    }
+
+    void renderer::on_mouse_move(const zcg_mouse_pos_t &mouse_pos)
+    {
+    }
+
+    void renderer::on_mouse_enter(const zcg_mouse_pos_t &mouse_pos)
+    {
+    }
+
+    void renderer::on_mouse_exit(const zcg_mouse_pos_t &mouse_pos)
+    {
+    }
+
+    void renderer::on_scroll(const zcg_scroll_event_t &scroll_event)
+    {
+        ms.scroll(scroll_event);
+    }
 }
