@@ -84,6 +84,7 @@ namespace zc_app
 
     void renderer::on_mouse_down(const zcg_mouse_pos_t &mouse_pos, int button)
     {
+        ms.on_mouse_down(mouse_pos, button);
     }
 
     void renderer::on_mouse_move(const zcg_mouse_pos_t &mouse_pos)
@@ -102,5 +103,15 @@ namespace zc_app
     void renderer::on_scroll(const zcg_scroll_event_t &scroll_event)
     {
         ms.scroll(scroll_event);
+    }
+
+    void renderer::on_key_down(const zcg_key_event_t &key_event)
+    {
+        ms.on_key_down(key_event);
+    }
+
+    void renderer::on_key_up(const zcg_key_event_t &key_event)
+    {
+        ms.on_key_up(key_event);
     }
 }

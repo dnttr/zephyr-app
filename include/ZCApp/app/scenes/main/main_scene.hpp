@@ -135,7 +135,8 @@ namespace zc_app
             user_avatar.setup();
             chat_avatar.setup();
 
-            f_list.initialize(friends_header.get_container().get_y() + 50, sidebar_width, sidebar_glass.get_container().get_height());
+            f_list.initialize(friends_header.get_container().get_y() + 50, sidebar_width,
+                              sidebar_glass.get_container().get_height());
         }
 
         void setup_text_styles()
@@ -269,12 +270,27 @@ namespace zc_app
                     font_manager::get_font("Roboto-Regular"),
                     message_style
                 );
+
                 message_texts.push_back(std::move(msg_text_ptr));
             }
         }
 
         void setup_typing_animation(float chat_x)
         {
+        }
+
+        void on_mouse_down(zcg_mouse_pos_t mouse_pos, int button)
+        {
+            input_button.on_mouse_down(mouse_pos, button);
+        }
+
+        void on_key_up(zcg_key_event_t key_event)
+        {
+        }
+
+        void on_key_down(zcg_key_event_t key_event)
+        {
+            input_button.on_key_down(key_event);
         }
 
         rectangle rect{colour(0, 0, 0, 255), colour(0, 0, 0, 0), 1, 0.0F};

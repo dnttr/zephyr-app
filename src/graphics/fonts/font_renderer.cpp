@@ -266,7 +266,7 @@ void zc_app::font_renderer::render(properties &props, text_properties &text_prop
             vertex_offset += 4;
         }
 
-        line_height += (SPACE * 1.5) / transform_props.text_magnification;
+        line_height += SPACE * 2.5 / transform_props.text_magnification;
 
         hb_buffer_destroy(buf);
     }

@@ -96,4 +96,14 @@ namespace zc_app
     {
         return str;
     }
+
+    void text::set_text(const std::string &str)
+    {
+        const auto [lines, size] = string_util::get_lines(str);
+
+        properties.lines = lines;
+        properties.total_characters = size;
+
+        font_renderer::set_parameters(this->style, text_props, transform_props, properties);
+    }
 }

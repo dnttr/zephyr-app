@@ -106,6 +106,22 @@ namespace zc_app
         }
     }
 
+    static void key_down_callback(zcg_key_event_t key_event)
+    {
+        if (current_renderer)
+        {
+            current_renderer->on_key_down(key_event);
+        }
+    }
+
+    static void key_up_callback(zcg_key_event_t key_event)
+    {
+        if (current_renderer)
+        {
+            current_renderer->on_key_up(key_event);
+        }
+    }
+
     static void update_callback()
     {
         if (current_renderer)
@@ -130,6 +146,8 @@ namespace zc_app
             .on_mouse_down_callback = mouse_down_callback,
             .on_mouse_up_callback = mouse_up_callback,
             .on_scroll_callback = scroll_callback,
+            .on_key_down_callback = key_down_callback,
+            .on_key_up_callback = key_up_callback,
         };
 
         if (cfg.window_width == 0 || cfg.window_height == 0)

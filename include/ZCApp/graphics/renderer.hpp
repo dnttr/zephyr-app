@@ -34,5 +34,9 @@ namespace zc_app
         void on_mouse_exit(const zcg_mouse_pos_t &mouse_pos);
 
         void on_scroll(const zcg_scroll_event_t &scroll_event);
+
+        void on_key_down(const zcg_key_event_t &key_event);
+
+        void on_key_up(const zcg_key_event_t &key_event);
     };
 }

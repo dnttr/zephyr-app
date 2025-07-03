@@ -42,5 +42,7 @@ namespace zc_app
         void increment_text_position(float x, float y);
 
         std::string get_text();
+
+        void set_text(const std::string &str);
     };
 }
