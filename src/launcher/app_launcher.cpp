@@ -3,22 +3,25 @@
 //
 
 #include <iostream>
+#include <filesystem>
 #include <map>
 
 #include <ZNBKit/vm/vm_management.hpp>
 #include "ZCApp/app/app_runner.hpp"
 #include "ZCKit/internal/util.hpp"
 
+#define LIBRARIES_SEPARATOR '|'
+
 int main(const int argc, char *argv[])
 {
     try
     {
         const auto args = zc_kit::util::to_vector(argc, argv);
-        const auto separated_args = zc_kit::util::split(args[0], ';');
+        const auto separated_args = zc_kit::util::split(args[0], '+');
 
         std::map<std::string, std::string> arguments;
 
-        for (const std::string& arg : separated_args)
+        for (const std::string &arg : separated_args)
         {
             auto single_arg = zc_kit::util::split(arg, '=');
 
@@ -33,26 +36,81 @@ int main(const int argc, char *argv[])
             arguments.emplace(key, value);
         }
 
+        if (!arguments.contains("libraries") || arguments["libraries"].empty() || !arguments.contains("native_libraries") || arguments["native_libraries"].empty())
+        {
+            throw std::runtime_error("No libraries");
+        }
+
         std::vector<std::string> classpath;
+        std::vector<std::string> native_libraries;
 
-        if (!(arguments.contains("management") || arguments.contains("network")))
+        for (const auto &[name, value] : arguments)
         {
-            throw std::runtime_error("No management or network argument provided.");
+            if (name == "libraries")
+            {
+                const auto files = zc_kit::util::split(value, LIBRARIES_SEPARATOR);
+                constexpr std::vector<std::string> libraries;
+
+                for (const auto &file : files)
+                {
+                    if (zc_kit::util::is_path_valid(file))
+                    {
+                        if (std::filesystem::is_directory(file))
+                        {
+                            for (const auto &entry : std::filesystem::directory_iterator(file))
+                            {
+                                if (std::filesystem::is_regular_file(entry) && entry.path().extension() == ".jar")
+                                {
+                                    classpath.push_back(entry.path().string());
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (std::filesystem::is_regular_file(file) && file.ends_with(".jar"))
+                            {
+                                classpath.push_back(file);
+                            }
+                            else
+                            {
+                                throw std::runtime_error("Invalid library file: " + file);
+                            }
+                        }
+                    }
+                }
+            } else if (name == "native_libraries")
+            {
+                for (const auto files = zc_kit::util::split(value, LIBRARIES_SEPARATOR); const auto &file : files)
+                {
+                    if (zc_kit::util::is_path_valid(file))
+                    {
+                        if (std::filesystem::is_directory(file))
+                        {
+                            for (const auto &entry : std::filesystem::directory_iterator(file))
+                            {
+                                if (std::filesystem::is_regular_file(entry) && entry.path().extension() == ".dylib")
+                                {
+                                    native_libraries.push_back(std::filesystem::absolute(entry.path().string()));
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (std::filesystem::is_regular_file(file) && file.ends_with(".dylib"))
+                            {
+                                native_libraries.push_back(std::filesystem::absolute(file));
+                            }
+                            else
+                            {
+                                throw std::runtime_error("Invalid native library file: " + file);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        const auto management_path = arguments["management"];
-        const auto network_path = arguments["network"];
-
-        if (!(zc_kit::util::is_path_valid(management_path) && zc_kit::util::is_path_valid(network_path)))
-        {
-            throw std::runtime_error("Invalid management or network path provided.");
-        }
-
-
-        classpath.push_back(arguments["management"]);
-        classpath.push_back(arguments["network"]);
-
-        zc_kit::app_runner::run(classpath);
+        zc_kit::app_runner::run(classpath, native_libraries);
 
         return 0;
     }

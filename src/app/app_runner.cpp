@@ -22,7 +22,8 @@ namespace zc_kit
     const std::string app_runner::executor_method_name = "load";
     const std::string app_runner::executor_method_signature = "()V";
 
-    void app_runner::run(const std::vector<std::string> &paths)
+    void app_runner::run(const std::vector<std::string> &paths,
+                         std::vector<std::string> &native_libraries)
     {
         const auto vm_object = znb_kit::vm_management::create_and_wrap_vm(paths);
 
@@ -32,7 +33,7 @@ namespace zc_kit
         znb_kit::jvmti_object jvmti(jni, bridge::vm_obj->get_jvmti()->get().get_owner());
 
         submit(jni, std::move(jvmti));
-        invoke(jni);
+        invoke(jni, native_libraries);
 
         zcg_kit::display::config display_cfg;
 
@@ -48,10 +49,11 @@ namespace zc_kit
         std::unique_lock lock(mtx);
         cv.wait(lock, [] { return ready; });
 
-        bridge::invoke_connect();
         window.run();
 
-        znb_kit::vm_management::cleanup_vm(bridge::vm_obj->get_owner());
+        std::cout << "Window closed" << std::endl;
+
+        znb_kit::vm_management::cleanup_vm(bridge::vm_obj);
     }
 
     void app_runner::submit(JNIEnv *jni, znb_kit::jvmti_object jvmti)
@@ -66,9 +68,12 @@ namespace zc_kit
         znb_kit::wrapper::register_natives(jni, bridge::bridge_klass_name, (*bridge::bridge_signature).get_owner(), methods);
     }
 
-    void app_runner::invoke(JNIEnv *jni)
+
+    void app_runner::invoke(JNIEnv *jni, std::vector<std::string> &native_libraries)
     {
         const znb_kit::klass_signature loader_signature(jni, executor_klass_name);
+
+        bridge::run(*bridge::bridge_signature, native_libraries);
 
         znb_kit::void_method loadMethod(jni, loader_signature, executor_method_name, executor_method_signature,
                                         std::nullopt, true);

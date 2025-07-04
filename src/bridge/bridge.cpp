@@ -13,6 +13,7 @@
 #include <ZNBKit/jni/signatures/method/void_method.hpp>
 #include <ZNBKit/vm/vm_management.hpp>
 #include <jni.h>
+#include <thread>
 #include <ZNBKit/vm/vm_object.hpp>
 
 #include "ZCApp/graphics/fonts/font_loader.hpp"
@@ -97,5 +98,42 @@ namespace zc_kit
         std::vector<jvalue> parameters;
 
         connect_method.invoke(nullptr, parameters);
+    }
+
+    void bridge::run(const znb_kit::klass_signature &signature,
+                                                std::vector<std::string> libraries_to_load) {
+        try {
+            load_native(signature, libraries_to_load);
+            invoke_connect();
+        } catch (const std::exception& e)
+        {
+            std::cerr << "Exception in async bridge operations: " << e.what() << std::endl;
+        }
+    }
+
+    void bridge::terminate()
+    {
+        fflush(stdout);
+        exit(0);
+    }
+
+    void bridge::load_native(const znb_kit::klass_signature &signature, std::vector<std::string> libraries)
+    {
+        for (const auto &library : libraries)
+        {
+            std::vector<std::string> signature_parameters;
+            signature_parameters.emplace_back("java.lang.String");
+
+            std::cout << "Loading native library: " << library << std::endl;
+            auto str = znb_kit::wrapper::get_string(vm_obj->get_env(), library);
+
+            znb_kit::void_method load_method(vm_obj->get_env(), signature, "loadNative", "(Ljava/lang/String;)V", { signature_parameters }, true);
+            std::vector<jvalue> parameters;
+            jvalue val;
+            val.l = str;
+            parameters.emplace_back(val);
+            load_method.invoke(nullptr, parameters);
+            znb_kit::wrapper::remove_string(vm_obj->get_env(), str);
+        }
     }
 }

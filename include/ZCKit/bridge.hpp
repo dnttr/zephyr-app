@@ -8,6 +8,7 @@
 #include <ZNBKit/internal/wrapper.hpp>
 #include <ZNBKit/jni/signatures/klass_signature.hpp>
 #include <ZNBKit/vm/vm_object.hpp>
+#include <__thread/jthread.h>
 
 #define DEFAULT JNIEnv *jni, jobject object
 
@@ -15,6 +16,10 @@ namespace zc_kit
 {
     class bridge
     {
+        static void invoke_connect();
+
+        static void load_native(const znb_kit::klass_signature &signature, std::vector<std::string> libraries);
+
     public:
         static const std::string bridge_klass_name;
 
@@ -32,8 +37,11 @@ namespace zc_kit
 
         static jint push_font(DEFAULT, jstring name, jbyteArray bytes);
 
-        static void invoke_connect();
-
         static void initialize_bridge(znb_kit::vm_object *vm_obj);
+
+        static void run(const znb_kit::klass_signature &signature,
+                                                   std::vector<std::string> libraries_to_load);
+
+        static void terminate();
     };
 }

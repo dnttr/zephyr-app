@@ -66,12 +66,7 @@ namespace zc_app
 
     static void destroy_callback()
     {
-        if (current_renderer)
-        {
-            current_renderer->destroy();
-
-            delete current_renderer;
-        }
+        abort(); //temporary, until jvm will get separated from this process
     }
 
     static void render_callback()

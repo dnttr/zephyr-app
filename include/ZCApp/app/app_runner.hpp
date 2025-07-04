@@ -15,7 +15,7 @@ namespace zc_kit
         static const std::string executor_method_signature;
 
         static void submit(JNIEnv *jni, znb_kit::jvmti_object jvmti);
-        static void invoke(JNIEnv *jni);
+        static void invoke(JNIEnv *jni, std::vector<std::string> &native_libraries);
 
     public:
         static std::mutex mtx;
@@ -23,6 +23,6 @@ namespace zc_kit
 
         static bool ready;
 
-        static void run(const std::vector<std::string> &paths);
+        static void run(const std::vector<std::string> &paths, std::vector<std::string> &native_libraries);
     };
 }
