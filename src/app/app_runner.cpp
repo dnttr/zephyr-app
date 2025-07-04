@@ -22,66 +22,35 @@ namespace zc_kit
     const std::string app_runner::executor_method_name = "load";
     const std::string app_runner::executor_method_signature = "()V";
 
-    void app_runner::run(const std::vector<std::string> &paths,
-                         std::vector<std::string> &native_libraries)
+    void app_runner::run(const std::string &daemon)
     {
-    }
+        try {
+            bridge::initialize_bridge(daemon); // Initialize bridge with daemon path
+            bridge::run(); // Start the daemon and its IPC listener; no libraries to pass here anymore
 
-    /**
-     *
-    *  const auto vm_object = znb_kit::vm_management::create_and_wrap_vm(paths);
+            zcg_kit::display::config display_cfg;
 
-        bridge::initialize_bridge(vm_object.get());
-        const auto jni = bridge::vm_obj->get_env();
+            display_cfg.window_width = 1920;
+            display_cfg.window_height = 1080;
+            display_cfg.virtual_width = 1920.0F;
+            display_cfg.virtual_height = 1080.0F;
 
-        znb_kit::jvmti_object jvmti(jni, bridge::vm_obj->get_jvmti()->get().get_owner());
+            zc_app::window window;
 
-        submit(jni, std::move(jvmti));
-        invoke(jni, native_libraries);
+            window.allocate("Core Graphics", 0, 0, display_cfg);
 
-        zcg_kit::display::config display_cfg;
+            std::unique_lock lock(mtx);
+            cv.wait(lock, [] { return ready; }); // Wait for resources to be pushed and FINISH_LOADING
 
-        display_cfg.window_width = 1920;
-        display_cfg.window_height = 1080;
-        display_cfg.virtual_width = 1920.0F;
-        display_cfg.virtual_height = 1080.0F;
+            window.run();
 
-        zc_app::window window;
+            std::cout << "Window closed" << std::endl;
 
-        window.allocate("Core Graphics", 0, 0, display_cfg);
+            bridge::terminate(); // Gracefully terminate the bridge and daemon
 
-        std::unique_lock lock(mtx);
-        cv.wait(lock, [] { return ready; });
-
-        window.run();
-
-        std::cout << "Window closed" << std::endl;
-
-        znb_kit::vm_management::cleanup_vm(bridge::vm_obj);
-     */
-    void app_runner::submit(JNIEnv *jni, znb_kit::jvmti_object jvmti)
-    {
-        const auto [methods, size] = jvmti.try_mapping_methods<void>(*bridge::bridge_signature, bridge::mapped_methods);
-
-        if (size == 0)
-        {
-            throw std::runtime_error("No methods found for the bridge class: " + bridge::bridge_klass_name);
+        } catch (const std::exception& e) {
+            std::cerr << "App Runner Error: Unhandled exception during run: " << e.what() << std::endl;
+            // Potentially add more robust error handling or exit code
         }
-
-        znb_kit::wrapper::register_natives(jni, bridge::bridge_klass_name, (*bridge::bridge_signature).get_owner(), methods);
-    }
-
-
-    void app_runner::invoke(JNIEnv *jni, std::vector<std::string> &native_libraries)
-    {
-        const znb_kit::klass_signature loader_signature(jni, executor_klass_name);
-
-        bridge::run(*bridge::bridge_signature, native_libraries);
-
-        znb_kit::void_method loadMethod(jni, loader_signature, executor_method_name, executor_method_signature,
-                                        std::nullopt, true);
-
-        std::vector<jvalue> parameters;
-        loadMethod.invoke(nullptr, parameters);
     }
 }

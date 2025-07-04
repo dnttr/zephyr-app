@@ -23,6 +23,6 @@ namespace zc_kit
 
         static bool ready;
 
-        static void run(const std::vector<std::string> &paths, std::vector<std::string> &native_libraries);
+        static void run(const std::string &daemon);
     };
 }

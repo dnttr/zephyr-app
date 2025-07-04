@@ -30,6 +30,7 @@ add_executable(zephyr-app
         src/graphics/objects/background.cpp
         src/graphics/effects/partial_blur.cpp
         src/graphics/effects/fullscreen_blur.cpp
+        src/internal/base64.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE include)

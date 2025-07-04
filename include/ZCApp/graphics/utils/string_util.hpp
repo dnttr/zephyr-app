@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <string>
 #include <vector>
 #include <sstream>
@@ -32,6 +33,13 @@ namespace zc_app
             }
 
             return {lines, static_cast<int>(total)};
+        }
+
+        static std::string trim(const std::string &s) {
+            const auto front = std::ranges::find_if_not(s, [](const int c){ return std::isspace(c); });
+            const auto back = std::find_if_not(s.rbegin(), s.rend(), [](const int c){ return std::isspace(c); }).base();
+
+            return (back <= front ? "" : std::string(front, back));
         }
     };
 }

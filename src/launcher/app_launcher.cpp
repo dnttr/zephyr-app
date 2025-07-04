@@ -124,29 +124,10 @@ int main(const int argc, char *argv[])
         }
 
         zcg_kit::client client;
-        client.start(main);
 
         std::cout << main << std::endl;
 
-        std::thread listenerThread([&client]()
-        {
-            while (client.is_connected())
-            {
-                if (std::string msg = client.read(); !msg.empty())
-                {
-                    std::cout << "Received: " << msg << std::endl;
-                }
-
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            }
-        });
-
-        while (true)
-        {
-
-        }
-
-        // zc_kit::app_runner::run(classpath, native_libraries);
+         zc_kit::app_runner::run(main);
 
         return 0;
     }
