@@ -4,12 +4,10 @@
 
 #pragma once
 
-#include <cstdio>
-#include <cstdlib>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
-#include <signal.h>
+#include <csignal>
 #include <string>
 #include <sys/wait.h>
 

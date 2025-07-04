@@ -4,43 +4,58 @@
 
 #pragma once
 
-#include <jni.h>
-#include <ZNBKit/internal/wrapper.hpp>
-#include <ZNBKit/jni/signatures/klass_signature.hpp>
-#include <ZNBKit/vm/vm_object.hpp>
-#include <__thread/jthread.h>
+#include <string>
+#include <vector>
+#include <memory>
+#include <thread>
+#include <atomic>
+#include <mutex>
 
-#define DEFAULT JNIEnv *jni, jobject object
+#include "ZCGKit/ipc/client.hpp"
+
+namespace zc_app
+{
+    namespace shaders
+    {
+        class manager;
+    }
+
+    namespace texture_loader
+    {
+        struct texture_info;
+    }
+
+    namespace font_loader
+    {
+    }
+
+    namespace app_runner
+    {
+        extern std::mutex mtx;
+        extern std::condition_variable cv;
+        extern bool ready;
+    }
+}
+
 
 namespace zc_kit
 {
     class bridge
     {
-        static void invoke_connect();
-
-        static void load_native(const znb_kit::klass_signature &signature, std::vector<std::string> libraries);
-
     public:
-        static const std::string bridge_klass_name;
 
-        static znb_kit::vm_object *vm_obj;
+        static std::unique_ptr<zcg_kit::client> daemon_ipc_client;
+        static std::unique_ptr<std::thread> ipc_read_thread;
+        static std::atomic_bool ipc_running;
 
-        static std::unique_ptr<znb_kit::klass_signature> bridge_signature;
+        static void initialize_bridge(const std::string &daemon_jar_path);
 
-        static const std::unordered_multimap<std::string, znb_kit::jni_bridge_reference> mapped_methods;
+        static void ipc_listener_loop();
 
-        static jint push_shader(DEFAULT, jstring name, jstring source);
-
-        static jint finish_loading(DEFAULT);
-
-        static jint push_texture(DEFAULT, jstring name, jobject direct_buffer, jint width, jint height);
-
-        static jint push_font(DEFAULT, jstring name, jbyteArray bytes);
-
-        static void initialize_bridge(znb_kit::vm_object *vm_obj);
-
-        static void run(const znb_kit::klass_signature &signature,
-                                                   std::vector<std::string> libraries_to_load);
+        static void push_shader(const std::string &name, const std::string &source);
+        static void finish_loading();
+        static void push_texture(const std::string &name, const std::vector<char> &buffer, int width, int height);
+        static void push_font(const std::string &name, const std::vector<char> &bytes);
 
         static void terminate();
     };

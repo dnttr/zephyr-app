@@ -4,136 +4,99 @@
 
 #include "ZCKit/bridge.hpp"
 
-#include <ZNBKit/internal/util.hpp>
+#include <iostream>
+#include <stdexcept>
 
 #include "ZCApp/app/app_runner.hpp"
-#include "ZCApp/graphics/shaders/shaders.hpp"
 #include "ZCApp/graphics/textures/texture_loader.hpp"
-#include <ZNBKit/jni/buffer.hpp>
-#include <ZNBKit/jni/signatures/method/void_method.hpp>
-#include <ZNBKit/vm/vm_management.hpp>
-#include <jni.h>
-#include <thread>
-#include <ZNBKit/vm/vm_object.hpp>
-
 #include "ZCApp/graphics/fonts/font_loader.hpp"
+
 
 namespace zc_kit
 {
-    const std::string bridge::bridge_klass_name = "org/dnttr/zephyr/bridge/internal/ZAKit";
-    std::unique_ptr<znb_kit::klass_signature> bridge::bridge_signature;
-    znb_kit::vm_object *bridge::vm_obj = nullptr;
+    std::unique_ptr<zcg_kit::client> bridge::daemon_ipc_client = nullptr;
+    std::unique_ptr<std::thread> bridge::ipc_read_thread = nullptr;
+    std::atomic_bool bridge::ipc_running = false;
 
-    const std::unordered_multimap<std::string, znb_kit::jni_bridge_reference> bridge::mapped_methods = {
-        {"ffi_zm_push_shader", znb_kit::jni_bridge_reference(&bridge::push_shader, {znb_kit::STRING, znb_kit::STRING})},
-        {"ffi_zm_finish_loading", znb_kit::jni_bridge_reference(&bridge::finish_loading)},
-        {
-            "ffi_zm_push_texture",
-            znb_kit::jni_bridge_reference(&bridge::push_texture, {
-                                              "java.lang.String", "java.nio.ByteBuffer", "int", "int"
-                                          })
-        },
-        //its deprecated however for now has to do, since i would have to refactor ZNB, which would be a waste of time for now
-        {"ffi_zm_push_font", znb_kit::jni_bridge_reference(&bridge::push_font, {znb_kit::STRING, znb_kit::BYTE_ARRAY})}
-    };
-
-    void bridge::initialize_bridge(znb_kit::vm_object *_vm_obj)
+    void bridge::initialize_bridge(const std::string& daemon_jar_path)
     {
-        if (_vm_obj)
-        {
-            vm_obj = _vm_obj;
+        daemon_ipc_client = std::make_unique<zcg_kit::client>();
+
+          if (!daemon_ipc_client->start(daemon_jar_path)) {
+            std::cerr << "Error: Failed to start Java daemon process at " << daemon_jar_path << std::endl;
+
+              throw std::runtime_error("Failed to start Java daemon process.");
         }
 
-        znb_kit::klass_signature bridge_klass = {vm_obj->get_env(), bridge_klass_name};
-        bridge_signature = std::make_unique<znb_kit::klass_signature>(std::move(bridge_klass));
+        std::cout << "Java daemon process started successfully." << std::endl;
 
+        ipc_running = true;
+        ipc_read_thread = std::make_unique<std::thread>(ipc_listener_loop);
+
+        std::cout << "IPC listener thread started." << std::endl;
     }
 
-    jint bridge::push_shader(JNIEnv *jni, [[maybe_unused]] jobject, const jstring name, const jstring source)
+    void bridge::ipc_listener_loop()
     {
-        const auto name_str = znb_kit::get_string(jni, name, true);
-        const auto source_str = znb_kit::get_string(jni, source, true);
+        std::cout << "IPC Listener: Thread started." << std::endl;
 
-        zc_app::shaders::manager::add_shader(name_str, source_str);
+        while (ipc_running) {
+            if (daemon_ipc_client && daemon_ipc_client->is_connected()) {
+                const auto message = daemon_ipc_client->read();
 
-        return 0;
-    }
+                if (!message.empty()) {
+                    std::cout << "IPC Listener: Received message from Java daemon: " << message;
+                }
+            } else {
+                if (ipc_running) {
+                    std::cerr << "IPC Listener: Daemon not connected or IPC client invalid. Stopping listener." << std::endl;
+                }
 
-    jint bridge::finish_loading([[maybe_unused]] JNIEnv *, [[maybe_unused]] jobject)
-    {
-        std::lock_guard lock(app_runner::mtx);
-        app_runner::ready = true;
-        app_runner::cv.notify_all();
+                ipc_running = false;
+            }
 
-        return 0;
-    }
-
-    jint bridge::push_texture(JNIEnv *jni, [[maybe_unused]] jobject, const jstring name, const jobject direct_buffer,
-                              const jint width, const jint height)
-    {
-        const auto buffer = znb_kit::wrapper::get_direct_buffer(jni, direct_buffer);
-        const zc_app::texture_loader::texture_info info{buffer, width, height};
-
-        zc_app::texture_loader::push(znb_kit::get_string(jni, name, true), info);
-
-        return 0;
-    }
-
-    jint bridge::push_font(JNIEnv *jni, [[maybe_unused]] jobject, const jstring name, const jbyteArray bytes)
-    {
-        const auto name_str = znb_kit::get_string(jni, name, true);
-        const int size = jni->GetArrayLength(bytes);
-
-        std::vector<int8_t> buffer(size);
-        znb_kit::buffer::get_ptr_byte(jni, bytes, buffer.data(), size, 0);
-
-        zc_app::font_loader::push_font(name_str, buffer);
-
-        return 0;
-    }
-
-    void bridge::invoke_connect()
-    {
-        znb_kit::void_method connect_method(vm_obj->get_env(), *bridge_signature, "connect", "()V", std::nullopt, true);
-        std::vector<jvalue> parameters;
-
-        connect_method.invoke(nullptr, parameters);
-    }
-
-    void bridge::run(const znb_kit::klass_signature &signature,
-                                                std::vector<std::string> libraries_to_load) {
-        try {
-            load_native(signature, libraries_to_load);
-            invoke_connect();
-        } catch (const std::exception& e)
-        {
-            std::cerr << "Exception in async bridge operations: " << e.what() << std::endl;
+            usleep(10 * 1000);
         }
+
+        std::cout << "IPC Listener: Thread stopping." << std::endl;
+    }
+
+
+    void bridge::push_shader(const std::string& name, const std::string& source)
+    {
+        std::cout << "Bridge (C++): Received command to push shader: Name=" << name << ", Source (truncated)=" << source.substr(0, 50) << "..." << std::endl;
+    }
+
+    void bridge::finish_loading()
+    {
+        std::cout << "Bridge (C++): Received command to finish loading." << std::endl;
+    }
+
+    void bridge::push_texture(const std::string& name, const std::vector<char>& buffer, int width, int height)
+    {
+        std::cout << "Bridge (C++): Received command to push texture: Name=" << name << ", Width=" << width << ", Height=" << height << ", Buffer Size=" << buffer.size() << std::endl;
+    }
+
+    void bridge::push_font(const std::string& name, const std::vector<char>& bytes)
+    {
+        std::cout << "Bridge (C++): Received command to push font: Name=" << name << ", Bytes Size=" << bytes.size() << std::endl;
     }
 
     void bridge::terminate()
     {
-        fflush(stdout);
-        exit(0);
-    }
+        std::cout << "Bridge: Initiating termination sequence." << std::endl;
+        ipc_running = false;
 
-    void bridge::load_native(const znb_kit::klass_signature &signature, std::vector<std::string> libraries)
-    {
-        for (const auto &library : libraries)
-        {
-            std::vector<std::string> signature_parameters;
-            signature_parameters.emplace_back("java.lang.String");
+        if (ipc_read_thread && ipc_read_thread->joinable()) {
+            std::cout << "Bridge: Joining IPC listener thread." << std::endl;
+            ipc_read_thread->join();
+        }
 
-            std::cout << "Loading native library: " << library << std::endl;
-            auto str = znb_kit::wrapper::get_string(vm_obj->get_env(), library);
-
-            znb_kit::void_method load_method(vm_obj->get_env(), signature, "loadNative", "(Ljava/lang/String;)V", { signature_parameters }, true);
-            std::vector<jvalue> parameters;
-            jvalue val;
-            val.l = str;
-            parameters.emplace_back(val);
-            load_method.invoke(nullptr, parameters);
-            znb_kit::wrapper::remove_string(vm_obj->get_env(), str);
+        if (daemon_ipc_client) {
+            std::cout << "Bridge: Disconnecting daemon IPC client." << std::endl;
+            daemon_ipc_client->disconnect();
+        } else {
+            std::cout << "Bridge: Daemon IPC client not initialized. No disconnect needed." << std::endl;
         }
     }
 }
