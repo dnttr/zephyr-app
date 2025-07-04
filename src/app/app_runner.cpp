@@ -25,7 +25,11 @@ namespace zc_kit
     void app_runner::run(const std::vector<std::string> &paths,
                          std::vector<std::string> &native_libraries)
     {
-        const auto vm_object = znb_kit::vm_management::create_and_wrap_vm(paths);
+    }
+
+    /**
+     *
+    *  const auto vm_object = znb_kit::vm_management::create_and_wrap_vm(paths);
 
         bridge::initialize_bridge(vm_object.get());
         const auto jni = bridge::vm_obj->get_env();
@@ -54,8 +58,7 @@ namespace zc_kit
         std::cout << "Window closed" << std::endl;
 
         znb_kit::vm_management::cleanup_vm(bridge::vm_obj);
-    }
-
+     */
     void app_runner::submit(JNIEnv *jni, znb_kit::jvmti_object jvmti)
     {
         const auto [methods, size] = jvmti.try_mapping_methods<void>(*bridge::bridge_signature, bridge::mapped_methods);

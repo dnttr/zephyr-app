@@ -66,7 +66,6 @@ namespace zc_app
 
     static void destroy_callback()
     {
-        abort(); //temporary, until jvm will get separated from this process
     }
 
     static void render_callback()

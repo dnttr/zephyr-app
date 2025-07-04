@@ -5,9 +5,11 @@
 #include <iostream>
 #include <filesystem>
 #include <map>
+#include <thread>
 
 #include <ZNBKit/vm/vm_management.hpp>
 #include "ZCApp/app/app_runner.hpp"
+#include "ZCGKit/ipc/client.hpp"
 #include "ZCKit/internal/util.hpp"
 
 #define LIBRARIES_SEPARATOR '|'
@@ -36,16 +38,26 @@ int main(const int argc, char *argv[])
             arguments.emplace(key, value);
         }
 
-        if (!arguments.contains("libraries") || arguments["libraries"].empty() || !arguments.contains("native_libraries") || arguments["native_libraries"].empty())
+        if (!arguments.contains("libraries") || arguments["libraries"].empty() || !arguments.
+            contains("native_libraries") || arguments["native_libraries"].empty())
         {
             throw std::runtime_error("No libraries");
         }
 
         std::vector<std::string> classpath;
         std::vector<std::string> native_libraries;
+        std::string main;
 
         for (const auto &[name, value] : arguments)
         {
+            if (name == "main")
+            {
+                if (zc_kit::util::is_path_valid(value) && std::filesystem::is_regular_file(value) && value.
+                    ends_with(".jar"))
+                {
+                    main = std::filesystem::absolute(value);
+                }
+            }
             if (name == "libraries")
             {
                 const auto files = zc_kit::util::split(value, LIBRARIES_SEPARATOR);
@@ -78,7 +90,8 @@ int main(const int argc, char *argv[])
                         }
                     }
                 }
-            } else if (name == "native_libraries")
+            }
+            else if (name == "native_libraries")
             {
                 for (const auto files = zc_kit::util::split(value, LIBRARIES_SEPARATOR); const auto &file : files)
                 {
@@ -110,7 +123,30 @@ int main(const int argc, char *argv[])
             }
         }
 
-        zc_kit::app_runner::run(classpath, native_libraries);
+        zcg_kit::client client;
+        client.start(main);
+
+        std::cout << main << std::endl;
+
+        std::thread listenerThread([&client]()
+        {
+            while (client.is_connected())
+            {
+                if (std::string msg = client.read(); !msg.empty())
+                {
+                    std::cout << "Received: " << msg << std::endl;
+                }
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+        });
+
+        while (true)
+        {
+
+        }
+
+        // zc_kit::app_runner::run(classpath, native_libraries);
 
         return 0;
     }

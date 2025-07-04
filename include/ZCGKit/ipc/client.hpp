@@ -10,6 +10,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include <signal.h>
+#include <string>
 #include <sys/wait.h>
 
 namespace zcg_kit
@@ -24,6 +25,7 @@ namespace zcg_kit
     public:
         client()
         {
+            connected = false;
             sockfd = -1;
             java_pid = -1;
         }
@@ -33,7 +35,7 @@ namespace zcg_kit
             disconnect();
         }
 
-        bool start()
+        bool start(std::string path)
         {
             int sv[2];
 
@@ -52,7 +54,8 @@ namespace zcg_kit
                 dup2(sv[1], STDOUT_FILENO);
                 close(sv[1]);
 
-                execl("/usr/bin/java", "java", "-jar", "runnable.jar", nullptr);
+                //that may require a bit of attention, if embedded
+                execl("/usr/bin/java", "java", "-jar", path.c_str(), nullptr);
                 perror("execl");
                 exit(1);
             }
@@ -67,6 +70,40 @@ namespace zcg_kit
 
             perror("fork");
             return false;
+        }
+
+        void send_message(const std::string &message)
+        {
+            if (!connected)
+            {
+                return;
+            }
+
+            const std::string buffer = message + "\n";
+
+            if (send(sockfd, buffer.c_str(), buffer.size(), 0) < 0)
+            {
+                perror("send");
+                disconnect();
+            }
+        }
+
+        [[nodiscard]] std::string read() const
+        {
+            if (!connected)
+            {
+                return "";
+            }
+
+            char buffer[4096];
+
+            if (const ssize_t bytes = recv(sockfd, buffer, sizeof(buffer) - 1, 0); bytes > 0)
+            {
+                buffer[bytes] = '\0';
+                return {buffer};
+            }
+
+            return "";
         }
 
         void disconnect()
@@ -89,7 +126,7 @@ namespace zcg_kit
             }
         }
 
-        bool is_connected() const
+        [[nodiscard]] bool is_connected() const
         {
             return connected;
         }
