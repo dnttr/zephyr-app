@@ -71,6 +71,27 @@ namespace zcg_kit
 
         void disconnect()
         {
+            if (!connected)
+            {
+                if (sockfd >= 0)
+                {
+                    close(sockfd);
+                    sockfd = -1;
+                }
+
+                if (java_pid > 0)
+                {
+                    kill(java_pid, SIGTERM);
+                    waitpid(java_pid, nullptr, 0);
+                }
+
+                connected = false;
+            }
+        }
+
+        bool is_connected() const
+        {
+            return connected;
         }
     };
 }
