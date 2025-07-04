@@ -10,6 +10,7 @@
 
 #include "ZCApp/graphics/renderer.hpp"
 #include "ZCApp/graphics/utils/perspective_util.hpp"
+#include "ZCKit/bridge.hpp"
 
 namespace zc_app
 {

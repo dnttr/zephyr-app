@@ -17,21 +17,19 @@ namespace zc_kit
     std::mutex app_runner::mtx;
     std::condition_variable app_runner::cv;
 
-    const std::string app_runner::bridge_klass_name = "org/dnttr/zephyr/bridge/internal/ZAKit";
     const std::string app_runner::executor_klass_name = "org/dnttr/zephyr/management/Loader";
 
     const std::string app_runner::executor_method_name = "load";
     const std::string app_runner::executor_method_signature = "()V";
 
-    void app_runner::run(const std::string &vm_path)
+    void app_runner::run(const std::vector<std::string> &paths)
     {
-        const auto vm_object = znb_kit::vm_management::create_and_wrap_vm(vm_path);
-        const auto vm = vm_object.get();
+        const auto vm_object = znb_kit::vm_management::create_and_wrap_vm(paths);
 
-        VAR_CHECK(vm);
+        bridge::initialize_bridge(vm_object.get());
+        const auto jni = bridge::vm_obj->get_env();
 
-        const auto jni = vm->get_env();
-        znb_kit::jvmti_object jvmti(jni, vm->get_jvmti()->get().get_owner());
+        znb_kit::jvmti_object jvmti(jni, bridge::vm_obj->get_jvmti()->get().get_owner());
 
         submit(jni, std::move(jvmti));
         invoke(jni);
@@ -50,20 +48,22 @@ namespace zc_kit
         std::unique_lock lock(mtx);
         cv.wait(lock, [] { return ready; });
 
+        bridge::invoke_connect();
         window.run();
+
+        znb_kit::vm_management::cleanup_vm(bridge::vm_obj->get_owner());
     }
 
     void app_runner::submit(JNIEnv *jni, znb_kit::jvmti_object jvmti)
     {
-        const znb_kit::klass_signature bridge_signature(jni, bridge_klass_name);
-        const auto [methods, size] = jvmti.try_mapping_methods<void>(bridge_signature, bridge::mapped_methods);
+        const auto [methods, size] = jvmti.try_mapping_methods<void>(*bridge::bridge_signature, bridge::mapped_methods);
 
         if (size == 0)
         {
-            throw std::runtime_error("No methods found for the bridge class: " + bridge_klass_name);
+            throw std::runtime_error("No methods found for the bridge class: " + bridge::bridge_klass_name);
         }
 
-        znb_kit::wrapper::register_natives(jni, bridge_klass_name, bridge_signature.get_owner(), methods);
+        znb_kit::wrapper::register_natives(jni, bridge::bridge_klass_name, (*bridge::bridge_signature).get_owner(), methods);
     }
 
     void app_runner::invoke(JNIEnv *jni)

@@ -10,11 +10,19 @@
 #include "ZCApp/graphics/shaders/shaders.hpp"
 #include "ZCApp/graphics/textures/texture_loader.hpp"
 #include <ZNBKit/jni/buffer.hpp>
+#include <ZNBKit/jni/signatures/method/void_method.hpp>
+#include <ZNBKit/vm/vm_management.hpp>
+#include <jni.h>
+#include <ZNBKit/vm/vm_object.hpp>
 
 #include "ZCApp/graphics/fonts/font_loader.hpp"
 
 namespace zc_kit
 {
+    const std::string bridge::bridge_klass_name = "org/dnttr/zephyr/bridge/internal/ZAKit";
+    std::unique_ptr<znb_kit::klass_signature> bridge::bridge_signature;
+    znb_kit::vm_object *bridge::vm_obj = nullptr;
+
     const std::unordered_multimap<std::string, znb_kit::jni_bridge_reference> bridge::mapped_methods = {
         {"ffi_zm_push_shader", znb_kit::jni_bridge_reference(&bridge::push_shader, {znb_kit::STRING, znb_kit::STRING})},
         {"ffi_zm_finish_loading", znb_kit::jni_bridge_reference(&bridge::finish_loading)},
@@ -27,6 +35,18 @@ namespace zc_kit
         //its deprecated however for now has to do, since i would have to refactor ZNB, which would be a waste of time for now
         {"ffi_zm_push_font", znb_kit::jni_bridge_reference(&bridge::push_font, {znb_kit::STRING, znb_kit::BYTE_ARRAY})}
     };
+
+    void bridge::initialize_bridge(znb_kit::vm_object *_vm_obj)
+    {
+        if (_vm_obj)
+        {
+            vm_obj = _vm_obj;
+        }
+
+        znb_kit::klass_signature bridge_klass = {vm_obj->get_env(), bridge_klass_name};
+        bridge_signature = std::make_unique<znb_kit::klass_signature>(std::move(bridge_klass));
+
+    }
 
     jint bridge::push_shader(JNIEnv *jni, [[maybe_unused]] jobject, const jstring name, const jstring source)
     {
@@ -69,5 +89,13 @@ namespace zc_kit
         zc_app::font_loader::push_font(name_str, buffer);
 
         return 0;
+    }
+
+    void bridge::invoke_connect()
+    {
+        znb_kit::void_method connect_method(vm_obj->get_env(), *bridge_signature, "connect", "()V", std::nullopt, true);
+        std::vector<jvalue> parameters;
+
+        connect_method.invoke(nullptr, parameters);
     }
 }

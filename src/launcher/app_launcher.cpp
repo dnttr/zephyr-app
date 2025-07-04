@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include <map>
 
 #include <ZNBKit/vm/vm_management.hpp>
 #include "ZCApp/app/app_runner.hpp"
@@ -13,24 +14,45 @@ int main(const int argc, char *argv[])
     try
     {
         const auto args = zc_kit::util::to_vector(argc, argv);
+        const auto separated_args = zc_kit::util::split(args[0], ';');
 
-        if (args.empty())
+        std::map<std::string, std::string> arguments;
+
+        for (const std::string& arg : separated_args)
         {
-            std::cerr << "No VM path provided. Usage: " << argv[0] << " vm_path=<path_to_vm>" << std::endl;
+            auto single_arg = zc_kit::util::split(arg, '=');
 
-            throw std::invalid_argument("No VM path provided.");
+            if (single_arg.size() != 2)
+            {
+                throw std::runtime_error("Invalid argument format: " + arg);
+            }
+
+            std::string key = single_arg[0];
+            std::string value = single_arg[1];
+
+            arguments.emplace(key, value);
         }
 
-        const auto vm_path = zc_kit::util::parse_argument(args.at(0));
+        std::vector<std::string> classpath;
 
-        if (!zc_kit::util::is_path_valid(vm_path))
+        if (!(arguments.contains("management") || arguments.contains("network")))
         {
-            std::cerr << "VM path does not exist: " << vm_path << std::endl;
-
-            throw std::invalid_argument("Invalid VM path provided.");
+            throw std::runtime_error("No management or network argument provided.");
         }
 
-        zc_kit::app_runner::run(vm_path);
+        const auto management_path = arguments["management"];
+        const auto network_path = arguments["network"];
+
+        if (!(zc_kit::util::is_path_valid(management_path) && zc_kit::util::is_path_valid(network_path)))
+        {
+            throw std::runtime_error("Invalid management or network path provided.");
+        }
+
+
+        classpath.push_back(arguments["management"]);
+        classpath.push_back(arguments["network"]);
+
+        zc_kit::app_runner::run(classpath);
 
         return 0;
     }

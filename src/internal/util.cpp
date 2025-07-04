@@ -5,18 +5,21 @@
 #include "ZCKit/internal/util.hpp"
 
 #include <filesystem>
+#include <sstream>
 #include <vector>
 
-std::string zc_kit::util::parse_argument(const std::string &argument)
+std::vector<std::string> zc_kit::util::split(const std::string &str, const char delimiter)
 {
-    const size_t position = argument.find_last_of('=');
+    std::vector<std::string> tokens;
+    std::stringstream ss(str);
+    std::string token;
 
-    if (position == std::string::npos)
+    while (std::getline(ss, token, delimiter))
     {
-        throw std::invalid_argument("Invalid argument. Expected format: name=value");
+        tokens.push_back(token);
     }
 
-    return argument.substr(position + 1);
+    return tokens;
 }
 
 bool zc_kit::util::is_path_valid(const std::string &path)

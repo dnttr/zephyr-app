@@ -12,7 +12,7 @@ namespace zc_kit
     class util
     {
     public:
-        static std::string parse_argument(const std::string &argument);
+        static std::vector<std::string> split(const std::string &str, char delimiter);
 
         static bool is_path_valid(const std::string &path);
 

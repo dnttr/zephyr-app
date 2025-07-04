@@ -14,8 +14,6 @@ namespace zc_kit
         static const std::string executor_method_name;
         static const std::string executor_method_signature;
 
-        static const std::string bridge_klass_name;
-
         static void submit(JNIEnv *jni, znb_kit::jvmti_object jvmti);
         static void invoke(JNIEnv *jni);
 
@@ -25,6 +23,6 @@ namespace zc_kit
 
         static bool ready;
 
-        static void run(const std::string &vm_path);
+        static void run(const std::vector<std::string> &paths);
     };
 }
