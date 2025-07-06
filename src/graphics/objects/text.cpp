@@ -92,7 +92,72 @@ namespace zc_app
         font_renderer::set_parameters(this->style, text_props, transform_props, properties);
     }
 
-    void text::set_x(float x)
+    void text::set_color(const colour color)
+    {
+        style.text_color = color;
+        text_props.text_color = color.get_vec4();
+
+        font_renderer::set_parameters(style, text_props, transform_props, properties);
+    }
+
+    colour text::get_color() const
+    {
+        return style.text_color;
+    }
+
+    void text::set_glow_intensity(float value)
+    {
+        style.glow_intensity = value;
+        text_props.text_glow_intensity = value;
+
+        font_renderer::set_parameters(style, text_props, transform_props, properties);
+    }
+
+    void text::set_glow_color(const colour &color)
+    {
+        style.glow_color = color;
+        text_props.text_glow_color = color.get_vec4();
+
+        font_renderer::set_parameters(style, text_props, transform_props, properties);
+    }
+
+    void text::set_glow_enable(const bool enable)
+    {
+        style.glow_enable = enable;
+        text_props.text_glow_enable = enable;
+
+        font_renderer::set_parameters(style, text_props, transform_props, properties);
+    }
+
+    void text::set_glow_radius(const float radius)
+    {
+        style.glow_radius = radius;
+        text_props.text_glow_radius = radius;
+
+        font_renderer::set_parameters(style, text_props, transform_props, properties);
+    }
+
+    bool text::is_glow_enabled() const
+    {
+        return style.glow_enable;
+    }
+
+    colour text::get_glow_color() const
+    {
+        return style.glow_color;
+    }
+
+    float text::get_glow_intensity() const
+    {
+        return style.glow_intensity;
+    }
+
+    float text::get_glow_radius() const
+    {
+        return style.glow_radius;
+    }
+
+    void text::set_x(const float x)
     {
         text_props.text_position.x = x;
         properties.x = x;
@@ -100,7 +165,7 @@ namespace zc_app
         font_renderer::set_parameters(this->style, text_props, transform_props, properties);
     }
 
-    void text::set_y(float y)
+    void text::set_y(const float y)
     {
         text_props.text_position.y = y;
         properties.y = y;

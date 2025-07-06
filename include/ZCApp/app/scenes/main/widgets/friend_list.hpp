@@ -15,7 +15,10 @@
 #include "ZCApp/graphics/utils/math_util.hpp"
 #include "ZCApp/graphics/utils/scissor.hpp"
 
-namespace zc_app { class chat_area; }
+namespace zc_app
+{
+    class chat_area;
+}
 
 #define SCROLLBAR_WIDTH 2.0F
 
@@ -25,7 +28,7 @@ namespace zc_app
     {
         std::vector<std::unique_ptr<friend_button>> friends_list;
 
-        const float default_item_height = 65.0f;
+        const float default_item_height = 42;
         const float default_item_spacing = 8.0f;
 
         float current_scroll_offset_y = 0.0f;
@@ -38,15 +41,15 @@ namespace zc_app
         float scroll_sensitivity_multiplier = 2.0f;
 
         rectangle scrollbar_thumb_rect{colour(130, 130, 130, 40), colour(0, 0, 0, 200), 1, 7.5F};
-        rectangle scrollbar_track_rect{colour(130, 0, 240, 100), 7.5f };
+        rectangle scrollbar_track_rect{colour(130, 0, 240, 100), 7.5f};
 
         const float min_thumb_height = 20.0f;
 
         container friends_container{};
 
-        chat_area* p_chat_area = nullptr;
+        chat_area *p_chat_area = nullptr;
 
-        void on_friend_button_clicked(const std::string& conversation_id)
+        void on_friend_button_clicked(const std::string &conversation_id)
         {
             if (p_chat_area)
             {
@@ -54,7 +57,8 @@ namespace zc_app
             }
         }
 
-        void create_friends_list_ui_container(const float begin_y, const float sidebar_width, const float sidebar_height)
+        void create_friends_list_ui_container(const float begin_y, const float sidebar_width,
+                                              const float sidebar_height)
         {
             const float start_y = begin_y;
 
@@ -65,13 +69,13 @@ namespace zc_app
         }
 
     public:
-
-        void initialize(const float begin_y, const float sidebar_width, const float sidebar_height, chat_area* chat_ptr)
+        void initialize(const float begin_y, const float sidebar_width, const float sidebar_height, chat_area *chat_ptr)
         {
             p_chat_area = chat_ptr;
             create_friends_list_ui_container(begin_y, sidebar_width, sidebar_height);
 
-            if (p_chat_area) {
+            if (p_chat_area)
+            {
                 populate_friends_from_chat_area();
             }
         }
@@ -86,9 +90,9 @@ namespace zc_app
 
             const auto conversation_ids = p_chat_area->get_conversation_ids();
 
-            for (const std::string& conv_id : conversation_ids)
+            for (const std::string &conv_id : conversation_ids)
             {
-                const conversation_data* conv_data_ptr = p_chat_area->get_conversation(conv_id);
+                const conversation_data *conv_data_ptr = p_chat_area->get_conversation(conv_id);
                 if (conv_data_ptr)
                 {
                     auto new_button = std::make_unique<friend_button>(
@@ -106,7 +110,10 @@ namespace zc_app
                     );
 
                     new_button->setup(button_container);
-                    new_button->set_on_click_callback(std::bind(&friend_list::on_friend_button_clicked, this, std::placeholders::_1));
+                    new_button->set_on_click_callback([this]<typename T0>(T0 &&PH1)
+                    {
+                        on_friend_button_clicked(std::forward<T0>(PH1));
+                    });
 
                     friends_list.push_back(std::move(new_button));
                     current_item_y_relative_to_friends_container_top += default_item_height + default_item_spacing;
@@ -151,15 +158,19 @@ namespace zc_app
 
         void draw(const float sidebar_glass_y_for_scissor_calc)
         {
-            scissor::glScissorOp([this] {
+            scissor::glScissorOp([this]
+            {
                 for (auto &button_ptr : friends_list)
                 {
                     container current_button_container_for_draw = button_ptr->get_container();
 
-                    current_button_container_for_draw.set_y(current_button_container_for_draw.get_y() + current_scroll_offset_y);
+                    current_button_container_for_draw.set_y(
+                        current_button_container_for_draw.get_y() + current_scroll_offset_y);
 
-                    if (current_button_container_for_draw.get_y() + current_button_container_for_draw.get_height() >= friends_container.get_y() &&
-                        current_button_container_for_draw.get_y() <= friends_container.get_y() + friends_container.get_height())
+                    if (current_button_container_for_draw.get_y() + current_button_container_for_draw.get_height() >=
+                        friends_container.get_y() &&
+                        current_button_container_for_draw.get_y() <= friends_container.get_y() + friends_container.
+                        get_height())
                     {
                         container original_button_shape_container = button_ptr->button_shape.get_container();
                         button_ptr->button_shape.set_container(current_button_container_for_draw);
@@ -233,22 +244,22 @@ namespace zc_app
             return 0.0f;
         }
 
-        void on_mouse_down(const zcg_mouse_pos_t& mouse_pos_physical, int button)
+        void on_mouse_down(const zcg_mouse_pos_t &mouse_pos_physical, int button)
         {
             if (!is_in_area(friends_container, mouse_pos_physical))
             {
                 return;
             }
 
-            for (auto& btn_ptr : friends_list)
+            for (auto &btn_ptr : friends_list)
             {
                 btn_ptr->on_mouse_down(mouse_pos_physical, button);
             }
         }
 
-        void on_mouse_move(const zcg_mouse_pos_t& mouse_pos_physical)
+        void on_mouse_move(const zcg_mouse_pos_t &mouse_pos_physical)
         {
-            for (auto& btn_ptr : friends_list)
+            for (auto &btn_ptr : friends_list)
             {
                 btn_ptr->on_mouse_move(mouse_pos_physical);
             }

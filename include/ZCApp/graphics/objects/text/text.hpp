@@ -41,18 +41,25 @@ namespace zc_app
         void set_properties_position(float x, float y);
         void increment_text_position(float x, float y);
 
-        void set_color(const colour color)
-        {
-            style.text_color = color;
-            text_props.text_color = color.get_vec4();
+        void set_color(colour color);
 
-            font_renderer::set_parameters(style, text_props, transform_props, properties);
-        }
+        [[nodiscard]] colour get_color() const;
 
-        [[nodiscard]] colour get_color() const
-        {
-            return style.text_color;
-        }
+        void set_glow_intensity(float value);
+
+        void set_glow_color(const colour &color);
+
+        void set_glow_enable(bool enable);
+
+        void set_glow_radius(float radius);
+
+        [[nodiscard]] bool is_glow_enabled() const;
+
+        [[nodiscard]] colour get_glow_color() const;
+
+        [[nodiscard]] float get_glow_intensity() const;
+
+        [[nodiscard]] float get_glow_radius() const;
 
         void set_x(float x);
 

@@ -109,7 +109,6 @@ namespace zc_app
 
         const float MESSAGE_ANIMATION_DURATION = 0.02f;
 
-
         [[nodiscard]] float get_estimated_text_width_px(const std::string &line_text) const
         {
             if (line_text.empty())
@@ -291,8 +290,7 @@ namespace zc_app
 
             constexpr float scrollbar_width = 12.0f;
 
-            const float scrollbar_x = chat_area_glass.get_container().get_x() + chat_area_glass.get_container().
-                get_width() - PADDING;
+            const float scrollbar_x = chat_area_glass.get_container().get_x() + chat_area_glass.get_container().get_width() - PADDING;
             const float scrollbar_y = messages_content_start_y;
             const float scrollbar_height = visible_messages_height;
 
@@ -306,7 +304,6 @@ namespace zc_app
                                            : 0.0f;
 
             const float thumb_y = scrollbar_y + (scrollbar_height - thumb_height) * scroll_ratio;
-
             scrollbar_thumb.set_container(container(scrollbar_x, thumb_y, scrollbar_width, thumb_height));
         }
 
@@ -366,25 +363,21 @@ namespace zc_app
                         end = wrapped_content.find('\n', start);
                     }
 
-                    float desired_content_width = estimated_wrapped_text_width_px + MESSAGE_TEXT_LEFT_RIGHT_PADDING * 2
-                        + TIMESTAMP_HEIGHT_IN_BUBBLE + 20;
+                    float desired_content_width = estimated_wrapped_text_width_px + MESSAGE_TEXT_LEFT_RIGHT_PADDING * 2 + TIMESTAMP_HEIGHT_IN_BUBBLE + 20;
 
-                    calculated_bubble_width = std::min(bubble_max_container_width,
-                                                       std::max(MIN_BUBBLE_WIDTH_SENT, desired_content_width));
+                    calculated_bubble_width = std::min(bubble_max_container_width, std::max(MIN_BUBBLE_WIDTH_SENT, desired_content_width));
                 }
 
                 const float bubble_text_height = static_cast<float>(num_lines) * ESTIMATED_LINE_HEIGHT;
 
-                float bubble_height = MESSAGE_TEXT_TOP_BOTTOM_PADDING * 2 + bubble_text_height +
-                    TIMESTAMP_HEIGHT_IN_BUBBLE;
+                float bubble_height = MESSAGE_TEXT_TOP_BOTTOM_PADDING * 2 + bubble_text_height + TIMESTAMP_HEIGHT_IN_BUBBLE;
                 bubble_height = std::max(bubble_height, MESSAGE_BUBBLE_BASE_HEIGHT);
 
                 float bubble_x;
 
                 if (is_sent)
                 {
-                    bubble_x = chat_area_glass.get_container().get_x() + chat_area_glass.get_container().get_width() -
-                        PADDING - calculated_bubble_width - 10;
+                    bubble_x = chat_area_glass.get_container().get_x() + chat_area_glass.get_container().get_width() - PADDING - calculated_bubble_width - 10;
                 }
                 else
                 {
@@ -589,7 +582,8 @@ namespace zc_app
             );
 
             send_button.set_container(container(
-                chat_area_glass.get_container().get_x() + chat_area_glass.get_container().get_width() - PADDING - BUTTON_RIGHT_PADDING - 50.0F,
+                chat_area_glass.get_container().get_x() + chat_area_glass.get_container().get_width() - PADDING -
+                BUTTON_RIGHT_PADDING - 50.0F,
                 static_cast<float>(scene_height) - INPUT_AREA_HEIGHT - PADDING + INPUT_AREA_HEIGHT / 2.0F - 25.0F,
                 50.0f,
                 50.0f
@@ -611,7 +605,6 @@ namespace zc_app
             visible_messages_height = std::max(0.0f, visible_messages_height);
 
             setup_chat_text_styles();
-
             chat_avatar.setup();
 
             if (p_data_manager)
@@ -941,7 +934,7 @@ namespace zc_app
 
                 return &temporary;
             }
-            catch (const std::runtime_error &e)
+            catch ([[maybe_unused]] const std::runtime_error &e)
             {
                 return nullptr;
             }

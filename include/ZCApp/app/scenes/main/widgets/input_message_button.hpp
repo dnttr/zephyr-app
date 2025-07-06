@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <vector>
 #include <string>
 #include <algorithm>
 
@@ -17,7 +16,6 @@
 #include "ZCApp/graphics/objects/text/text_style.hpp"
 #include "ZCApp/graphics/utils/scissor.hpp"
 #include "ZCApp/graphics/utils/time_util.hpp"
-#include "ZCApp/graphics/utils/perspective_util.hpp"
 
 namespace zc_app
 {

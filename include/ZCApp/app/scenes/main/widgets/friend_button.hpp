@@ -8,81 +8,96 @@
 
 #include <string>
 #include <functional>
+#include <utility>
 
 namespace zc_app
 {
+    static colour default_color{40, 40, 40, 70};
+    static colour hovered_colour{40, 40, 40, 100};
+
     class friend_button
     {
-    public:
-        rectangle button_shape{colour(130, 130, 130, 40), colour(0, 0, 0, 200), 1, 7.5F};
-        fan_texture avatar_texture{"avatar.png", 2.0F, 32};
+        fan_texture avatar_texture{"avatar.png", 2.5F, 128};
+
+        const float avatar_size = 32.0f;
+        bool is_hovered = false;
+
         text name_text;
         text status_text;
 
+        std::string name;
+        std::string status;
         std::string conversation_id;
-        bool is_hovered = false;
 
-        std::function<void(const std::string&)> on_click_callback;
+        std::function<void(const std::string &)> on_click_callback;
+
+    public:
+        rectangle button_shape{default_color, colour(0, 0, 0, 240), 1, 30.0F};
+
+        friend_button(std::string id, std::string name, std::string status, const std::string &avatar_path)
+            : avatar_texture(avatar_path, 2.0F, 32), name(std::move(name)), status(std::move(status)),
+              conversation_id(std::move(id))
+        {
+        }
 
         friend_button() = default;
 
-        friend_button(const std::string& id, const std::string& name, const std::string& status, const std::string& avatar_path)
-            : conversation_id(id), avatar_texture(avatar_path, 2.0F, 32)
+        void setup(const container &c)
         {
-            name_text.set_text(name);
-            status_text.set_text(status);
-        }
+            text_style name_style;
+            text_style status_style = name_style;
 
-        void setup(const container& c)
-        {
             button_shape.set_container(c);
 
-            float avatar_size = 40.0f;
+            name_style.text_size_magnification = 0.099F;
+            name_style.text_color = colour(255, 255, 255, 255);
+            name_style.shadow_enable = true;
+
+            status_style.text_size_magnification = 0.06F;
+            status_style.text_color = colour(235, 235, 235, 255);
+            status_style.shadow_enable = false;
+
             avatar_texture.set_container(container(
-                button_shape.get_container().get_x() + PADDING,
-                button_shape.get_container().get_y() + (button_shape.get_container().get_height() / 2) - (avatar_size / 2),
-                avatar_size, avatar_size
+                button_shape.get_container().get_x() + (avatar_size + PADDING / 2.0F) / 2.0f,
+                button_shape.get_container().get_y() + 2 + (button_shape.get_container().get_height() - PADDING) / 2.0f,
+                avatar_size,
+                avatar_size
             ));
+
             avatar_texture.setup();
 
-            text_style name_style;
-            name_style.text_size_magnification = 0.07F;
-            name_style.text_color = colour(255, 255, 255, 240);
-            name_style.shadow_enable = true;
-            name_style.shadow_offset = {2.0F, 2.0F};
-            name_style.shadow_color = colour(0, 0, 0, 100);
-
             name_text.initialize(
-                name_text.get_text(),
-                container(button_shape.get_container().get_x() + PADDING + avatar_size + 10.0f, button_shape.get_container().get_y() + 15),
+                name,
+                container(button_shape.get_container().get_x() + PADDING + avatar_size + 10.0f,
+                          button_shape.get_container().get_y() + (button_shape.get_container().get_height() - PADDING * 2.0F) / 2.0F),
                 font_manager::get_font("Roboto-Medium"),
                 name_style
             );
 
-            text_style status_style = name_style;
-            status_style.text_size_magnification = 0.05F;
-            status_style.text_color = colour(180, 180, 180, 200);
-            status_style.shadow_enable = false;
-
             status_text.initialize(
-                status_text.get_text(),
-                container(button_shape.get_container().get_x() + PADDING + avatar_size + 10.0f, button_shape.get_container().get_y() + 35),
+                status,
+                container(button_shape.get_container().get_x() + PADDING + avatar_size + 10.0f,
+                          button_shape.get_container().get_y() + (button_shape.get_container().get_height() + PADDING /
+                              2.0F) / 2.0F),
                 font_manager::get_font("Roboto-Regular"),
                 status_style
             );
         }
 
-        void set_on_click_callback(std::function<void(const std::string&)> callback)
+        void set_on_click_callback(std::function<void(const std::string &)> callback)
         {
-            on_click_callback = callback;
+            on_click_callback = std::move(callback);
         }
 
         void render()
         {
-            if (is_hovered) {
-                // button_shape.set_fill_color(colour(130, 130, 130, 60)); // Original commented out lines
-            } else {
-                // button_shape.set_fill_color(colour(130, 130, 130, 40)); // Original commented out lines
+            if (is_hovered)
+            {
+                button_shape.set_colour(hovered_colour);
+            }
+            else
+            {
+                button_shape.set_colour(default_color);
             }
 
             button_shape.draw();
@@ -96,9 +111,9 @@ namespace zc_app
             return button_shape.get_container();
         }
 
-        void on_mouse_down(const zcg_mouse_pos_t& mouse_pos, int button)
+        void on_mouse_down(const zcg_mouse_pos_t &mouse_pos, const int button)
         {
-            if (button == ZCG_MOUSE_BUTTON_LEFT && zc_app::is_in_area(button_shape.get_container(), mouse_pos))
+            if (button == ZCG_MOUSE_BUTTON_LEFT && is_in_area(button_shape.get_container(), mouse_pos))
             {
                 if (on_click_callback)
                 {
@@ -107,11 +122,8 @@ namespace zc_app
             }
         }
 
-        void on_mouse_up(const zcg_mouse_pos_t& mouse_pos, int button)
-        {
-        }
 
-        void on_mouse_move(const zcg_mouse_pos_t& mouse_pos)
+        void on_mouse_move(const zcg_mouse_pos_t &mouse_pos)
         {
             is_hovered = is_in_area(button_shape.get_container(), mouse_pos);
         }
