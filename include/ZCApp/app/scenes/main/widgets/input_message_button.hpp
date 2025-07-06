@@ -4,18 +4,20 @@
 
 #pragma once
 
-#include "ZCApp/app/scenes/apperance.hpp"
-#include "ZCApp/graphics/objects/shapes/rectangle.hpp"
-#include "ZCGKit/zcg_interface.h"
-
+#include <vector>
 #include <string>
-#include <iostream>
 #include <algorithm>
+
+#include "ZCApp/graphics/objects/shapes/rectangle.hpp"
+#include "ZCApp/app/scenes/apperance.hpp"
+#include "ZCGKit/zcg_interface.h"
 
 #include "ZCApp/graphics/fonts/font_manager.hpp"
 #include "ZCApp/graphics/objects/text/text.hpp"
 #include "ZCApp/graphics/objects/text/text_style.hpp"
 #include "ZCApp/graphics/utils/scissor.hpp"
+#include "ZCApp/graphics/utils/time_util.hpp"
+#include "ZCApp/graphics/utils/perspective_util.hpp"
 
 namespace zc_app
 {
@@ -23,8 +25,6 @@ namespace zc_app
     {
         rectangle input_area_glass{glass_tint, glass_border, 1, BORDER_RADIUS};
         rectangle message_input{colour(255, 255, 255, 30), accent_color, 2, 25.0F};
-
-        std::vector<int> characters_per_line{};
 
         text input_placeholder{};
         text input_text{};
@@ -37,16 +37,10 @@ namespace zc_app
         float animated_default_text_pos_y = 0.0f;
         float vertical_entry_animation_speed = 300.0f;
 
-        int characters_total = 0;
         int character_total_max = 120;
-        int characters_per_line_max = 30;
-        int current_line = 0;
+        int max_chars_per_visual_line = 25;
 
-        float default_text_pos_x = 0.0f;
-        constexpr static float ORIGINAL_FONT_SIZE_OFFSET = 128.0f * 0.1f / 2.0f;
-
-        float line_height_px = ORIGINAL_FONT_SIZE_OFFSET * 2.5f;
-
+        float line_height_px = 0.0f;
         float max_lines_visible = 1.0f;
 
         float current_text_scroll_y_offset = 0.0f;
@@ -62,7 +56,10 @@ namespace zc_app
         float cursor_blink_speed = 0.5f;
         bool show_cursor = true;
 
-        size_t count_lines(const std::string &str)
+        float default_text_pos_x = 0.0f;
+        const float ORIGINAL_FONT_SIZE_OFFSET = 128.0f * 0.1f / 2.0f;
+
+        size_t count_display_lines(const std::string &str) const
         {
             if (str.empty()) return 1;
             size_t lines = 1;
@@ -76,17 +73,51 @@ namespace zc_app
             return lines;
         }
 
+        std::string get_formatted_display_text(bool include_cursor)
+        {
+            std::string formatted_text = "";
+            size_t chars_on_current_line = 0;
+
+            for (size_t i = 0; i < current_text.length(); ++i)
+            {
+                char c = current_text[i];
+
+                if (c == '\n')
+                {
+                    formatted_text += '\n';
+                    chars_on_current_line = 0;
+                }
+                else
+                {
+                    if (chars_on_current_line >= max_chars_per_visual_line)
+                    {
+                         formatted_text += '\n';
+                         chars_on_current_line = 0;
+                    }
+                    formatted_text += c;
+                    chars_on_current_line++;
+                }
+            }
+
+            if (include_cursor)
+            {
+                formatted_text += "|";
+            }
+            return formatted_text;
+        }
+
+
         void update_text_scroll_target()
         {
-            size_t num_lines_in_text = count_lines(current_text);
+            size_t num_display_lines = count_display_lines(get_formatted_display_text(false));
 
-            if (num_lines_in_text <= max_lines_visible)
+            if (num_display_lines <= max_lines_visible)
             {
                 target_text_scroll_y_offset = 0.0f;
             }
             else
             {
-                target_text_scroll_y_offset = (num_lines_in_text - max_lines_visible) * line_height_px;
+                target_text_scroll_y_offset = (num_display_lines - max_lines_visible) * line_height_px;
             }
 
             if (target_text_scroll_y_offset < 0.0f)
@@ -99,14 +130,16 @@ namespace zc_app
         {
             if (!current_text.empty())
             {
-                std::cout << "Message sent: " << current_text << std::endl;
                 current_text.clear();
                 update_text_scroll_target();
+                cursor_blink_timer = 0.0f;
+                show_cursor = true;
+                is_typing = true;
             }
         }
 
     public:
-        void initialize(const float chat_x, float input_height, float scene_height, float scene_width)
+        void initialize(const float chat_x, float input_height, const float scene_height, const float scene_width)
         {
             input_area_glass.set_container(container(
                 chat_x, scene_height - input_height - PADDING,
@@ -128,17 +161,14 @@ namespace zc_app
             input_style.text_color = colour(0, 0, 0, 255);
             input_style.text_size_magnification = 0.1F;
 
-            max_lines_visible = message_input.get_container().get_height() / line_height_px;
+            line_height_px = ORIGINAL_FONT_SIZE_OFFSET * 2.5f;
 
-            if (max_lines_visible < 1.0f)
-            {
-                max_lines_visible = 1.0f;
-            }
+            max_lines_visible = message_input.get_container().get_height() / line_height_px;
+            if (max_lines_visible < 1.0f) { max_lines_visible = 1.0f; }
 
             default_text_pos_x = message_input.get_container().get_x() + 20;
 
-            animated_default_text_pos_y = message_input.get_container().get_y() + message_input.get_container().
-                get_height() / 2 - ORIGINAL_FONT_SIZE_OFFSET;
+            animated_default_text_pos_y = message_input.get_container().get_y() + message_input.get_container().get_height() / 2 - ORIGINAL_FONT_SIZE_OFFSET;
             target_animated_default_text_pos_y = animated_default_text_pos_y;
 
             input_placeholder.initialize(
@@ -171,25 +201,14 @@ namespace zc_app
 
             if (is_hovered)
             {
-                const float increment_value = animation_speed * deltaTime;
-
-                if (current_animation_width < max_animation_width)
-                {
-                    current_animation_width += increment_value;
-                }
-                else
-                {
-                    current_animation_width = max_animation_width;
-                }
+                current_animation_width = std::min(current_animation_width + animation_speed * deltaTime, max_animation_width);
             }
             else
             {
                 current_animation_width = std::max(current_animation_width - animation_speed * deltaTime, 0.0F);
             }
 
-            float y_pos_when_idle = message_input.get_container().get_y() + message_input.get_container().get_height() /
-                2 - ORIGINAL_FONT_SIZE_OFFSET;
-
+            float y_pos_when_idle = message_input.get_container().get_y() + message_input.get_container().get_height() / 2 - ORIGINAL_FONT_SIZE_OFFSET;
             float y_pos_when_typing = y_pos_when_idle - 10.0f;
 
             target_animated_default_text_pos_y = is_typing ? y_pos_when_typing : y_pos_when_idle;
@@ -199,20 +218,17 @@ namespace zc_app
                 const float step = vertical_entry_animation_speed * deltaTime;
                 if (target_animated_default_text_pos_y < animated_default_text_pos_y)
                 {
-                    animated_default_text_pos_y = std::max(animated_default_text_pos_y - step,
-                                                           target_animated_default_text_pos_y);
+                    animated_default_text_pos_y = std::max(animated_default_text_pos_y - step, target_animated_default_text_pos_y);
                 }
                 else
                 {
-                    animated_default_text_pos_y = std::min(animated_default_text_pos_y + step,
-                                                           target_animated_default_text_pos_y);
+                    animated_default_text_pos_y = std::min(animated_default_text_pos_y + step, target_animated_default_text_pos_y);
                 }
             }
 
             if (is_typing)
             {
                 cursor_blink_timer += deltaTime;
-
                 if (cursor_blink_timer >= cursor_blink_speed)
                 {
                     show_cursor = !show_cursor;
@@ -230,39 +246,24 @@ namespace zc_app
                 float scroll_delta = text_scroll_animation_speed * deltaTime;
                 if (target_text_scroll_y_offset > current_text_scroll_y_offset)
                 {
-                    current_text_scroll_y_offset += scroll_delta;
-
-                    if (current_text_scroll_y_offset > target_text_scroll_y_offset)
-                    {
-                        current_text_scroll_y_offset = target_text_scroll_y_offset;
-                    }
+                    current_text_scroll_y_offset = std::min(current_text_scroll_y_offset + scroll_delta, target_text_scroll_y_offset);
                 }
                 else
                 {
-                    current_text_scroll_y_offset -= scroll_delta;
-                    if (current_text_scroll_y_offset < target_text_scroll_y_offset)
-                    {
-                        current_text_scroll_y_offset = target_text_scroll_y_offset;
-                    }
+                    current_text_scroll_y_offset = std::max(current_text_scroll_y_offset - scroll_delta, target_text_scroll_y_offset);
                 }
             }
-
 
             const float final_text_y = animated_default_text_pos_y - current_text_scroll_y_offset;
 
             if (current_text.empty() && !is_typing)
             {
-                input_placeholder.set_properties_position(default_text_pos_x + current_animation_width,
-                                                          final_text_y);
+                input_placeholder.set_properties_position(default_text_pos_x + current_animation_width, final_text_y);
                 input_placeholder.render();
             }
             else
             {
-                std::string display_text = current_text;
-                if (is_typing && show_cursor)
-                {
-                    display_text += "|";
-                }
+                std::string display_text = get_formatted_display_text(is_typing && show_cursor);
 
                 input_text.set_text(display_text);
                 input_text.set_properties_position(default_text_pos_x + current_animation_width, final_text_y);
@@ -274,26 +275,10 @@ namespace zc_app
             }
         }
 
-        bool is_inside_area(const container &area, const zcg_mouse_pos_t pos)
+
+        void on_mouse_move(zcg_mouse_pos_t pos_physical)
         {
-            const float scale = perspective_util::get_current_display_config().scale / 2;
-
-            const float mouse_x = round(pos.x / scale);
-            const float mouse_y = round(pos.y / scale);
-
-            if (mouse_x >= area.get_x() && mouse_x <= area.get_x() + area.get_width())
-            {
-                if (mouse_y >= area.get_y() && mouse_y <= area.get_y() + area.get_height())
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        void on_mouse_move(zcg_mouse_pos_t pos)
-        {
-            if (is_inside_area(message_input.get_container(), pos))
+            if (is_in_area(message_input.get_container(), pos_physical))
             {
                 is_hovered = true;
             }
@@ -303,9 +288,9 @@ namespace zc_app
             }
         }
 
-        void on_mouse_down(zcg_mouse_pos_t mouse_pos, int button)
+        void on_mouse_down(zcg_mouse_pos_t mouse_pos_physical, int button)
         {
-            if (is_inside_area(message_input.get_container(), mouse_pos) && button == ZCG_MOUSE_BUTTON_LEFT)
+            if (is_in_area(message_input.get_container(), mouse_pos_physical) && button == ZCG_MOUSE_BUTTON_LEFT)
             {
                 is_typing = true;
                 cursor_blink_timer = 0.0f;
@@ -324,83 +309,41 @@ namespace zc_app
                 return;
             }
 
-            const auto length = static_cast<int>(current_text.length());
-
             if (key_event.key_code == ZCG_KEY_BACKSPACE)
             {
                 if (!current_text.empty())
                 {
                     current_text.pop_back();
-
-                    if (current_text.empty())
-                    {
-                        current_line = 0;
-                        characters_per_line.assign(1, 0);
-                        characters_total = 0;
-                    } else if (current_text.back() == '\n')
-                    {
-                        if (current_line > 0)
-                        {
-                            current_line--;
-                            if (!characters_per_line.empty())
-                            {
-                                characters_per_line.pop_back();
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (characters_per_line[current_line] > 0 && characters_total > 0)
-                        {
-                            characters_total--;
-                            characters_per_line[current_line]--;
-                        }
-                    }
                 }
             }
             else if (key_event.key_code == ZCG_KEY_ENTER)
             {
-                if (count_lines(current_text) > 3 || length == character_total_max)
+                if (count_display_lines(current_text) < max_lines_visible || current_text.length() < character_total_max)
                 {
-                    return; //unsupported
+                    current_text += '\n';
                 }
-
-                current_text += '\n'; //debug it
-                current_line++;
-                characters_per_line.push_back(0);
             }
             else if (key_event.key_code >= 32 && key_event.key_code <= 126)
             {
-                if (characters_per_line.size() == 0)
+                if (current_text.length() < character_total_max)
                 {
-                    characters_per_line.push_back(0);
-                    current_line = 0;
-                }
+                    size_t last_newline_pos = current_text.rfind('\n');
+                    size_t chars_on_current_visual_line = (last_newline_pos == std::string::npos) ? current_text.length() : (current_text.length() - last_newline_pos - 1);
 
-                if (characters_total + 1 > character_total_max)
-                {
-                    return; //duh
-                }
-
-                if (current_line < characters_per_line.size() && characters_per_line[current_line] >= characters_per_line_max)
-                {
-                     if (count_lines(current_text) >= max_lines_visible || characters_total == character_total_max)
+                    if (chars_on_current_visual_line >= max_chars_per_visual_line)
                     {
-                        return; //unsupported
+                        if (count_display_lines(current_text) < max_lines_visible || current_text.length() < character_total_max)
+                        {
+                            current_text += '\n';
+                        } else {
+                            return;
+                        }
                     }
-
-                    current_text += '\n'; //no idea if it is classified as two or one lol
-                    current_line++;
-                    characters_per_line.push_back(0);
+                    current_text += static_cast<char>(key_event.key_code);
                 }
-
-                current_text += static_cast<char>(key_event.key_code);
-
-                characters_total++;
-
-                if (current_line < characters_per_line.size())
+                else
                 {
-                    characters_per_line[current_line]++;
+                    return;
                 }
             }
 
@@ -411,15 +354,6 @@ namespace zc_app
 
         void on_char_input(char c)
         {
-            if (!is_typing) return;
-
-            if (c >= 32 && c <= 126)
-            {
-                current_text += c;
-                cursor_blink_timer = 0.0f;
-                show_cursor = true;
-                update_text_scroll_target();
-            }
         }
 
         bool get_is_typing() const { return is_typing; }
@@ -438,6 +372,7 @@ namespace zc_app
         {
             current_text.clear();
             update_text_scroll_target();
+            is_typing = false;
         }
 
         void set_typing(bool typing)

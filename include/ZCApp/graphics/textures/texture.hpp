@@ -5,7 +5,6 @@
 #pragma once
 
 #include <iostream>
-
 #include <string>
 #include <utility>
 #include <OpenGL/gl3.h>
@@ -28,8 +27,7 @@ namespace zc_app
             u_alpha = glGetUniformLocation(program, "tex_alpha");
         }
 
-        bool update = false;
-
+        bool uniforms_need_update = false;
     protected:
         GLuint vao{}, vbo{};
 
@@ -41,6 +39,8 @@ namespace zc_app
         container m_container{};
 
         std::string m_name;
+        texture_loader::texture_info m_tex_info_cache{};
+
 
         GLint u_projection{};
         GLint u_texture{};
@@ -63,7 +63,11 @@ namespace zc_app
         virtual void setup() = 0;
 
     public:
-        virtual ~texture() = default;
+        virtual ~texture()
+        {
+            if (program != 0) glDeleteProgram(program);
+            if (m_texture != 0) glDeleteTextures(1, &m_texture);
+        }
 
         texture(std::string name, const container &container) : m_container(container), m_name(std::move(name))
         {
@@ -76,14 +80,13 @@ namespace zc_app
         void set_container(const container &new_container)
         {
             m_container = new_container;
-            update = true;
+            uniforms_need_update = true;
         }
 
         [[nodiscard]] const container &get_container() const
         {
             return m_container;
         }
-
 
         void draw()
         {
@@ -93,45 +96,66 @@ namespace zc_app
 
                 auto [tex_id, tex_info] = texture_loader::get(m_name, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_TRUE,
                                                               MAX_ANISOTROPIC);
-
-                const float scaled_width = m_container.get_width() > 0
-                                               ? m_container.get_width() / m_scale
-                                               : tex_info.width / m_scale;
-                const float scaled_height = m_container.get_height() > 0
-                                                ? m_container.get_height() / m_scale
-                                                : tex_info.height / m_scale;
-
-                m_container.set_x(m_container.get_x() + (m_container.get_width() / 2));
-                m_container.set_y(m_container.get_y() + (m_container.get_height() / 2));
-
-                m_container.set_width(scaled_width);
-                m_container.set_height(scaled_height);
-
                 m_texture = tex_id;
+                m_tex_info_cache = tex_info;
+
                 program = shaders::create_program("texture_vert", "texture_frag");
                 fetch_uniforms();
 
-                update = true;
+                uniforms_need_update = true;
+            }
+
+            if (m_tex_info_cache.data == nullptr)
+            {
+                throw std::runtime_error("Texture data is null for texture: " + m_name);
             }
 
             glUseProgram(program);
 
-            if (update)
-            {
-                setup_uniforms(m_container.get_x(), m_container.get_y(), m_container.get_width(),
-                               m_container.get_height());
+            float final_draw_x = m_container.get_x();
+            float final_draw_y = m_container.get_y();
+            float final_draw_width = m_container.get_width();
+            float final_draw_height = m_container.get_height();
 
-                update = false;
+            if (final_draw_width > 0)
+            {
+                final_draw_width /= static_cast<float>(m_scale);
             }
+            else if (m_tex_info_cache.width > 0)
+            {
+                final_draw_width = static_cast<float>(m_tex_info_cache.width) / static_cast<float>(m_scale);
+            }
+
+            if (final_draw_height > 0)
+            {
+                final_draw_height /= static_cast<float>(m_scale);
+            }
+            else if (m_tex_info_cache.height > 0)
+            {
+                final_draw_height = static_cast<float>(m_tex_info_cache.height) / static_cast<float>(m_scale);
+            }
+
+            final_draw_x += final_draw_width / 2.0f;
+            final_draw_y += final_draw_height / 2.0f;
+
+            if (uniforms_need_update)
+            {
+                setup_uniforms(final_draw_x, final_draw_y, final_draw_width, final_draw_height);
+                uniforms_need_update = false;
+            }
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, m_texture);
 
             render();
 
+            glBindTexture(GL_TEXTURE_2D, 0);
             glUseProgram(0);
         }
 
         void reshape()
         {
-            update = true;
+            uniforms_need_update = true;
         }
     };
 }

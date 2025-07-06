@@ -3,6 +3,7 @@
 #include "widgets/friend_button.hpp"
 #include "widgets/friend_list.hpp"
 #include "widgets/input_message_button.hpp"
+#include "widgets/chat_area.hpp"
 #include "ZCApp/app/scenes/apperance.hpp"
 #include "ZCApp/graphics/effects/partial_blur.hpp"
 #include "ZCApp/graphics/objects/background.hpp"
@@ -11,7 +12,6 @@
 #include "ZCApp/graphics/scene/scene.hpp"
 #include "ZCApp/graphics/textures/fan_texture.hpp"
 #include "ZCApp/graphics/textures/texture.hpp"
-#include "ZCApp/graphics/utils/perspective_util.hpp"
 
 namespace zc_app
 {
@@ -21,47 +21,31 @@ namespace zc_app
         background bg{};
 
         rectangle sidebar_glass{glass_tint, glass_border, 1, BORDER_RADIUS};
-        rectangle chat_area_glass{glass_tint, glass_border, 1, BORDER_RADIUS};
-        rectangle top_bar_glass{dark_glass, glass_border, 1, BORDER_RADIUS};
         rectangle profile_section{dark_glass, glass_border, 1, BORDER_RADIUS};
-        rectangle send_button{accent_color, colour(255, 255, 255, 100), 1, 20.0F};
-        rectangle attach_button{glass_tint, glass_border, 1, 20.0F};
-
         rectangle search_bar{colour(255, 255, 255, 20), colour(255, 255, 255, 60), 1, 20.0F};
+        rectangle friends_header{dark_glass, colour(255, 255, 255, 60), 1, 8.0F};
 
-        fan_texture user_avatar{"avatar.png", 2.0F, 32};
-        fan_texture chat_avatar{"avatar.png", 2.0F, 32};
+        fan_texture user_avatar{"avatar.png", 2.0F , 128};
 
-        text send_icon, attach_icon;
         text search_placeholder, search_icon;
         text username_text, user_status_text;
-        text chat_title, last_seen_text;
         text friends_title;
-
-        rectangle friends_header{dark_glass, colour(255, 255, 255, 60), 1, 8.0F};
-        rectangle chat_header{dark_glass, glass_border, 1, BORDER_RADIUS};
-
-        std::vector<rectangle> message_bubbles;
-        std::vector<std::unique_ptr<text>> message_texts;
 
         int scene_width = 0;
         int scene_height = 0;
 
-        float typing_animation = 0.0f;
-        bool show_typing = false;
+        data::data_manager app_data_manager;
 
         friend_list f_list;
-        input_message_button input_button;
+        chat_area chat_area_widget;
 
     public:
-        void initialize(const int scene_width, const int scene_height) override
+        void initialize(const int scene_width, const int scene_height)
         {
             this->scene_width = scene_width;
             this->scene_height = scene_height;
 
             float sidebar_width = std::min(320.0f, scene_width * 0.25f);
-            float top_bar_height = 70.0f;
-            float input_height = 80.0f;
 
             sidebar_glass.set_container(container(
                 PADDING, PADDING,
@@ -93,56 +77,21 @@ namespace zc_app
             ));
 
             float chat_x = sidebar_width + PADDING;
-            chat_area_glass.set_container(container(
-                chat_x, PADDING,
-                scene_width - chat_x - PADDING,
-                scene_height - input_height - PADDING * 3
-            ));
 
-            chat_header.set_container(container(
-                chat_x + PADDING, PADDING * 2,
-                scene_width - chat_x - PADDING * 3,
-                top_bar_height
-            ));
+            chat_area_widget.initialize(chat_x, &app_data_manager);
 
-            chat_avatar.set_container(container(
-                chat_x + PADDING * 2, PADDING * 3,
-                40.0f, 40.0f
-            ));
-
-            //INPUT_AREA_GLASS
-            input_button.initialize(chat_x, input_height, scene_height, scene_width);
-
-            send_button.set_container(container(
-                scene_width - PADDING * 3 - 50,
-                scene_height - input_height - PADDING + input_height / 2 - 25,
-                50.0f, 50.0f
-            ));
-
-            attach_button.set_container(container(
-                scene_width - PADDING * 4 - 110,
-                scene_height - input_height - PADDING + input_height / 2 - 25,
-                50.0f, 50.0f
-            ));
-
-            setup_text_styles();
-
-            create_test_messages(chat_x);
-
-            setup_typing_animation(chat_x);
+            setup_sidebar_text_styles();
 
             bg.setup();
             user_avatar.setup();
-            chat_avatar.setup();
 
             f_list.initialize(friends_header.get_container().get_y() + 50, sidebar_width,
-                              sidebar_glass.get_container().get_height());
+                              sidebar_glass.get_container().get_height(), &chat_area_widget);
         }
 
-        void setup_text_styles()
+        void setup_sidebar_text_styles()
         {
             text_style default_style;
-
             default_style.text_size_magnification = 0.07F;
             default_style.text_color = colour(255, 255, 255, 240);
             default_style.outline_enable = false;
@@ -187,115 +136,29 @@ namespace zc_app
                 font_manager::get_font("Roboto-Medium"),
                 header_style
             );
-
-            text_style chat_header_style = default_style;
-            chat_header_style.text_size_magnification = 0.08F;
-            chat_title.initialize(
-                "Joshua hardstick",
-                container(chat_header.get_container().get_x() + 60, chat_header.get_container().get_y() + 10),
-                font_manager::get_font("Roboto-Medium"),
-                chat_header_style
-            );
-
-            last_seen_text.initialize(
-                "Last seen 5 minutes ago",
-                container(chat_header.get_container().get_x() + 60, chat_header.get_container().get_y() + 35),
-                font_manager::get_font("Roboto-Regular"),
-                status_style
-            );
-
-            text_style icon_style = default_style;
-            icon_style.text_size_magnification = 0.09F;
-            send_icon.initialize(
-                "",
-                container(send_button.get_container().get_x() + 18, send_button.get_container().get_y() + 12),
-                font_manager::get_font("Roboto-Regular"),
-                icon_style
-            );
-
-            attach_icon.initialize(
-                "",
-                container(attach_button.get_container().get_x() + 18, attach_button.get_container().get_y() + 12),
-                font_manager::get_font("Roboto-Regular"),
-                icon_style
-            );
-        }
-
-        void create_test_messages(float chat_x)
-        {
-            float chat_content_x = chat_x + PADDING * 2;
-            float chat_content_width = scene_width - chat_x - PADDING * 4;
-            float message_y = chat_header.get_container().get_y() + 90;
-
-            std::vector<std::pair<std::string, bool>> messages = {
-                {"Hey! How was your weekend?", false},
-                {"It was great! Went hiking with friends. How about you?", true},
-                {"Nice! I stayed home and binged Netflix", false},
-                {"Haha, sometimes that's exactly what you need!", true},
-                {"Absolutely! Any show recommendations?", false}
-            };
-
-            text_style message_style;
-            message_style.text_size_magnification = 0.06F;
-            message_style.text_color = colour(0, 0, 0, 255);
-            message_style.shadow_enable = true;
-            message_style.shadow_offset = {1.0F, 1.0F};
-            message_style.shadow_color = colour(0, 0, 0, 0);
-
-            for (int i = 0; i < messages.size(); ++i)
-            {
-                bool is_sent = messages[i].second;
-                float bubble_width = std::min(400.0f, chat_content_width * 0.7f);
-                float bubble_height = 45.0f;
-
-                float bubble_x = is_sent
-                                     ? chat_content_x + chat_content_width - bubble_width - 20
-                                     : chat_content_x + 20;
-
-                rectangle bubble(
-                    is_sent ? accent_color : colour(255, 255, 255, 80),
-                    is_sent ? colour(255, 255, 255, 100) : colour(255, 255, 255, 60),
-                    1, 18.0f
-                );
-                bubble.set_container(container(bubble_x, message_y + i * 60, bubble_width, bubble_height));
-                message_bubbles.push_back(bubble);
-
-                message_style.text_color = is_sent ? colour(0, 0, 0) : colour(0, 0, 0);
-                text msg_text;
-
-                auto msg_text_ptr = std::make_unique<text>();
-                msg_text_ptr->initialize(
-                    messages[i].first,
-                    container(bubble_x + 15, message_y + i * 60 + 12),
-                    font_manager::get_font("Roboto-Regular"),
-                    message_style
-                );
-
-                message_texts.push_back(std::move(msg_text_ptr));
-            }
-        }
-
-        void setup_typing_animation(float chat_x)
-        {
         }
 
         void on_mouse_down(const zcg_mouse_pos_t mouse_pos, const int button)
         {
-            input_button.on_mouse_down(mouse_pos, button);
+            chat_area_widget.on_mouse_down(mouse_pos, button);
+            f_list.on_mouse_down(mouse_pos, button);
         }
 
         void on_key_up(zcg_key_event_t key_event)
         {
         }
 
-        void on_key_down(const zcg_key_event_t key_event)
+        void on_mouse_up(const zcg_mouse_pos_t mouse_pos, const int button)
         {
-            input_button.on_key_down(key_event);
+            chat_area_widget.on_mouse_up(mouse_pos, button);
         }
 
-        rectangle rect{colour(0, 0, 0, 255), colour(0, 0, 0, 0), 1, 0.0F};
+        void on_key_down(const zcg_key_event_t key_event)
+        {
+            chat_area_widget.on_key_down(key_event);
+        }
 
-        void render() override
+        void render()
         {
             blur_effect.setup();
 
@@ -313,8 +176,7 @@ namespace zc_app
                 [this]
                 {
                     sidebar_glass.draw();
-                    chat_area_glass.draw();
-                    input_button.draw_glassy();
+                    chat_area_widget.draw_glassy();
                 },
                 bg_gradient_start
             );
@@ -325,69 +187,38 @@ namespace zc_app
             profile_section.draw();
             search_bar.draw();
             friends_header.draw();
-            chat_header.draw();
-            input_button.draw();
-            send_button.draw();
-            attach_button.draw();
-
-            for (auto &bubble : message_bubbles)
-            {
-                bubble.draw();
-            }
 
             user_avatar.draw();
-            chat_avatar.draw();
-
-            //  glDisable(GL_SCISSOR_TEST);
 
             username_text.render();
             user_status_text.render();
             search_placeholder.render();
             friends_title.render();
-            chat_title.render();
-            last_seen_text.render();
-            send_icon.render();
-            attach_icon.render();
 
             f_list.draw(sidebar_glass.get_container().get_y());
 
-            for (auto &msg_text : message_texts)
-            {
-                if (msg_text)
-                {
-                    msg_text->render();
-                }
-            }
+            chat_area_widget.draw();
         }
 
-        void update() override
+        void update()
         {
-            typing_animation += 0.1f;
-
-            if (typing_animation > 6.28f) typing_animation = 0.0f;
-
-            static int frame_count = 0;
-            frame_count++;
-
-            if (frame_count % 300 == 0)
-            {
-                show_typing = !show_typing;
-            }
-
             f_list.update(time_util::get_delta_time());
+            chat_area_widget.update();
         }
 
         void scroll(const zcg_scroll_event_t &scroll_event)
         {
             f_list.scroll(scroll_event);
+            chat_area_widget.on_scroll(scroll_event);
         }
 
         void on_mouse_move(const zcg_mouse_pos_t &mouse_pos)
         {
-            input_button.on_mouse_move(mouse_pos);
+            chat_area_widget.on_mouse_move(mouse_pos);
+            f_list.on_mouse_move(mouse_pos);
         }
 
-        void resize(const int width, const int height) override
+        void resize(const int width, const int height)
         {
             scene_width = width;
             scene_height = height;
@@ -395,7 +226,7 @@ namespace zc_app
             blur_effect.reshape(width, height);
         }
 
-        void destroy() override
+        void destroy()
         {
         }
     };

@@ -5,13 +5,17 @@
 #pragma once
 
 #include <vector>
+#include <string>
+#include <memory>
+#include <functional>
 
+#include "chat_area.hpp"
 #include "friend_button.hpp"
 #include "ZCApp/app/scenes/apperance.hpp"
-#include "ZCApp/graphics/framebuffer.hpp"
 #include "ZCApp/graphics/utils/math_util.hpp"
-#include "ZCApp/graphics/utils/perspective_util.hpp"
-#include "ZCApp/graphics/utils/time_util.hpp"
+#include "ZCApp/graphics/utils/scissor.hpp"
+
+namespace zc_app { class chat_area; }
 
 #define SCROLLBAR_WIDTH 2.0F
 
@@ -19,7 +23,7 @@ namespace zc_app
 {
     class friend_list
     {
-        std::vector<friend_button> friends_list;
+        std::vector<std::unique_ptr<friend_button>> friends_list;
 
         const float default_item_height = 65.0f;
         const float default_item_spacing = 8.0f;
@@ -40,37 +44,74 @@ namespace zc_app
 
         container friends_container{};
 
-        void create_friends_list(const float begin_y, const float sidebar_width, const float sidebar_height)
+        chat_area* p_chat_area = nullptr;
+
+        void on_friend_button_clicked(const std::string& conversation_id)
+        {
+            if (p_chat_area)
+            {
+                p_chat_area->switch_conversation(conversation_id);
+            }
+        }
+
+        void create_friends_list_ui_container(const float begin_y, const float sidebar_width, const float sidebar_height)
         {
             const float start_y = begin_y;
-            const float item_height = default_item_height;
 
             friends_container.set_x(PADDING * 2);
             friends_container.set_y(start_y);
             friends_container.set_width(sidebar_width - PADDING * 4);
             friends_container.set_height(sidebar_height - start_y);
-
-            const std::vector<std::string> friend_names = {
-                "Sarah Wilson", "Mike Chen", "Emma Davis",
-                "Alex Turner", "Lisa Park", "David Kim",
-                "Rachel Green", "Tom Brown"
-            };
-
-            for (int i = 0; i < friend_names.size() && i < 8; ++i)
-            {
-                friend_button button;
-                container container = friends_container;
-
-                container.set_height(item_height);
-                button.setup(container);
-                friends_list.push_back(button);
-            }
         }
 
     public:
-        void initialize(const float begin_y, const float sidebar_width, const float sidebar_height)
+
+        void initialize(const float begin_y, const float sidebar_width, const float sidebar_height, chat_area* chat_ptr)
         {
-            create_friends_list(begin_y, sidebar_width, sidebar_height);
+            p_chat_area = chat_ptr;
+            create_friends_list_ui_container(begin_y, sidebar_width, sidebar_height);
+
+            if (p_chat_area) {
+                populate_friends_from_chat_area();
+            }
+        }
+
+        void populate_friends_from_chat_area()
+        {
+            if (!p_chat_area) return;
+
+            friends_list.clear();
+
+            float current_item_y_relative_to_friends_container_top = 0.0f;
+
+            const auto conversation_ids = p_chat_area->get_conversation_ids();
+
+            for (const std::string& conv_id : conversation_ids)
+            {
+                const conversation_data* conv_data_ptr = p_chat_area->get_conversation(conv_id);
+                if (conv_data_ptr)
+                {
+                    auto new_button = std::make_unique<friend_button>(
+                        conv_id,
+                        conv_data_ptr->contact_name,
+                        conv_data_ptr->is_online ? "Online" : conv_data_ptr->last_seen,
+                        conv_data_ptr->contact_avatar
+                    );
+
+                    container button_container(
+                        friends_container.get_x(),
+                        friends_container.get_y() + current_item_y_relative_to_friends_container_top,
+                        friends_container.get_width(),
+                        default_item_height
+                    );
+
+                    new_button->setup(button_container);
+                    new_button->set_on_click_callback(std::bind(&friend_list::on_friend_button_clicked, this, std::placeholders::_1));
+
+                    friends_list.push_back(std::move(new_button));
+                    current_item_y_relative_to_friends_container_top += default_item_height + default_item_spacing;
+                }
+            }
         }
 
         void update(const float delta_time)
@@ -98,88 +139,65 @@ namespace zc_app
             const float content_height = get_total_content_height();
             const float viewport_height = friends_container.get_height();
 
-            constexpr float scroll_boundary_top = PADDING;
-
+            constexpr float scroll_boundary_top = 0.0f;
             const float scroll_boundary_bottom = content_height <= viewport_height
-                                                     ? PADDING
-                                                     : viewport_height - PADDING - content_height;
+                                                     ? 0.0f
+                                                     : -(content_height - viewport_height);
+
 
             current_scroll_offset_y = std::max(current_scroll_offset_y, scroll_boundary_bottom);
             current_scroll_offset_y = std::min(current_scroll_offset_y, scroll_boundary_top);
         }
 
-
-        rectangle rect{colour(0, 0, 0, 255), colour(0, 0, 0, 200), 1, 7.5F};
-
-        void draw(const float sidebar_glass_y)
+        void draw(const float sidebar_glass_y_for_scissor_calc)
         {
-            glEnable(GL_SCISSOR_TEST);
+            scissor::glScissorOp([this] {
+                for (auto &button_ptr : friends_list)
+                {
+                    container current_button_container_for_draw = button_ptr->get_container();
 
-            const float scale = (perspective_util::get_current_display_config().dpi_scale *
-                perspective_util::get_current_display_config().scale) / 2;
+                    current_button_container_for_draw.set_y(current_button_container_for_draw.get_y() + current_scroll_offset_y);
 
-            const auto scissor_x = GL_INT_C(friends_container.get_x() * scale);
-            const auto scissor_y = GL_INT_C(sidebar_glass_y * scale);
-            const auto scissor_w = GL_INT_C(friends_container.get_width() * scale);
-            const auto scissor_h = GL_INT_C((friends_container.get_height() + PADDING) * scale);
-
-            glScissor(scissor_x, scissor_y, scissor_w, scissor_h);
-
-            const float container_screen_y = friends_container.get_y();
-
-            for (size_t i = 0; i < friends_list.size(); ++i)
-            {
-                auto &button = friends_list[i];
-                auto &container = button.get_container();
-
-                const float item_base_relative_y = static_cast<float>(i) * (default_item_height + default_item_spacing);
-                const float item_screen_y = container_screen_y + item_base_relative_y + current_scroll_offset_y;
-                container.set_y(item_screen_y);
-
-                button.render();
-            }
-
-            glDisable(GL_SCISSOR_TEST);
+                    if (current_button_container_for_draw.get_y() + current_button_container_for_draw.get_height() >= friends_container.get_y() &&
+                        current_button_container_for_draw.get_y() <= friends_container.get_y() + friends_container.get_height())
+                    {
+                        container original_button_shape_container = button_ptr->button_shape.get_container();
+                        button_ptr->button_shape.set_container(current_button_container_for_draw);
+                        button_ptr->render();
+                        button_ptr->button_shape.set_container(original_button_shape_container);
+                    }
+                }
+            }, friends_container, {});
 
             const float content_height = get_total_content_height();
             const float viewport_height = friends_container.get_height();
 
             if (content_height > viewport_height)
             {
-                scrollbar_track_rect.get_container().set_x(friends_container.get_x() + friends_container.get_width() + 2);
-                scrollbar_track_rect.get_container().set_y(friends_container.get_y());
-                scrollbar_track_rect.get_container().set_width(SCROLLBAR_WIDTH);
-                scrollbar_track_rect.get_container().set_height(friends_container.get_height());
-
+                scrollbar_track_rect.set_container(container(
+                    friends_container.get_x() + friends_container.get_width() + 2,
+                    friends_container.get_y(),
+                    SCROLLBAR_WIDTH,
+                    friends_container.get_height()
+                ));
                 scrollbar_track_rect.draw();
 
                 const float thumb_proportional_height = viewport_height / content_height;
                 float thumb_height = viewport_height * thumb_proportional_height;
-
                 thumb_height = std::max(thumb_height, min_thumb_height);
 
-                constexpr float scroll_boundary_top = 0;
-                const float scroll_boundary_bottom = viewport_height - PADDING - content_height;
+                const float max_scroll_y = get_max_scroll_y();
+                const float normalized_scroll = (current_scroll_offset_y - 0) / (max_scroll_y - 0);
 
-                const float scroll_range = scroll_boundary_top - scroll_boundary_bottom;
-                const float current_scroll_from_top = scroll_boundary_top - current_scroll_offset_y;
+                const float thumb_movable_range_in_track = friends_container.get_height() - thumb_height;
+                const float thumb_y_offset_in_track = normalized_scroll * thumb_movable_range_in_track;
 
-                float normalized_scroll = 0.0f;
-
-                if (scroll_range > 0.0f)
-                {
-                    normalized_scroll = current_scroll_from_top / scroll_range;
-                }
-
-                normalized_scroll = std::max(0.0f, std::min(1.0f, normalized_scroll));
-
-                const float thumb_movable_range = friends_container.get_height() - thumb_height;
-                const float thumb_y_offset_in_track = normalized_scroll * thumb_movable_range;
-
-                scrollbar_thumb_rect.get_container().set_x(scrollbar_track_rect.get_container().get_x());
-                scrollbar_thumb_rect.get_container().set_y(scrollbar_track_rect.get_container().get_y() + thumb_y_offset_in_track);
-                scrollbar_thumb_rect.get_container().set_width(scrollbar_track_rect.get_container().get_width());
-                scrollbar_thumb_rect.get_container().set_height(thumb_height + static_cast<float>(PADDING) / 2.0F);
+                scrollbar_thumb_rect.set_container(container(
+                    scrollbar_track_rect.get_container().get_x(),
+                    scrollbar_track_rect.get_container().get_y() + thumb_y_offset_in_track,
+                    scrollbar_track_rect.get_container().get_width(),
+                    thumb_height
+                ));
                 scrollbar_thumb_rect.draw();
             }
         }
@@ -210,50 +228,49 @@ namespace zc_app
             return -(content_height - viewport_height);
         }
 
-        [[nodiscard]] float get_min_scroll_y()
+        [[nodiscard]] float get_min_scroll_y() const
         {
-            return 0;
+            return 0.0f;
         }
 
-        [[nodiscard]] bool is_in_scrollable_area(const float x, const float y) const
-        // It would be appropriate to test this on different displays (non-retina)
+        void on_mouse_down(const zcg_mouse_pos_t& mouse_pos_physical, int button)
         {
-            const float scale = perspective_util::get_current_display_config().scale / 2;
-
-            const float mouse_x = x / scale;
-            const float mouse_y = y / scale;
-
-            if (mouse_x < friends_container.get_x() ||
-                mouse_x > friends_container.get_x() + friends_container.get_width() ||
-                mouse_y < friends_container.get_y() ||
-                mouse_y > friends_container.get_y() + friends_container.get_height())
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        void scroll(const zcg_scroll_event_t &scroll_event)
-        {
-            if (!is_in_scrollable_area(scroll_event.mouse_x, scroll_event.mouse_y))
+            if (!is_in_area(friends_container, mouse_pos_physical))
             {
                 return;
             }
 
-            const float immediate_desired_offset_y = current_scroll_offset_y + scroll_event.delta_y *
-                scroll_sensitivity_multiplier;
+            for (auto& btn_ptr : friends_list)
+            {
+                btn_ptr->on_mouse_down(mouse_pos_physical, button);
+            }
+        }
 
-            constexpr float scroll_boundary_top = 0;
-            const float content_height = get_total_content_height() - PADDING;
-            const float viewport_height = friends_container.get_height();
-            float scroll_boundary_bottom = content_height <= viewport_height
-                                               ? PADDING
-                                               : viewport_height - PADDING - content_height;
+        void on_mouse_move(const zcg_mouse_pos_t& mouse_pos_physical)
+        {
+            for (auto& btn_ptr : friends_list)
+            {
+                btn_ptr->on_mouse_move(mouse_pos_physical);
+            }
+        }
 
+        void scroll(const zcg_scroll_event_t &scroll_event)
+        {
+            zcg_mouse_pos_t physical_scroll_pos = {scroll_event.mouse_x, scroll_event.mouse_y};
+            if (!zc_app::is_in_area(friends_container, physical_scroll_pos))
+            {
+                return;
+            }
 
-            float clamped_target_y = std::max(immediate_desired_offset_y, scroll_boundary_bottom);
-            clamped_target_y = std::min(clamped_target_y, scroll_boundary_top);
+            const float scroll_amount_virtual = scroll_event.delta_y * scroll_sensitivity_multiplier;
+
+            float immediate_desired_offset_y = current_scroll_offset_y + scroll_amount_virtual;
+
+            const float max_scroll_offset = 0.0f;
+            const float min_scroll_offset = get_max_scroll_y();
+
+            float clamped_target_y = std::max(immediate_desired_offset_y, min_scroll_offset);
+            clamped_target_y = std::min(clamped_target_y, max_scroll_offset);
 
             if (std::abs(clamped_target_y - current_scroll_offset_y) < 0.1F && !is_scrolling_smoothly)
             {

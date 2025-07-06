@@ -92,6 +92,27 @@ namespace zc_app
         font_renderer::set_parameters(this->style, text_props, transform_props, properties);
     }
 
+    void text::set_x(float x)
+    {
+        text_props.text_position.x = x;
+        properties.x = x;
+
+        font_renderer::set_parameters(this->style, text_props, transform_props, properties);
+    }
+
+    void text::set_y(float y)
+    {
+        text_props.text_position.y = y;
+        properties.y = y;
+
+        font_renderer::set_parameters(this->style, text_props, transform_props, properties);
+    }
+
+    std::pair<float, float> text::get_text_position() const
+    {
+        return {properties.x, properties.y};
+    }
+
     std::string text::get_text()
     {
         return str;

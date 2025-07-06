@@ -1,8 +1,4 @@
 //
-// Created by Damian Netter on 23/06/2025.
-//
-
-//
 //
 // Created by Damian Netter on 14/05/2025.
 //
@@ -80,6 +76,7 @@ namespace zc_app
 
     void renderer::on_mouse_up(const zcg_mouse_pos_t &mouse_pos, const int button)
     {
+        ms.on_mouse_up(mouse_pos, button);
     }
 
     void renderer::on_mouse_down(const zcg_mouse_pos_t &mouse_pos, int button)
