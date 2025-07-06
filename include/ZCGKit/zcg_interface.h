@@ -153,6 +153,8 @@ typedef struct
 
     void (* on_scroll_callback)(zcg_scroll_event_t scroll_event);
 
+    void (* on_char_typed_callback)(unsigned int char_code);
+
     void (* on_key_down_callback)(zcg_key_event_t key_event);
 
     void (* on_key_up_callback)(zcg_key_event_t key_event);

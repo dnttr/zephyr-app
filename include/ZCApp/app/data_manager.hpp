@@ -1,7 +1,3 @@
-//
-// Created by Damian Netter on 06/07/2025.
-//
-
 #pragma once
 
 #include <string>
@@ -95,9 +91,21 @@ namespace data
         }
 
     public:
+        bool is_client_connected = false;
+
         data_manager()
         {
             populate_dummy_data();
+        }
+
+        bool attempt_connection(const std::string& ip, const std::string& port)
+        {
+            if (ip == "127.0.0.1" && !port.empty()) {
+                is_client_connected = true;
+                return true;
+            }
+            is_client_connected = false;
+            return false;
         }
 
         std::vector<std::string> fetch_all_conversation_ids() const

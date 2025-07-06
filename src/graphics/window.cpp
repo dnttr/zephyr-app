@@ -32,6 +32,14 @@ namespace zc_app
         }
     }
 
+    void char_typed_callback(unsigned int character)
+    {
+        if (current_renderer)
+        {
+            current_renderer->on_char_typed(character);
+        }
+    }
+
     void mouse_exit_callback(zcg_mouse_pos_t mouse_pos)
     {
         if (current_renderer)
@@ -151,6 +159,7 @@ namespace zc_app
             .on_mouse_down_callback = mouse_down_callback,
             .on_mouse_up_callback = mouse_up_callback,
             .on_scroll_callback = scroll_callback,
+            .on_char_typed_callback = char_typed_callback,
             .on_key_down_callback = key_down_callback,
             .on_key_up_callback = key_up_callback,
         };

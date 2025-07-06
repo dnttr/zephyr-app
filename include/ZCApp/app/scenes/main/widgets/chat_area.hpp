@@ -874,6 +874,14 @@ namespace zc_app
             }
         }
 
+        void on_char_typed(unsigned int char_code)
+        {
+            if (input_button.get_is_typing())
+            {
+                input_button.on_char_input(char_code);
+            }
+        }
+
         void on_key_down(const zcg_key_event_t key_event)
         {
             if (key_event.key_code == ZCG_KEY_ENTER && key_event.is_pressed)

@@ -111,4 +111,9 @@ namespace zc_app
     {
         ms.on_key_up(key_event);
     }
+
+    void renderer::on_char_typed(unsigned int character)
+    {
+        ms.on_char_typed(character);
+    }
 }

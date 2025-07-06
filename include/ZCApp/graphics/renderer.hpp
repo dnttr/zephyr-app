@@ -10,7 +10,6 @@ namespace zc_app
     class renderer
     {
     public:
-
         void destroy();
 
         void initialize();
@@ -38,5 +37,7 @@ namespace zc_app
         void on_key_down(const zcg_key_event_t &key_event);
 
         void on_key_up(const zcg_key_event_t &key_event);
+
+        void on_char_typed(unsigned int character);
     };
 }

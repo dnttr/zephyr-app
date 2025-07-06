@@ -114,4 +114,37 @@ namespace zc_app
     {
         radius = new_radius;
     }
+
+    void rectangle::set_outline(const float width, const colour &color, const float opacity)
+    {
+        outline_width = width;
+        outline_color = color;
+        outline_color.set_alpha_u8(static_cast<uint8_t>(opacity));
+    }
+
+    void rectangle::set_outline_opacity(const float opacity)
+    {
+        outline_color.set_alpha_u8(static_cast<uint8_t>(opacity));
+    }
+
+    float rectangle::get_outline_width() const
+    {
+        return outline_width;
+    }
+
+    colour rectangle::get_outline_color() const
+    {
+        return outline_color;
+    }
+
+    float rectangle::get_outline_opacity() const
+    {
+        return outline_color.get_alpha_u8();
+    }
+
+    void rectangle::set_outline_color(colour colour)
+    {
+        outline_color = colour;
+        outline_color.set_alpha_u8(static_cast<uint8_t>(outline_color.get_alpha_direct()));
+    }
 }

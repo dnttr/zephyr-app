@@ -1,11 +1,8 @@
-//
-// Created by Damian Netter on 03/07/2025.
-//
-
 #pragma once
 
 #include <string>
 #include <algorithm>
+#include <cctype>
 
 #include "ZCApp/graphics/objects/shapes/rectangle.hpp"
 #include "ZCApp/app/scenes/apperance.hpp"
@@ -321,37 +318,31 @@ namespace zc_app
                     current_text += '\n';
                 }
             }
-            else if (key_event.key_code >= 32 && key_event.key_code <= 126)
-            {
-                if (current_text.length() < character_total_max)
-                {
-                    size_t last_newline_pos = current_text.rfind('\n');
-                    size_t chars_on_current_visual_line = (last_newline_pos == std::string::npos) ? current_text.length() : (current_text.length() - last_newline_pos - 1);
-
-                    if (chars_on_current_visual_line >= max_chars_per_visual_line)
-                    {
-                        if (count_display_lines(current_text) < max_lines_visible || current_text.length() < character_total_max)
-                        {
-                            current_text += '\n';
-                        } else {
-                            return;
-                        }
-                    }
-                    current_text += static_cast<char>(key_event.key_code);
-                }
-                else
-                {
-                    return;
-                }
-            }
 
             cursor_blink_timer = 0.0f;
             show_cursor = true;
             update_text_scroll_target();
         }
 
-        void on_char_input(char c)
+        void on_char_input(unsigned int char_code)
         {
+            if (!is_typing || !std::isprint(char_code))
+            {
+                return;
+            }
+
+            if (current_text.length() < character_total_max)
+            {
+                current_text += static_cast<char>(char_code);
+            }
+            else
+            {
+                return;
+            }
+
+            cursor_blink_timer = 0.0f;
+            show_cursor = true;
+            update_text_scroll_target();
         }
 
         bool get_is_typing() const { return is_typing; }

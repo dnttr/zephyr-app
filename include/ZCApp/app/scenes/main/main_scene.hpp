@@ -4,6 +4,7 @@
 #include "widgets/friend_list.hpp"
 #include "widgets/input_message_button.hpp"
 #include "widgets/chat_area.hpp"
+#include "widgets/connection_modal.hpp"
 #include "ZCApp/app/scenes/apperance.hpp"
 #include "ZCApp/graphics/effects/partial_blur.hpp"
 #include "ZCApp/graphics/objects/background.hpp"
@@ -12,11 +13,13 @@
 #include "ZCApp/graphics/scene/scene.hpp"
 #include "ZCApp/graphics/textures/fan_texture.hpp"
 #include "ZCApp/graphics/textures/texture.hpp"
+#include "ZCApp/graphics/effects/fullscreen_blur.hpp"
 
 namespace zc_app
 {
     class main_scene final : public scene
     {
+        fullscreen_blur blur_background{};
         partial_blur blur_effect{};
         background bg{};
 
@@ -25,7 +28,7 @@ namespace zc_app
         rectangle search_bar{colour(255, 255, 255, 20), colour(255, 255, 255, 60), 1, 20.0F};
         rectangle friends_header{dark_glass, colour(255, 255, 255, 60), 1, 8.0F};
 
-        fan_texture user_avatar{"avatar.png", 2.0F , 128};
+        fan_texture user_avatar{"avatar.png", 2.0F, 128};
 
         text search_placeholder, search_icon;
         text username_text, user_status_text;
@@ -38,19 +41,23 @@ namespace zc_app
 
         friend_list f_list;
         chat_area chat_area_widget;
+        connection_modal connection_modal_widget{};
 
     public:
         void initialize(const int scene_width, const int scene_height)
         {
+            auto [width, height] = perspective_util::get_effective_virtual_dimensions();
+            blur_background.setup(width, height);
+
             this->scene_width = scene_width;
             this->scene_height = scene_height;
 
-            float sidebar_width = std::min(320.0f, scene_width * 0.25f);
+            float sidebar_width = std::min(320.0f, static_cast<float>(scene_width) * 0.25f);
 
             sidebar_glass.set_container(container(
                 PADDING, PADDING,
                 sidebar_width - PADDING,
-                scene_height - PADDING * 2
+                static_cast<float>(scene_height) - PADDING * 2
             ));
 
             profile_section.set_container(container(
@@ -79,6 +86,7 @@ namespace zc_app
             float chat_x = sidebar_width + PADDING;
 
             chat_area_widget.initialize(chat_x, &app_data_manager);
+            connection_modal_widget.initialize(960, 540);
 
             setup_sidebar_text_styles();
 
@@ -87,6 +95,23 @@ namespace zc_app
 
             f_list.initialize(friends_header.get_container().get_y() + 50, sidebar_width,
                               sidebar_glass.get_container().get_height(), &chat_area_widget);
+
+            connection_modal_widget.set_on_connect_callback(
+                [this](const std::string &username, const std::string &ip, const std::string &port)
+                {
+                    bool success = app_data_manager.attempt_connection(ip, port);
+                    if (success) {
+                        connection_modal_widget.on_connection_result(true, "Connected!");
+                        chat_area_widget.add_message("Successfully connected to " + ip, false, false);
+                    } else {
+                        connection_modal_widget.on_connection_result(false, "Connection failed. Try again.");
+                    }
+                }
+            );
+
+            if (!app_data_manager.is_client_connected) {
+                connection_modal_widget.set_visible(true);
+            }
         }
 
         void setup_sidebar_text_styles()
@@ -138,10 +163,34 @@ namespace zc_app
             );
         }
 
+        void on_char_typed(unsigned int char_code)
+        {
+            if (connection_modal_widget.is_modal_visible())
+            {
+                connection_modal_widget.on_char_typed(char_code);
+            }
+            else
+            {
+                chat_area_widget.on_char_typed(char_code);
+            }
+        }
+
         void on_mouse_down(const zcg_mouse_pos_t mouse_pos, const int button)
         {
-            chat_area_widget.on_mouse_down(mouse_pos, button);
-            f_list.on_mouse_down(mouse_pos, button);
+            if (connection_modal_widget.is_modal_visible())
+            {
+                connection_modal_widget.on_mouse_down(mouse_pos, button);
+            }
+            else
+            {
+                chat_area_widget.on_mouse_down(mouse_pos, button);
+                f_list.on_mouse_down(mouse_pos, button);
+
+                if (button == ZCG_MOUSE_BUTTON_LEFT && zc_app::is_in_area(user_avatar.get_container(), mouse_pos))
+                {
+                    connection_modal_widget.set_visible(true);
+                }
+            }
         }
 
         void on_key_up(zcg_key_event_t key_event)
@@ -150,12 +199,28 @@ namespace zc_app
 
         void on_mouse_up(const zcg_mouse_pos_t mouse_pos, const int button)
         {
-            chat_area_widget.on_mouse_up(mouse_pos, button);
+            if (connection_modal_widget.is_modal_visible())
+            {
+            }
+            else
+            {
+                chat_area_widget.on_mouse_up(mouse_pos, button);
+            }
         }
 
         void on_key_down(const zcg_key_event_t key_event)
         {
-            chat_area_widget.on_key_down(key_event);
+            if (connection_modal_widget.is_modal_visible())
+            {
+                connection_modal_widget.on_key_down(key_event);
+            }
+            else if (!app_data_manager.is_client_connected && key_event.key_code == ZCG_KEY_ESCAPE) {
+                connection_modal_widget.set_visible(true);
+            }
+            else
+            {
+                chat_area_widget.on_key_down(key_event);
+            }
         }
 
         void render()
@@ -184,6 +249,23 @@ namespace zc_app
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+            if (connection_modal_widget.is_modal_visible())
+            {
+                blur_background.draw(scene_width, scene_height, [this]
+                {
+                    draw_components();
+                });
+            }
+            else
+            {
+                draw_components();
+            }
+
+            connection_modal_widget.draw();
+        }
+
+        void draw_components()
+        {
             profile_section.draw();
             search_bar.draw();
             friends_header.draw();
@@ -208,14 +290,27 @@ namespace zc_app
 
         void scroll(const zcg_scroll_event_t &scroll_event)
         {
-            f_list.scroll(scroll_event);
-            chat_area_widget.on_scroll(scroll_event);
+            if (connection_modal_widget.is_modal_visible())
+            {
+            }
+            else
+            {
+                f_list.scroll(scroll_event);
+                chat_area_widget.on_scroll(scroll_event);
+            }
         }
 
         void on_mouse_move(const zcg_mouse_pos_t &mouse_pos)
         {
-            chat_area_widget.on_mouse_move(mouse_pos);
-            f_list.on_mouse_move(mouse_pos);
+            if (connection_modal_widget.is_modal_visible())
+            {
+                connection_modal_widget.on_mouse_move(mouse_pos);
+            }
+            else
+            {
+                chat_area_widget.on_mouse_move(mouse_pos);
+                f_list.on_mouse_move(mouse_pos);
+            }
         }
 
         void resize(const int width, const int height)
@@ -223,11 +318,22 @@ namespace zc_app
             scene_width = width;
             scene_height = height;
             bg.reshape(width, height);
+            blur_background.reshape(width, height);
             blur_effect.reshape(width, height);
         }
 
         void destroy()
         {
+        }
+
+        void show_connection_modal()
+        {
+            connection_modal_widget.set_visible(true);
+        }
+
+        void hide_connection_modal()
+        {
+            connection_modal_widget.set_visible(false);
         }
     };
 }

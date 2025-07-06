@@ -49,25 +49,29 @@ namespace zc_app
 
         ~rectangle() override;
 
-        [[nodiscard]] container &get_container();
-
         void set_container(const container &new_container);
 
-        [[nodiscard]] colour &get_colour();
-
         void set_colour(const colour &new_colour);
-
-        [[nodiscard]] float get_radius() const;
 
         void set_radius(float new_radius);
 
         void set_outline(float width, const colour &color, float opacity = 0.0F);
+
+        void set_outline_opacity(float opacity);
+
+        [[nodiscard]] container &get_container();
+
+        [[nodiscard]] colour &get_colour();
+
+        [[nodiscard]] float get_radius() const;
 
         [[nodiscard]] float get_outline_width() const;
 
         [[nodiscard]] colour get_outline_color() const;
 
         [[nodiscard]] float get_outline_opacity() const;
+
+        void set_outline_color(colour colour);
 
     protected:
         void setup_uniforms() override;
