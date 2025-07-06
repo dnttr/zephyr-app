@@ -36,7 +36,7 @@ namespace zc_app
             int viewport_x = -1, viewport_y = -1, viewport_width = -1, viewport_height = -1;
         };
 
-        static info glScissorOp(std::function<void()> func, const float x, const float y, const float width, const float height,
+        static info glScissorOp(const std::function<void()> &func, const float x, const float y, const float width, const float height,
                                 const options &options)
         {
             int viewport_x = options.viewport_x;

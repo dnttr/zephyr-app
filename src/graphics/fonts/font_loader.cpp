@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 #include <hb-ft.h>
+#include <iostream>
+#include <__ostream/basic_ostream.h>
 
 #include "ZCApp/graphics/fonts/font_manager.hpp"
 #include "ZCGKit/external.hpp"
@@ -19,19 +21,19 @@ namespace zc_app
     {
         if (provided_data.empty())
         {
-            debug_print_cerr("No font data provided for: " + name);
+            std::cerr << "No font data provided for: " + name << std::endl;
             return;
         }
 
         if (buffers.contains(name))
         {
-            debug_print_cerr("Font with name '" + name + "' already exists.");
+            std::cerr << "Font with name '" + name + "' already exists." << std::endl;
             return;
         }
 
         buffers.emplace(name, std::move(provided_data));
 
-        debug_print("Pushed font: " + name + " with size: " + std::to_string(buffers[name].size()) + " bytes");
+        std::cerr << "Pushed font: " + name + " with size: " + std::to_string(buffers[name].size()) + " bytes" << std::endl;
     }
 
     void font_loader::load_font(const std::string& name, const int pixel_size)
@@ -48,7 +50,7 @@ namespace zc_app
             FT_Face face;
             if (FT_New_Memory_Face(font_manager::ft, reinterpret_cast<const FT_Byte*>(font_data.data()), static_cast<FT_Long>(size), 0, &face))
             {
-                debug_print_cerr("unable to create FreeType face for font: " + name);
+                std::cerr << "unable to create FreeType face for font: " + name << std::endl;
                 return;
             }
 
@@ -56,7 +58,7 @@ namespace zc_app
 
             if (FT_Set_Pixel_Sizes(face, 0, pixel_size))
             {
-                debug_print_cerr("unable to set pixel size for font: " + name);
+                std::cerr << "unable to set pixel size for font: " + name << std::endl;
                 return;
             }
 
@@ -99,13 +101,13 @@ namespace zc_app
 
                 if (FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER))
                 {
-                    debug_print_cerr("unable to load glyph for character '" + std::string(1, value) + "' for font: " + name);
+                    std::cerr << "unable to load glyph for character '" + std::string(1, value) + "' for font: " + name << std::endl;
                     continue;
                 }
 
                 if (FT_Render_Glyph(face->glyph, FT_RENDER_MODE_SDF))
                 {
-                    debug_print_cerr("unable to render SDF for character '" + std::string(1, value) + "' for font: " + name);
+                    std::cerr << "unable to render SDF for character '" + std::string(1, value) + "' for font: " + name << std::endl;
                     continue;
                 }
 
@@ -152,7 +154,7 @@ namespace zc_app
         }
         else
         {
-            debug_print_cerr("invalid font data provided for: " + name);
+            std::cerr << "invalid font data provided for: " + name << std::endl;
         }
     }
 };

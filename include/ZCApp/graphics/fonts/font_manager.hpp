@@ -4,14 +4,19 @@
 
 #pragma once
 
-#include <ft2build.h>
+
+#include <hb-ft.h>
 #include <hb.h>
+#include <iostream>
 #include <map>
 #include <ranges>
+#include <stdexcept>
+#include <string>
 #include <unordered_map>
-#include <glm/vec2.hpp>
+#include <vector>
+#include <freetype/freetype.h>
+#include <glm/glm.hpp>
 #include <OpenGL/gl3.h>
-#include <ZNBKit/debug.hpp>
 
 #include FT_FREETYPE_H
 
@@ -51,7 +56,7 @@ namespace zc_app
 
             if (pair == fonts_map.end())
             {
-                throw std::runtime_error("Font not found " + name);
+                throw std::runtime_error("Font not found ");
             }
 
             return pair->second;

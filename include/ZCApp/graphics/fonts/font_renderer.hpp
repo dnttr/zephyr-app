@@ -4,11 +4,13 @@
 
 #pragma once
 
+#include <chrono>
+#include <string>
+#include <vector>
 #include <glm/glm.hpp>
 
 #include "ZCApp/graphics/fonts/font_manager.hpp"
 #include "ZCApp/graphics/objects/text/text_style.hpp"
-#include "ZCApp/graphics/shaders/shaders.hpp"
 
 namespace zc_app
 {

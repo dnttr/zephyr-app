@@ -5,135 +5,72 @@
 #include <iostream>
 #include <filesystem>
 #include <map>
-#include <thread>
 
-#include <ZNBKit/vm/vm_management.hpp>
 #include "ZCApp/app/app_runner.hpp"
-#include "ZCGKit/ipc/client.hpp"
-#include "ZCKit/internal/util.hpp"
+#include "ZCApp/app/test/test_runner.hpp"
 
-#define LIBRARIES_SEPARATOR '|'
+#define GL_SILENCE_DEPRECATION
+
+struct command_line_args
+{
+    std::string main_jar;
+    std::string role = "app";
+};
+
+command_line_args parse_arguments(const int argc, char *argv[])
+{
+    command_line_args args;
+
+    for (int i = 1; i < argc; ++i)
+    {
+        if (const std::string_view arg = argv[i]; arg == "--main" && i + 1 < argc)
+        {
+            args.main_jar = argv[++i];
+        }
+        else if (arg == "--role" && i + 1 < argc)
+        {
+            args.role = argv[++i];
+        }
+    }
+
+    return args;
+}
 
 int main(const int argc, char *argv[])
 {
     try
     {
-        const auto args = zc_kit::util::to_vector(argc, argv);
-        const auto separated_args = zc_kit::util::split(args[0], '+');
+        const auto [jar, role] = parse_arguments(argc, argv);
 
-        std::map<std::string, std::string> arguments;
-
-        for (const std::string &arg : separated_args)
+        if (jar.empty())
         {
-            auto single_arg = zc_kit::util::split(arg, '=');
-
-            if (single_arg.size() != 2)
-            {
-                throw std::runtime_error("Invalid argument format: " + arg);
-            }
-
-            std::string key = single_arg[0];
-            std::string value = single_arg[1];
-
-            arguments.emplace(key, value);
+            throw std::runtime_error("Missing --main <path_to_jar>");
         }
 
-        if (!arguments.contains("libraries") || arguments["libraries"].empty() || !arguments.
-            contains("native_libraries") || arguments["native_libraries"].empty())
+        if (role == "test_harness")
         {
-            throw std::runtime_error("No libraries");
+            zc_kit::test_runner::run_test_harness(argv[0], jar);
+            return 0;
         }
 
-        std::vector<std::string> classpath;
-        std::vector<std::string> native_libraries;
-        std::string main;
+        zc_kit::bridge::internal_initialize(jar);
 
-        for (const auto &[name, value] : arguments)
+        if (role == "client_a" || role == "client_b")
         {
-            if (name == "main")
-            {
-                if (zc_kit::util::is_path_valid(value) && std::filesystem::is_regular_file(value) && value.
-                    ends_with(".jar"))
-                {
-                    main = std::filesystem::absolute(value);
-                }
-            }
-            if (name == "libraries")
-            {
-                const auto files = zc_kit::util::split(value, LIBRARIES_SEPARATOR);
-                constexpr std::vector<std::string> libraries;
-
-                for (const auto &file : files)
-                {
-                    if (zc_kit::util::is_path_valid(file))
-                    {
-                        if (std::filesystem::is_directory(file))
-                        {
-                            for (const auto &entry : std::filesystem::directory_iterator(file))
-                            {
-                                if (std::filesystem::is_regular_file(entry) && entry.path().extension() == ".jar")
-                                {
-                                    classpath.push_back(entry.path().string());
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (std::filesystem::is_regular_file(file) && file.ends_with(".jar"))
-                            {
-                                classpath.push_back(file);
-                            }
-                            else
-                            {
-                                throw std::runtime_error("Invalid library file: " + file);
-                            }
-                        }
-                    }
-                }
-            }
-            else if (name == "native_libraries")
-            {
-                for (const auto files = zc_kit::util::split(value, LIBRARIES_SEPARATOR); const auto &file : files)
-                {
-                    if (zc_kit::util::is_path_valid(file))
-                    {
-                        if (std::filesystem::is_directory(file))
-                        {
-                            for (const auto &entry : std::filesystem::directory_iterator(file))
-                            {
-                                if (std::filesystem::is_regular_file(entry) && entry.path().extension() == ".dylib")
-                                {
-                                    native_libraries.push_back(std::filesystem::absolute(entry.path().string()));
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (std::filesystem::is_regular_file(file) && file.ends_with(".dylib"))
-                            {
-                                native_libraries.push_back(std::filesystem::absolute(file));
-                            }
-                            else
-                            {
-                                throw std::runtime_error("Invalid native library file: " + file);
-                            }
-                        }
-                    }
-                }
-            }
+            zc_kit::app_runner::run_test(role);
+        }
+        else
+        {
+            zc_kit::app_runner::run_application();
         }
 
-        zcg_kit::client client;
-
-        std::cout << main << std::endl;
-
-         zc_kit::app_runner::run(main);
-
-        return 0;
+        zc_kit::bridge::internal_terminate();
     }
     catch (const std::exception &e)
     {
-        std::cerr << e.what() << std::endl;
-        return 1;
+        std::cerr << "App Runner Error: " << e.what() << std::endl;
+        zc_kit::bridge::internal_terminate();
     }
+
+    return 0;
 }

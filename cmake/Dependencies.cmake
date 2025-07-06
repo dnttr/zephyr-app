@@ -9,14 +9,12 @@ find_package(harfbuzz REQUIRED)
 function(configure_apple_platform)
     if(APPLE)
         set(COREGRAPHICS_LIB_PATH "${CMAKE_SOURCE_DIR}/extern/libcoregraphics.a")
-        set(NATIVEBRIDGE_LIB_PATH "${CMAKE_SOURCE_DIR}/extern/libznb.dylib")
 
         set(PLATFORM_LIBS
                 "-framework Cocoa"
                 "-framework OpenGL"
                 "-framework QuartzCore"
                 ${COREGRAPHICS_LIB_PATH}
-                ${NATIVEBRIDGE_LIB_PATH}
                 PARENT_SCOPE
         )
     endif()

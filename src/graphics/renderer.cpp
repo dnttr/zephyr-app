@@ -51,9 +51,9 @@ namespace zc_app
     {
         const auto &cfg = perspective_util::get_current_display_config();
 
-        glViewport(static_cast<GLint>(cfg.viewport_x), static_cast<GLint>(cfg.viewport_y),
-                   static_cast<GLsizei>(cfg.viewport_width),
-                   static_cast<GLsizei>(cfg.viewport_height));
+        glViewport(GL_INT_C(cfg.viewport_x), GL_INT_C(cfg.viewport_y),
+                   GL_SIZEI_C(cfg.viewport_width),
+                   GL_SIZEI_C(cfg.viewport_height));
 
         ms.render();
     }

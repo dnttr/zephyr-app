@@ -6,6 +6,8 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
+#include <filesystem>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -25,155 +27,369 @@
 
 namespace zc_kit
 {
-    std::map<std::string, std::unique_ptr<std::vector<char>>> bridge::texture_data_buffers;
+    static std::map<std::string, std::unique_ptr<std::vector<char>>> texture_data_buffers;
 
-    std::unique_ptr<zcg_kit::client> bridge::daemon = nullptr;
+    const std::unordered_map<std::string, bridge::events> bridge::events_map =
+    {
+        {"PUSH_SHADER", EV_PUSH_SHADER},
+        {"PUSH_TEXTURE", EV_PUSH_TEXTURE},
+        {"PUSH_FONT", EV_PUSH_FONT},
+        {"FINISH_LOADING", EV_FINISH_LOADING},
+        {"DAEMON_READY", EV_DAEMON_READY},
+        {"READY_FOR_IDENTIFY", EV_READY_FOR_IDENTIFY},
+        {"IDENTIFY_SUCCESS", EV_IDENTIFY_SUCCESS},
+        {"IDENTIFY_FAIL", EV_IDENTIFY_FAIL},
+        {"INCOMING_RELAY_REQUEST", EV_INCOMING_RELAY_REQUEST},
+        {"RELAY_ESTABLISHED", EV_RELAY_ESTABLISHED},
+        {"RELAY_REFUSED", EV_RELAY_REFUSED},
+        {"RELAY_TERMINATED", EV_RELAY_TERMINATED},
+        {"INCOMING_CHAT", EV_INCOMING_CHAT},
+        {"INCOMING_STATUS", EV_INCOMING_STATUS},
+        {"INCOMING_DESCRIPTION", EV_INCOMING_DESCRIPTION}
+    };
+
     std::unique_ptr<std::thread> bridge::ipc_read_thread = nullptr;
-
+    std::unique_ptr<zcg_kit::client> bridge::daemon = nullptr;
+    std::atomic_bool bridge::shutdown_requested = false;
     std::atomic_bool bridge::is_running = false;
 
-    void bridge::initialize_bridge(const std::string& daemon_jar_path) {
-        daemon = std::make_unique<zcg_kit::client>();
+    std::function<void(bool, const std::string &)> bridge::on_identification_result;
+    std::function<void(const std::string &)> bridge::on_incoming_relay_request;
+    std::function<void(const std::string &)> bridge::on_chat_message_received;
+    std::function<void(const std::string &)> bridge::on_description_received;
+    std::function<void(const std::string &)> bridge::on_relay_terminated;
+    std::function<void()> bridge::on_ready_for_identification;
+    std::function<void(int)> bridge::on_status_received;
+    std::function<void()> bridge::on_relay_established;
+    std::function<void()> bridge::on_relay_refused;
 
-        if (!daemon->start(daemon_jar_path)) {
-            std::cerr << "Error: Failed to start Java daemon process at " << daemon_jar_path << std::endl;
-
-            throw std::runtime_error("Failed to start Java daemon process.");
-        }
-
-        is_running = true;
-        ipc_read_thread = std::make_unique<std::thread>(ipc_listener_loop);
-
-        std::cout << "Bridge: Java daemon process started." << std::endl;
-    }
-
-    void bridge::ipc_listener_loop() {
-        while (is_running) {
-            if (daemon && daemon->is_connected()) {
+    void bridge::_loop()
+    {
+        while (!shutdown_requested)
+        {
+            try
+            {
                 std::string message = daemon->read();
 
-                if (message.empty()) {
-                    if (daemon->is_connected())
-                    {
-                        continue;
-                    }
-
+                if (message.empty())
+                {
                     break;
                 }
 
                 message = zc_app::string_util::trim(message);
 
-                if (message.rfind("DAEMON_READY", 0) == 0) {
-                    //bruh x2, todo: add some logic here,
-                } else if (message.rfind("CONNECT_SUCCESS", 0) == 0) {
-                    //bruh x2, todo: add some logic here,
-                } else if (message.rfind("CONNECT_FAIL:", 0) == 0) {
-                    std::cerr << "Bridge ERROR: Daemon Netty connection failed: " << message.substr(13) << std::endl;
-                } else if (message.rfind("DAEMON_SHUTDOWN_ACK", 0) == 0) {
-                    is_running = false;
-                } else if (message.rfind("RESOURCE_PUSH_FAIL:", 0) == 0) {
-                    std::cerr << "Bridge ERROR: Daemon failed to push resources: " << message.substr(19) << std::endl;
-                } else if (message.rfind("PUSH_SHADER:", 0) == 0) {
-                    std::string args = message.substr(12);
+                size_t pos = message.find(':');
 
-                    if (size_t first_colon = args.find(':'); first_colon != std::string::npos) {
-                        push_shader(args.substr(0, first_colon), args.substr(first_colon + 1));
-                    }
-                } else if (message.rfind("FINISH_LOADING", 0) == 0) {
-                    finish_loading();
-                } else if (message.rfind("PUSH_TEXTURE:", 0) == 0) {
-                    std::string args = message.substr(13);
+                std::string cmd = (pos == std::string::npos) ? message : message.substr(0, pos);
+                std::string payload = (pos == std::string::npos) ? "" : message.substr(pos + 1);
 
-                    size_t p1 = args.find(':');
-                    size_t p2 = p1 != std::string::npos ? args.find(':', p1 + 1) : std::string::npos;
+                auto it = events_map.find(cmd);
 
-                    if (size_t p3 = p2 != std::string::npos ? args.find(':', p2 + 1) : std::string::npos; p3 != std::string::npos) {
-                        try {
-                            std::string name_str = args.substr(0, p1);
-                            std::string decoded_str = base64_decode(args.substr(p1 + 1, p2 - (p1 + 1)));
+                if (it == events_map.end())
+                {
+                    std::cerr << "[Bridge] Unknown command received: " << cmd << " (Payload: " << payload << ")" <<
+                        std::endl;
 
-                            int width = std::stoi(args.substr(p2 + 1, p3 - (p2 + 1)));
-                            int height = std::stoi(args.substr(p3 + 1));
-
-                            auto buffer_ptr = std::make_unique<std::vector<char>>(decoded_str.begin(), decoded_str.end());
-                            texture_data_buffers[name_str] = std::move(buffer_ptr);
-
-                            push_texture(name_str, texture_data_buffers[name_str]->data(), width, height);
-                        } catch (const std::exception& e) {
-                            std::cerr << "Bridge ERROR: Failed to decode PUSH_TEXTURE: " << e.what() << std::endl;
-                        }
-                    }
-                } else if (message.rfind("PUSH_FONT:", 0) == 0) {
-                    std::string args = message.substr(10);
-
-                    if (size_t first_colon = args.find(':'); first_colon != std::string::npos) {
-                        try {
-                            std::string decoded_str = base64_decode(args.substr(first_colon + 1));
-
-                            std::vector<int8_t> bytes(decoded_str.begin(), decoded_str.end());
-
-                            push_font(args.substr(0, first_colon), std::move(bytes));
-                        } catch (const std::exception& e) {
-                            std::cerr << "Bridge ERROR: Failed to decode PUSH_FONT: " << e.what() << std::endl;
-                        }
-                    }
-                } else {
-                    std::cerr << "Bridge WARNING: Unrecognized command from daemon: " << message << std::endl;
+                    continue;
                 }
-            } else {
-                is_running = false;
+
+                switch (it->second)
+                {
+                case EV_PUSH_SHADER:
+                    {
+                        if (const auto first_colon = payload.find(':'); first_colon != std::string::npos)
+                        {
+                            std::string shader_name = payload.substr(0, first_colon);
+                            std::string encoded_data = payload.substr(first_colon + 1);
+                            std::string shader_data = base64_decode(encoded_data);
+
+                            zc_app::shaders::manager::add_shader(shader_name, shader_data);
+                        }
+
+                        break;
+                    }
+                case EV_PUSH_TEXTURE:
+                    {
+                        const auto p1 = payload.find(':');
+                        const auto p2 = payload.find(':', p1 + 1);
+                        const auto p3 = payload.find(':', p2 + 1);
+
+                        if (p3 != std::string::npos)
+                        {
+                            std::string name = payload.substr(0, p1);
+                            std::string data = base64_decode(payload.substr(p1 + 1, p2 - (p1 + 1)));
+
+                            int w = std::stoi(payload.substr(p2 + 1, p3 - (p2 + 1)));
+                            int h = std::stoi(payload.substr(p3 + 1));
+
+                            auto buf = std::make_unique<std::vector<char>>(data.begin(), data.end());
+
+                            texture_data_buffers[name] = std::move(buf);
+
+                            zc_app::texture_loader::push(name, {texture_data_buffers[name]->data(), w, h});
+                        }
+
+                        break;
+                    }
+                case EV_PUSH_FONT:
+                    {
+                        size_t colon = payload.find(':');
+
+                        if (colon != std::string::npos)
+                        {
+                            std::string font_name = payload.substr(0, colon);
+                            std::string data = base64_decode(payload.substr(colon + 1));
+
+                            zc_app::font_loader::push_font(font_name, {data.begin(), data.end()});
+                        }
+
+                        break;
+                    }
+                case EV_FINISH_LOADING:
+                    {
+                        std::lock_guard lock(app_runner::mtx);
+
+                        app_runner::ready = true;
+                        app_runner::condition.notify_all();
+
+                        break;
+                    }
+                case EV_DAEMON_READY:
+                    {
+                        internal_request_resources();
+
+                        break;
+                    }
+                case EV_READY_FOR_IDENTIFY:
+                    {
+                        if (on_ready_for_identification)
+                        {
+                            on_ready_for_identification();
+                        }
+
+                        break;
+                    }
+                case EV_IDENTIFY_SUCCESS:
+                    {
+                        if (on_identification_result)
+                        {
+                            on_identification_result(true, "");
+                        }
+
+                        break;
+                    }
+                case EV_IDENTIFY_FAIL:
+                    {
+                        if (on_identification_result)
+                        {
+                            on_identification_result(false, payload);
+                        }
+
+                        break;
+                    }
+                case EV_INCOMING_RELAY_REQUEST:
+                    {
+                        if (on_incoming_relay_request)
+                        {
+                            on_incoming_relay_request(payload);
+                        }
+
+                        break;
+                    }
+
+                case EV_RELAY_ESTABLISHED:
+                    {
+                        if (on_relay_established)
+                        {
+                            on_relay_established();
+                        }
+
+                        break;
+                    }
+
+                case EV_RELAY_REFUSED:
+                    {
+                        if (on_relay_refused)
+                        {
+                            on_relay_refused();
+                        }
+
+                        break;
+                    }
+
+                case EV_RELAY_TERMINATED:
+                    {
+                        if (on_relay_terminated)
+                        {
+                            on_relay_terminated(payload);
+                        }
+
+                        break;
+                    }
+
+                case EV_INCOMING_CHAT:
+                    {
+                        if (on_chat_message_received)
+                        {
+                            on_chat_message_received(payload);
+                        }
+
+                        break;
+                    }
+
+                case EV_INCOMING_STATUS:
+                    {
+                        if (on_status_received)
+                        {
+                            on_status_received(std::stoi(payload));
+                        }
+
+                        break;
+                    }
+
+                case EV_INCOMING_DESCRIPTION:
+                    {
+                        if (on_description_received)
+                        {
+                            on_description_received(payload);
+                        }
+
+                        break;
+                    }
+
+                default:
+                    {
+                        std::cerr << "[Bridge] Unknown command received: " << cmd << " (Payload: " << payload << ")" <<
+                            std::endl;
+                    }
+                }
+            }
+            catch (const std::exception &e)
+            {
+                std::cerr << "[Bridge] FATAL Exception in IPC listener: " << e.what() << std::endl;
+                break;
             }
         }
     }
 
-    void bridge::push_shader(const std::string& name, const std::string& source) {
-        zc_app::shaders::manager::add_shader(name, source);
-    }
-
-    void bridge::finish_loading() {
-        std::lock_guard lock(app_runner::mtx);
-        app_runner::ready = true;
-        app_runner::cv.notify_all();
-    }
-
-    void bridge::push_texture(const std::string& name, void* buffer, int width, int height) {
-        const zc_app::texture_loader::texture_info info{buffer, width, height};
-        zc_app::texture_loader::push(name, info);
-    }
-
-    void bridge::push_font(const std::string& name, std::vector<int8_t> bytes) {
-        zc_app::font_loader::push_font(name, std::move(bytes));
-    }
-
-    void bridge::connect_netty(const std::string& ip, int port) {
-        if (daemon && daemon->is_connected()) {
-            daemon->send_message("CONNECT_NETTY:" + ip + ":" + std::to_string(port));
-        } else {
-            std::cerr << "Bridge ERROR: Cannot send CONNECT_NETTY, IPC client not connected." << std::endl;
-        }
-    }
-
-    void bridge::run() {
-    }
-
-    void bridge::terminate() {
-        std::cout << "Bridge: Terminating daemon process." << std::endl;
-        is_running = false;
-
-        if (daemon && daemon->is_connected()) {
-            daemon->send_message("SHUTDOWN");
+    void bridge::internal_initialize(const std::string &path)
+    {
+        if (is_running)
+        {
+            std::cout << "[Bridge] Bridge already running, skipping initialization." << std::endl;
+            return;
         }
 
-        if (ipc_read_thread && ipc_read_thread->joinable()) {
-            ipc_read_thread->join();
+        shutdown_requested = false;
+        daemon = std::make_unique<zcg_kit::client>();
+
+        if (!daemon->start(std::filesystem::absolute(path)))
+        {
+            throw std::runtime_error("Failed to start Java daemon.");
         }
 
-        if (daemon) {
+        is_running = true;
+
+        ipc_read_thread = std::make_unique<std::thread>(_loop);
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+
+    void bridge::internal_terminate()
+    {
+        if (shutdown_requested.exchange(true))
+        {
+            return;
+        }
+
+        if (daemon && daemon->is_connected())
+        {
+            daemon->send_message(IPC_SHUTDOWN);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+
+        if (daemon)
+        {
             daemon->disconnect();
         }
 
-        texture_data_buffers.clear();
+        if (ipc_read_thread && ipc_read_thread->joinable())
+        {
+            ipc_read_thread->join();
+        }
+
+        std::cout << "[Bridge] Bridge terminated successfully." << std::endl;
+
         fflush(stdout);
+        
         exit(0);
+    }
+
+    void bridge::internal_request_resources()
+    {
+        if (daemon && daemon->is_connected())
+        {
+            daemon->send_message(IPC_REQUEST_RESOURCES);
+        }
+        else
+        {
+            std::cout << "[Bridge] WARNING: Cannot request resources - daemon not connected." << std::endl;
+        }
+    }
+
+    void bridge::client_connect(const std::string &ip, const int port)
+    {
+        if (daemon && daemon->is_connected())
+        {
+            daemon->send_message("CONNECT_NETTY:" + ip + ":" + std::to_string(port));
+        }
+    }
+
+    void bridge::client_identify(const std::string &name)
+    {
+        if (daemon && daemon->is_connected())
+        {
+            daemon->send_message("IDENTIFY:" + name);
+        }
+        else
+        {
+            std::cerr << "[C++-DEBUG] WARNING: Cannot send IDENTIFY command - daemon not connected or null." <<
+                std::endl;
+        }
+    }
+
+    void bridge::client_request_relay(const std::string &target_name)
+    {
+        if (daemon && daemon->is_connected())
+        {
+            daemon->send_message(IPC_REQUEST_RELAY + target_name);
+        }
+    }
+
+    void bridge::client_answer_relay(const bool accept)
+    {
+        if (daemon && daemon->is_connected())
+            daemon->send_message(accept ? IPC_ANSWER_RELAY_ACCEPT : IPC_ANSWER_RELAY_REFUSE);
+    }
+
+    void bridge::client_message(const std::string &msg)
+    {
+        if (daemon && daemon->is_connected())
+            daemon->send_message(IPC_SEND_CHAT + msg);
+    }
+
+    void bridge::client_status(const int code)
+    {
+        if (daemon && daemon->is_connected())
+        {
+            daemon->send_message(IPC_SEND_STATUS + std::to_string(code));
+        }
+    }
+
+    void bridge::client_description(const std::string &description)
+    {
+        if (daemon && daemon->is_connected())
+        {
+            daemon->send_message(IPC_SEND_DESCRIPTION + description);
+        }
     }
 }

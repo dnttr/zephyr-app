@@ -14,7 +14,7 @@ namespace zc_app
     {
         if (FT_Init_FreeType(&ft))
         {
-            debug_print_cerr("unable to initialize FreeType library");
+            std::cerr << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
         }
     }
 }

@@ -4,25 +4,24 @@
 
 #pragma once
 
-#include <ZNBKit/jvmti/jvmti_object.hpp>
+#include <condition_variable>
+#include <string>
+
+#include "ZCKit/bridge.hpp"
 
 namespace zc_kit
 {
     class app_runner
     {
-        static const std::string executor_klass_name;
-        static const std::string executor_method_name;
-        static const std::string executor_method_signature;
-
-        static void submit(JNIEnv *jni, znb_kit::jvmti_object jvmti);
-        static void invoke(JNIEnv *jni, std::vector<std::string> &native_libraries);
-
-    public:
-        static std::mutex mtx;
-        static std::condition_variable cv;
+        friend class bridge;
 
         static bool ready;
 
-        static void run(const std::string &daemon);
+        static std::mutex mtx;
+        static std::condition_variable condition;
+
+    public:
+        static void run_application();
+        static void run_test(const std::string &role);
     };
 }

@@ -3,7 +3,6 @@
 //
 
 #pragma once
-#include <cstdint>
 
 namespace zc_app
 {

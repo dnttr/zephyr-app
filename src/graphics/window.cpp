@@ -66,6 +66,16 @@ namespace zc_app
 
     static void destroy_callback()
     {
+        std::cout << "[Window] Destroy callback triggered." << std::endl;
+
+        if (current_renderer)
+        {
+            current_renderer->destroy();
+            delete current_renderer;
+            current_renderer = nullptr;
+        }
+
+        zc_kit::bridge::internal_terminate();
     }
 
     static void render_callback()

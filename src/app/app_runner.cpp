@@ -1,56 +1,53 @@
-//
-// Created by Damian Netter on 20/06/2025.
-//
-
 #include "ZCApp/app/app_runner.hpp"
-
-#include <ZNBKit/jni/signatures/method/void_method.hpp>
-#include <ZNBKit/vm/vm_management.hpp>
-
 #include "ZCApp/graphics/window.hpp"
 #include "ZCKit/bridge.hpp"
 
+#include <condition_variable>
+#include <exception>
+#include <iostream>
+#include <mutex>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+
+#include "ZCApp/app/test/test_runner.hpp"
+
 namespace zc_kit
 {
+    std::mutex app_runner::mtx;
+    std::condition_variable app_runner::condition;
+
     bool app_runner::ready = false;
 
-    std::mutex app_runner::mtx;
-    std::condition_variable app_runner::cv;
+    void app_runner::run_application() {
+        zcg_kit::display::config display_cfg;
+        display_cfg.window_width = 1920;
+        display_cfg.window_height = 1080;
+        display_cfg.virtual_width = 1920.0F;
+        display_cfg.virtual_height = 1080.0F;
 
-    const std::string app_runner::executor_klass_name = "org/dnttr/zephyr/management/Loader";
+        zc_app::window window;
 
-    const std::string app_runner::executor_method_name = "load";
-    const std::string app_runner::executor_method_signature = "()V";
+        window.allocate("Core Graphics", 0, 0, display_cfg);
 
-    void app_runner::run(const std::string &daemon)
-    {
-        try {
-            bridge::initialize_bridge(daemon); // Initialize bridge with daemon path
-            bridge::run(); // Start the daemon and its IPC listener; no libraries to pass here anymore
+        std::unique_lock lock(mtx);
+        condition.wait(lock, [] { return app_runner::ready; });
 
-            zcg_kit::display::config display_cfg;
+        window.run();
 
-            display_cfg.window_width = 1920;
-            display_cfg.window_height = 1080;
-            display_cfg.virtual_width = 1920.0F;
-            display_cfg.virtual_height = 1080.0F;
+    }
 
-            zc_app::window window;
+    void app_runner::run_test(const std::string& role) {
+        std::cout << "--- RUNNING IN TEST MODE (" << role << ") ---" << std::endl;
 
-            window.allocate("Core Graphics", 0, 0, display_cfg);
+        test_runner::setup_test_callbacks(role);
+        test_runner::reset_promises();
+        bridge::client_connect("127.0.0.1", 12345);
 
-            std::unique_lock lock(mtx);
-            cv.wait(lock, [] { return ready; }); // Wait for resources to be pushed and FINISH_LOADING
-
-            window.run();
-
-            std::cout << "Window closed" << std::endl;
-
-            bridge::terminate(); // Gracefully terminate the bridge and daemon
-
-        } catch (const std::exception& e) {
-            std::cerr << "App Runner Error: Unhandled exception during run: " << e.what() << std::endl;
-            // Potentially add more robust error handling or exit code
+        if (role == "client_a") {
+            test_runner::run_client_a();
+        } else if (role == "client_b") {
+            test_runner::run_client_b();
         }
     }
 }

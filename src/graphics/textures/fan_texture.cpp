@@ -4,6 +4,7 @@
 
 #include "ZCApp/graphics/textures/fan_texture.hpp"
 
+#include "ZCApp/graphics/framebuffer.hpp"
 #include "ZCGKit/external.hpp"
 
 namespace zc_app
@@ -19,7 +20,7 @@ namespace zc_app
         const auto size = circle_vertices.size() * sizeof(float);
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(size), circle_vertices.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, GL_SIZEI_PTR_C(size), circle_vertices.data(), GL_STATIC_DRAW);
 
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
         glEnableVertexAttribArray(0);

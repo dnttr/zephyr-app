@@ -54,7 +54,7 @@ namespace zc_app
         input_message_button input_button;
 
     public:
-        void initialize(int scene_width, int scene_height) override
+        void initialize(const int scene_width, const int scene_height) override
         {
             this->scene_width = scene_width;
             this->scene_height = scene_height;
@@ -279,7 +279,7 @@ namespace zc_app
         {
         }
 
-        void on_mouse_down(zcg_mouse_pos_t mouse_pos, int button)
+        void on_mouse_down(const zcg_mouse_pos_t mouse_pos, const int button)
         {
             input_button.on_mouse_down(mouse_pos, button);
         }
@@ -288,7 +288,7 @@ namespace zc_app
         {
         }
 
-        void on_key_down(zcg_key_event_t key_event)
+        void on_key_down(const zcg_key_event_t key_event)
         {
             input_button.on_key_down(key_event);
         }
@@ -387,7 +387,7 @@ namespace zc_app
             input_button.on_mouse_move(mouse_pos);
         }
 
-        void resize(int width, int height) override
+        void resize(const int width, const int height) override
         {
             scene_width = width;
             scene_height = height;

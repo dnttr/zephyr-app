@@ -5,9 +5,11 @@
 #include "ZCApp/graphics/fonts/font_renderer.hpp"
 
 #include <chrono>
+#include <iostream>
 
 #include "ZCApp/graphics/fonts/font_loader.hpp"
 #include "ZCApp/graphics/objects/shapes/container.hpp"
+#include "ZCApp/graphics/shaders/shaders.hpp"
 #include "ZCApp/graphics/utils/perspective_util.hpp"
 #include "ZCApp/graphics/utils/time_util.hpp"
 #include "ZCGKit/external.hpp"
@@ -70,17 +72,17 @@ void zc_app::font_renderer::setup_ubo()
     if (textPropsIndex != GL_INVALID_INDEX) {
         glUniformBlockBinding(program, textPropsIndex, 0);
     } else {
-        printf("ERROR: text_properties uniform block not found in shader!\n");
+        //printf("ERROR: text_properties uniform block not found in shader!\n");
     }
 
     if (transformPropsIndex != GL_INVALID_INDEX) {
         glUniformBlockBinding(program, transformPropsIndex, 1);
     } else {
-        printf("ERROR: transform_properties uniform block not found in shader!\n");
+        //printf("ERROR: transform_properties uniform block not found in shader!\n");
     }
 
     if (const GLenum error = glGetError(); error != GL_NO_ERROR) {
-        printf("OpenGL error in setup_ubo: %d\n", error);
+        //printf("OpenGL error in setup_ubo: %d\n", error);
     }
 
     glBindBuffer(GL_UNIFORM_BUFFER, 0);

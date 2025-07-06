@@ -13,6 +13,7 @@ namespace zc_app
 #define GL_SIZEI_PTR_C static_cast<GLsizeiptr>
 #define GL_SIZEI_C static_cast<GLsizei>
 #define GL_INT_C static_cast<GLint>
+#define GL_ENUM_C static_cast<GLenum>
 
     class framebuffer
     {

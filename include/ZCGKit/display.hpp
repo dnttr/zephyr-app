@@ -1,6 +1,7 @@
 //
 // Created by Damian Netter on 23/06/2025.
 //
+
 #pragma once
 
 namespace zcg_kit

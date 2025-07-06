@@ -6,7 +6,6 @@
 
 #include <map>
 #include <OpenGL/gl3.h>
-#include <ZNBKit/internal/wrapper.hpp>
 
 namespace zc_app
 {

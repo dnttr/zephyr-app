@@ -5,7 +5,7 @@
 #include "ZCApp/graphics/shaders/shaders.hpp"
 
 #include <iostream>
-#include <ZNBKit/debug.hpp>
+#include <vector>
 
 namespace zc_app
 {
@@ -13,14 +13,8 @@ namespace zc_app
 
     GLuint shaders::create_program(const std::string &vertex_name, const std::string &fragment_name)
     {
-        VAR_CONTENT_CHECK(vertex_name);
-        VAR_CONTENT_CHECK(fragment_name);
-
         const auto vertex_source = manager::get_source(vertex_name);
         const auto fragment_source = manager::get_source(fragment_name);
-
-        VAR_CONTENT_CHECK(vertex_source);
-        VAR_CONTENT_CHECK(fragment_source);
 
         const GLuint vertex_shader = create(vertex_source.c_str(), GL_VERTEX_SHADER);
         const GLuint fragment_shader = create(fragment_source.c_str(), GL_FRAGMENT_SHADER);
@@ -85,7 +79,7 @@ namespace zc_app
             std::vector<char> infoLog(length);
 
             glGetProgramInfoLog(program, length, nullptr, infoLog.data());
-            debug_print(infoLog.data());
+            std::cerr << "Shader program linking failed: " << infoLog.data() << std::endl;
 
             glDeleteProgram(program);
 
