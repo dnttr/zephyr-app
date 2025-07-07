@@ -48,7 +48,7 @@ namespace zc_app
         std::string current_text = "";
 
         float cursor_blink_timer = 0.0f;
-        float cursor_blink_speed = 0.5f;
+        float cursor_blink_speed = 0.06f;
         bool show_cursor = true;
 
         float default_text_pos_x = 0.0f;

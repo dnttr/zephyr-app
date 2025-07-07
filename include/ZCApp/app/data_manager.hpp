@@ -50,52 +50,31 @@ namespace data
     private:
         std::unordered_map<std::string, conversation_data> all_conversations;
 
-        void populate_dummy_data()
-        {
-            conversation_data conv1("Joshua Hardstick", "avatar.png", "Last seen 5 minutes ago", true);
-            conv1.messages.emplace_back("Hey! How was your weekend?", false, "Joshua Hardstick");
-            conv1.messages.emplace_back("It was great! Went hiking with friends. How about you?", true, "You");
-            conv1.messages.emplace_back("Nice! I stayed home and binged Netflix", false, "Joshua Hardstick");
-            conv1.messages.emplace_back("Haha, sometimes that's exactly what you need!", true, "You");
-            conv1.messages.emplace_back("Absolutely! Any show recommendations? Looking for something new to watch. Maybe a sci-fi or a mystery? This message is quite long and should definitely wrap around multiple lines for testing purposes. It contains many characters that might push the boundary of the bubble. Let's see if it fits nicely and grows the bubble correctly.", false, "Joshua Hardstick");
-            conv1.messages.emplace_back("I just finished 'The Expanse' and it was amazing! Highly recommend it if you like sci-fi.", true, "You");
-            conv1.messages.emplace_back("Oh, I've heard good things about that one! Is it on Netflix?", false, "Joshua Hardstick");
-            conv1.messages.emplace_back("I think it's on Amazon Prime Video. Definitely worth checking out!", true, "You");
-            conv1.messages.emplace_back("Cool, I'll add it to my watchlist. Thanks for the tip!", false, "Joshua Hardstick");
-            conv1.messages.emplace_back("No problem! Enjoy!", true, "You");
-            all_conversations["user1"] = std::move(conv1);
-
-            conversation_data conv2("Sarah Miller", "avatar.png", "Last seen 2 hours ago", false);
-            conv2.messages.emplace_back("Are we still on for dinner tonight?", false, "Sarah Miller");
-            conv2.messages.emplace_back("Yes! Looking forward to it", true, "You");
-            conv2.messages.emplace_back("Great! See you at 7", false, "Sarah Miller");
-            all_conversations["user2"] = std::move(conv2);
-
-            conversation_data conv3("John Doe", "avatar.png", "Last seen 1 day ago", false);
-            conv3.messages.emplace_back("Hi there!", false, "John Doe");
-            conv3.messages.emplace_back("Hey John! How are you?", true, "You");
-            conv3.messages.emplace_back("I'm doing well, thanks! Just working on a new project.", false, "John Doe");
-            conv3.messages.emplace_back("Sounds interesting! What kind of project?", true, "You");
-            conv3.messages.emplace_back("It's a really complex one with lots of moving parts and requires a lot of concentration and long hours. Hopefully, it pays off in the end!", false, "John Doe");
-            conv3.messages.emplace_back("Wow, that sounds intense! Good luck with it! Don't forget to take breaks.", true, "You");
-            conv3.messages.emplace_back("I'll try! Maybe we can catch up once it's done?", false, "John Doe");
-            conv3.messages.emplace_back("Definitely! Let me know when you're free. I'm always up for a coffee.", true, "You");
-            conv3.messages.emplace_back("Sounds like a plan! I'll be in touch.", false, "John Doe");
-            conv3.messages.emplace_back("Great, looking forward to it!", true, "You");
-            all_conversations["user3"] = std::move(conv3);
-
-            conversation_data conv4("Alice", "avatar.png", "Online", true);
-            conv4.messages.emplace_back("Hello!", false, "Alice");
-            conv4.messages.emplace_back("Hey!", true, "You");
-            all_conversations["user4"] = std::move(conv4);
-        }
-
     public:
         bool is_client_connected = false;
 
-        data_manager()
+        data_manager() = default;
+
+        bool has_conversation(const std::string& id) const
         {
-            populate_dummy_data();
+            return all_conversations.count(id);
+        }
+
+        void create_conversation(const std::string& id, const std::string& name, const std::string& status)
+        {
+            if (!has_conversation(id))
+            {
+                all_conversations[id] = conversation_data(name, "avatar.png", status, true);
+            }
+        }
+
+        void add_message_to_conversation(const std::string& conversation_id, const message_data& new_message)
+        {
+            const auto it = all_conversations.find(conversation_id);
+            if (it != all_conversations.end())
+            {
+                it->second.messages.push_back(new_message);
+            }
         }
 
         bool attempt_connection(const std::string& ip, const std::string& port)
@@ -104,6 +83,7 @@ namespace data
                 is_client_connected = true;
                 return true;
             }
+
             is_client_connected = false;
             return false;
         }
@@ -129,16 +109,6 @@ namespace data
             }
 
             return it->second;
-        }
-
-        void send_message_to_server(const std::string& conversation_id, const message_data& new_message)
-        {
-            const auto it = all_conversations.find(conversation_id);
-
-            if (it != all_conversations.end())
-            {
-                it->second.messages.push_back(new_message);
-            }
         }
     };
 }

@@ -69,6 +69,8 @@ namespace zc_app
 
         std::string get_text();
 
+        text_style &get_style();
+
         void set_text(const std::string &str);
     };
 }

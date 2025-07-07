@@ -1,7 +1,3 @@
-//
-// Created by Damian Netter on 20/06/2025.
-//
-
 #include "ZCKit/bridge.hpp"
 
 #include <algorithm>
@@ -45,7 +41,8 @@ namespace zc_kit
         {"RELAY_TERMINATED", EV_RELAY_TERMINATED},
         {"INCOMING_CHAT", EV_INCOMING_CHAT},
         {"INCOMING_STATUS", EV_INCOMING_STATUS},
-        {"INCOMING_DESCRIPTION", EV_INCOMING_DESCRIPTION}
+        {"INCOMING_DESCRIPTION", EV_INCOMING_DESCRIPTION},
+        {"PUSH_USER_LIST", EV_PUSH_USER_LIST}
     };
 
     std::unique_ptr<std::thread> bridge::ipc_read_thread = nullptr;
@@ -62,6 +59,7 @@ namespace zc_kit
     std::function<void(int)> bridge::on_status_received;
     std::function<void()> bridge::on_relay_established;
     std::function<void()> bridge::on_relay_refused;
+    std::function<void(const std::string &)> bridge::on_user_list_received;
 
     void bridge::_loop()
     {
@@ -257,6 +255,15 @@ namespace zc_kit
                         break;
                     }
 
+                case EV_PUSH_USER_LIST:
+                    {
+                        if (on_user_list_received)
+                        {
+                            on_user_list_received(payload);
+                        }
+                        break;
+                    }
+
                 default:
                     {
                         std::cerr << "[Bridge] Unknown command received: " << cmd << " (Payload: " << payload << ")" <<
@@ -320,7 +327,7 @@ namespace zc_kit
         std::cout << "[Bridge] Bridge terminated successfully." << std::endl;
 
         fflush(stdout);
-        
+
         exit(0);
     }
 
@@ -344,6 +351,19 @@ namespace zc_kit
         }
     }
 
+    void bridge::client_disconnect()
+    {
+        if (daemon && daemon->is_connected())
+        {
+            daemon->send_message(IPC_DISCONNECT);
+        }
+        else
+        {
+            std::cerr << "[C++-DEBUG] WARNING: Cannot send DISCONNECT command - daemon not connected or null." <<
+                std::endl;
+        }
+    }
+
     void bridge::client_identify(const std::string &name)
     {
         if (daemon && daemon->is_connected())
@@ -354,6 +374,14 @@ namespace zc_kit
         {
             std::cerr << "[C++-DEBUG] WARNING: Cannot send IDENTIFY command - daemon not connected or null." <<
                 std::endl;
+        }
+    }
+
+    void bridge::client_get_users()
+    {
+        if (daemon && daemon->is_connected())
+        {
+            daemon->send_message(IPC_GET_USERS);
         }
     }
 

@@ -1,7 +1,3 @@
-//
-// Created by Damian Netter on 20/06/2025.
-//
-
 #pragma once
 
 #include <string>
@@ -26,6 +22,9 @@ namespace zc_kit
         static constexpr std::string IPC_IDENTIFY = "IDENTIFY:";
         static constexpr std::string IPC_CONNECT_NETTY = "CONNECT_NETTY:";
 
+
+        static constexpr std::string IPC_GET_USERS = "GET_USERS";
+        static constexpr std::string IPC_DISCONNECT = "DISCONNECT_NETTY";
         static constexpr std::string IPC_SHUTDOWN = "SHUTDOWN";
         static constexpr std::string IPC_REQUEST_RESOURCES = "REQUEST_RESOURCES";
 
@@ -44,7 +43,8 @@ namespace zc_kit
             EV_RELAY_TERMINATED,
             EV_INCOMING_CHAT,
             EV_INCOMING_STATUS,
-            EV_INCOMING_DESCRIPTION
+            EV_INCOMING_DESCRIPTION,
+            EV_PUSH_USER_LIST
         };
 
     public:
@@ -53,9 +53,11 @@ namespace zc_kit
         static void internal_request_resources();
 
         static void client_connect(const std::string& ip, int port);
+        static void client_disconnect();
         static void client_identify(const std::string& name);
         static void client_request_relay(const std::string& target_name);
         static void client_answer_relay(bool accept);
+        static void client_get_users();
 
         static void client_message(const std::string& msg);
         static void client_status(int status_code);
@@ -70,6 +72,8 @@ namespace zc_kit
         static std::function<void(const std::string& message)> on_chat_message_received;
         static std::function<void(int status)> on_status_received;
         static std::function<void(const std::string& description)> on_description_received;
+        static std::function<void(const std::string& json_payload)> on_user_list_received;
+
     private:
         static void _loop();
 

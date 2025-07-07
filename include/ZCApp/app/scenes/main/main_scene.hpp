@@ -5,6 +5,7 @@
 #include "widgets/input_message_button.hpp"
 #include "widgets/chat_area.hpp"
 #include "widgets/connection_modal.hpp"
+#include "widgets/request_modal.hpp"
 #include "ZCApp/app/scenes/apperance.hpp"
 #include "ZCApp/graphics/effects/partial_blur.hpp"
 #include "ZCApp/graphics/objects/background.hpp"
@@ -14,6 +15,11 @@
 #include "ZCApp/graphics/textures/fan_texture.hpp"
 #include "ZCApp/graphics/textures/texture.hpp"
 #include "ZCApp/graphics/effects/fullscreen_blur.hpp"
+#include "ZCKit/bridge.hpp"
+#include "nlohmann/json.hpp"
+#include <mutex>
+#include <vector>
+#include <functional>
 
 namespace zc_app
 {
@@ -37,11 +43,175 @@ namespace zc_app
         int scene_width = 0;
         int scene_height = 0;
 
+        bool is_identified = false;
+        bool is_awaiting_relay_response = false;
+        bool is_network_connected = false;
+
+        std::string my_username;
+        std::string active_chat_partner;
+
         data::data_manager app_data_manager;
 
         friend_list f_list;
         chat_area chat_area_widget;
         connection_modal connection_modal_widget{};
+        request_modal request_modal_widget{};
+
+        std::mutex main_thread_action_mutex;
+        std::vector<std::function<void()>> main_thread_actions;
+
+        void queue_main_thread_action(std::function<void()> action)
+        {
+            std::lock_guard lock(main_thread_action_mutex);
+            main_thread_actions.push_back(std::move(action));
+        }
+
+        void process_main_thread_actions()
+        {
+            std::vector<std::function<void()>> actions_to_run;
+            {
+                std::lock_guard lock(main_thread_action_mutex);
+                if (main_thread_actions.empty())
+                {
+                    return;
+                }
+                actions_to_run.swap(main_thread_actions);
+            }
+
+            for (const auto &action : actions_to_run)
+            {
+                action();
+            }
+        }
+
+        void setup_bridge_callbacks()
+        {
+            zc_kit::bridge::on_ready_for_identification = [this]()
+            {
+                my_username = connection_modal_widget.get_username();
+                if (my_username.empty())
+                {
+                    my_username = "Guest" + std::to_string(rand() % 1000);
+                }
+
+                queue_main_thread_action([this]
+                {
+                    username_text.set_text(my_username);
+                });
+
+                zc_kit::bridge::client_identify(my_username);
+            };
+
+            zc_kit::bridge::on_identification_result = [this](bool success, const std::string &reason)
+            {
+                queue_main_thread_action([this, success, reason]
+                {
+                    if (success)
+                    {
+                        is_identified = true;
+                        connection_modal_widget.on_connection_result(true, "Identification successful!");
+                        zc_kit::bridge::client_get_users();
+                    }
+                    else
+                    {
+                        is_identified = false;
+                        connection_modal_widget.on_connection_result(false, reason);
+
+                        zc_kit::bridge::client_disconnect();
+                    }
+                });
+            };
+
+            zc_kit::bridge::on_user_list_received = [this](const std::string &json_payload)
+            {
+                std::cout << "--- User List Received ---" << std::endl;
+                std::cout << "Raw JSON Payload: " << json_payload << std::endl;
+                std::cout << "My username at this moment: '" << my_username << "'" << std::endl;
+
+                queue_main_thread_action([this, json_payload]
+                {
+                    try
+                    {
+                        std::vector<friend_data> friends;
+                        auto json = nlohmann::json::parse(json_payload);
+                        for (const auto &user_obj : json)
+                        {
+                            std::cout << "Processing user: " << user_obj.dump() << std::endl;
+                            if (user_obj.value("name", "") == my_username)
+                            {
+                                std::cout << "--> Skipping myself." << std::endl;
+                                continue;
+                            }
+
+                            friends.push_back({
+                                .name = user_obj.value("name", "Unknown"),
+                                .status = user_obj.value("status", 0)
+                            });
+                        }
+                        std::cout << "Populating friends list with " << friends.size() << " user(s)." << std::endl;
+                        f_list.populate_friends(friends);
+                    }
+                    catch (const nlohmann::json::parse_error &e)
+                    {
+                        std::cerr << "JSON parse error: " << e.what() << std::endl;
+                    }
+                });
+            };
+
+            zc_kit::bridge::on_incoming_relay_request = [this](const std::string &sender_name)
+            {
+                active_chat_partner = sender_name;
+                queue_main_thread_action([this, sender_name]
+                {
+                    request_modal_widget.show(sender_name);
+                });
+            };
+
+            zc_kit::bridge::on_relay_established = [this]()
+            {
+                is_awaiting_relay_response = false;
+                queue_main_thread_action([this]
+                {
+                    chat_area_widget.switch_conversation(active_chat_partner);
+                });
+            };
+
+            zc_kit::bridge::on_relay_refused = [this]()
+            {
+                is_awaiting_relay_response = false;
+                active_chat_partner.clear();
+                std::cout << "Relay request was refused." << std::endl;
+            };
+
+            zc_kit::bridge::on_chat_message_received = [this](const std::string &message)
+            {
+                queue_main_thread_action([this, message]
+                {
+                    if (chat_area_widget.get_current_conversation_id() == active_chat_partner)
+                    {
+                        chat_area_widget.add_message(message, false);
+                    }
+                });
+            };
+
+            zc_kit::bridge::on_relay_terminated = [this](const std::string &reason)
+            {
+                queue_main_thread_action([this]
+                {
+                    if (!active_chat_partner.empty())
+                    {
+                        chat_area_widget.clear_chat("'" + active_chat_partner + "' has left the chat.");
+                        active_chat_partner.clear();
+                        zc_kit::bridge::client_get_users();
+                    }
+                });
+            };
+
+            zc_kit::bridge::on_status_received = [this](int status_code)
+            {
+                std::cout << "Received status update: " << status_code << std::endl;
+            };
+        }
 
     public:
         void initialize(const int scene_width, const int scene_height)
@@ -86,7 +256,8 @@ namespace zc_app
             float chat_x = sidebar_width + PADDING;
 
             chat_area_widget.initialize(chat_x, &app_data_manager);
-            connection_modal_widget.initialize(960, 540);
+            connection_modal_widget.initialize(scene_width, scene_height);
+            request_modal_widget.initialize(scene_width, scene_height);
 
             setup_sidebar_text_styles();
 
@@ -94,22 +265,34 @@ namespace zc_app
             user_avatar.setup();
 
             f_list.initialize(friends_header.get_container().get_y() + 50, sidebar_width,
-                              sidebar_glass.get_container().get_height(), &chat_area_widget);
+                              sidebar_glass.get_container().get_height());
+
+            f_list.set_on_friend_selected_callback([this](const std::string &target_username)
+            {
+                if (is_awaiting_relay_response || active_chat_partner == target_username) return;
+
+                is_awaiting_relay_response = true;
+                active_chat_partner = target_username;
+                zc_kit::bridge::client_request_relay(target_username);
+            });
+
+            setup_bridge_callbacks();
 
             connection_modal_widget.set_on_connect_callback(
-                [this](const std::string &username, const std::string &ip, const std::string &port)
+                [](const std::string &username, const std::string &ip, const std::string &port)
                 {
-                    bool success = app_data_manager.attempt_connection(ip, port);
-                    if (success) {
-                        connection_modal_widget.on_connection_result(true, "Connected!");
-                        chat_area_widget.add_message("Successfully connected to " + ip, false, false);
-                    } else {
-                        connection_modal_widget.on_connection_result(false, "Connection failed. Try again.");
-                    }
+                    zc_kit::bridge::client_connect(ip, std::stoi(port));
                 }
             );
 
-            if (!app_data_manager.is_client_connected) {
+
+            request_modal_widget.set_on_answered_callback([](bool accepted)
+            {
+                zc_kit::bridge::client_answer_relay(accepted);
+            });
+
+            if (!is_identified)
+            {
                 connection_modal_widget.set_visible(true);
             }
         }
@@ -125,7 +308,7 @@ namespace zc_app
             default_style.shadow_color = colour(0, 0, 0, 100);
 
             username_text.initialize(
-                "Alex Johnson",
+                "Not Connected",
                 container(PADDING * 3 + 60, PADDING * 3 + 5),
                 font_manager::get_font("Roboto-Medium"),
                 default_style
@@ -136,7 +319,7 @@ namespace zc_app
             status_style.text_color = colour(180, 180, 180, 200);
 
             user_status_text.initialize(
-                "Online",
+                "Offline",
                 container(PADDING * 3 + 60, PADDING * 3 + 25),
                 font_manager::get_font("Roboto-Regular"),
                 status_style
@@ -165,9 +348,10 @@ namespace zc_app
 
         void on_char_typed(unsigned int char_code)
         {
-            if (connection_modal_widget.is_modal_visible())
+            if (connection_modal_widget.is_modal_visible() || request_modal_widget.is_modal_visible())
             {
-                connection_modal_widget.on_char_typed(char_code);
+                if (connection_modal_widget.is_modal_visible())
+                    connection_modal_widget.on_char_typed(char_code);
             }
             else
             {
@@ -180,6 +364,10 @@ namespace zc_app
             if (connection_modal_widget.is_modal_visible())
             {
                 connection_modal_widget.on_mouse_down(mouse_pos, button);
+            }
+            else if (request_modal_widget.is_modal_visible())
+            {
+                request_modal_widget.on_mouse_down(mouse_pos, button);
             }
             else
             {
@@ -199,7 +387,7 @@ namespace zc_app
 
         void on_mouse_up(const zcg_mouse_pos_t mouse_pos, const int button)
         {
-            if (connection_modal_widget.is_modal_visible())
+            if (connection_modal_widget.is_modal_visible() || request_modal_widget.is_modal_visible())
             {
             }
             else
@@ -214,7 +402,11 @@ namespace zc_app
             {
                 connection_modal_widget.on_key_down(key_event);
             }
-            else if (!app_data_manager.is_client_connected && key_event.key_code == ZCG_KEY_ESCAPE) {
+            else if (request_modal_widget.is_modal_visible())
+            {
+            }
+            else if (!is_identified && key_event.key_code == ZCG_KEY_ESCAPE)
+            {
                 connection_modal_widget.set_visible(true);
             }
             else
@@ -249,19 +441,10 @@ namespace zc_app
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-            if (connection_modal_widget.is_modal_visible())
-            {
-                blur_background.draw(scene_width, scene_height, [this]
-                {
-                    draw_components();
-                });
-            }
-            else
-            {
-                draw_components();
-            }
+            draw_components();
 
             connection_modal_widget.draw();
+            request_modal_widget.draw();
         }
 
         void draw_components()
@@ -284,13 +467,15 @@ namespace zc_app
 
         void update()
         {
+            process_main_thread_actions();
             f_list.update(time_util::get_delta_time());
             chat_area_widget.update();
+            connection_modal_widget.update(time_util::get_delta_time());
         }
 
         void scroll(const zcg_scroll_event_t &scroll_event)
         {
-            if (connection_modal_widget.is_modal_visible())
+            if (connection_modal_widget.is_modal_visible() || request_modal_widget.is_modal_visible())
             {
             }
             else
@@ -302,9 +487,10 @@ namespace zc_app
 
         void on_mouse_move(const zcg_mouse_pos_t &mouse_pos)
         {
-            if (connection_modal_widget.is_modal_visible())
+            if (connection_modal_widget.is_modal_visible() || request_modal_widget.is_modal_visible())
             {
-                connection_modal_widget.on_mouse_move(mouse_pos);
+                if (connection_modal_widget.is_modal_visible())
+                    connection_modal_widget.on_mouse_move(mouse_pos);
             }
             else
             {

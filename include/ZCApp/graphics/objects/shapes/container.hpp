@@ -23,6 +23,18 @@ namespace zc_app
         {
         }
 
+        void set_position(const float new_x, const float new_y)
+        {
+            x = new_x;
+            y = new_y;
+        }
+
+        void set_size(const float new_width, const float new_height)
+        {
+            width = new_width;
+            height = new_height;
+        }
+
         void set_x(const float new_x)
         {
             x = new_x;

@@ -183,6 +183,11 @@ namespace zc_app
         return str;
     }
 
+    text_style &text::get_style()
+    {
+        return style;
+    }
+
     void text::set_text(const std::string &str)
     {
         const auto [lines, size] = string_util::get_lines(str);

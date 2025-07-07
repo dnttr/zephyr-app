@@ -83,7 +83,7 @@ namespace zc_app
             uniforms_need_update = true;
         }
 
-        [[nodiscard]] const container &get_container() const
+        [[nodiscard]] container &get_container()
         {
             return m_container;
         }

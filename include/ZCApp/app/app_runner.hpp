@@ -7,8 +7,6 @@
 #include <condition_variable>
 #include <string>
 
-#include "ZCKit/bridge.hpp"
-
 namespace zc_kit
 {
     class app_runner

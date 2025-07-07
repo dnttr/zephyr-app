@@ -7,6 +7,7 @@
 #include "ZCApp/graphics/utils/scissor.hpp"
 #include "ZCApp/graphics/utils/time_util.hpp"
 #include "ZCApp/graphics/utils/perspective_util.hpp"
+#include "ZCKit/bridge.hpp"
 
 #include <vector>
 #include <memory>
@@ -606,43 +607,35 @@ namespace zc_app
 
             setup_chat_text_styles();
             chat_avatar.setup();
-
-            if (p_data_manager)
-            {
-                if (const auto &conv_ids = p_data_manager->fetch_all_conversation_ids(); !conv_ids.empty())
-                {
-                    switch_conversation(conv_ids[0]);
-                }
-            }
         }
 
-        void switch_conversation(const std::string &conversation_id)
+        void clear_chat(const std::string& system_message)
         {
-            if (!p_data_manager) return;
+            current_conversation_id = "";
+            current_conversation_cache = conversation_data();
+            chat_title.set_text("No conversation selected");
+            last_seen_text.set_text("");
+            add_message(system_message, false);
+        }
 
-            try
+        void switch_conversation(const std::string& conversation_partner_name)
+        {
+            current_conversation_id = conversation_partner_name;
+
+            if (p_data_manager->has_conversation(current_conversation_id))
             {
-                current_conversation_cache = p_data_manager->fetch_conversation_by_id(conversation_id);
-                current_conversation_id = conversation_id;
-
-                chat_title.set_text(current_conversation_cache.contact_name);
-                last_seen_text.set_text(current_conversation_cache.is_online
-                                            ? "Online"
-                                            : current_conversation_cache.last_seen);
-
-                rebuild_message_display(false);
-
-                scroll_to_bottom(true);
+                 current_conversation_cache = p_data_manager->fetch_conversation_by_id(current_conversation_id);
             }
-            catch (const std::runtime_error &e)
+            else
             {
-                current_conversation_id.clear();
-
-                chat_title.set_text("Error: " + std::string(e.what()));
-                last_seen_text.set_text("");
-
-                rebuild_message_display(false);
+                p_data_manager->create_conversation(current_conversation_id, conversation_partner_name, "Online");
+                current_conversation_cache = p_data_manager->fetch_conversation_by_id(current_conversation_id);
             }
+
+            chat_title.set_text(current_conversation_cache.contact_name);
+            last_seen_text.set_text(current_conversation_cache.is_online ? "Online" : current_conversation_cache.last_seen);
+            rebuild_message_display(false);
+            scroll_to_bottom(true);
         }
 
         void scroll_to_bottom(bool instant)
@@ -661,12 +654,24 @@ namespace zc_app
 
         void add_message(const std::string &content, bool is_sent, bool auto_scroll = true)
         {
-            if (current_conversation_id.empty() || !p_data_manager) return;
+            if (current_conversation_id.empty() && is_sent) return;
+            if (!p_data_manager) return;
+
+            std::string conv_id = current_conversation_id.empty() ? "SYSTEM" : current_conversation_id;
+
+            if (!p_data_manager->has_conversation(conv_id)) {
+                p_data_manager->create_conversation(conv_id, "System", "");
+            }
 
             const message_data new_msg(content, is_sent, is_sent ? "You" : current_conversation_cache.contact_name);
+            p_data_manager->add_message_to_conversation(conv_id, new_msg);
 
-            p_data_manager->send_message_to_server(current_conversation_id, new_msg);
-            current_conversation_cache.messages.push_back(new_msg);
+            if (conv_id == "SYSTEM") {
+                current_conversation_cache = p_data_manager->fetch_conversation_by_id(conv_id);
+            } else {
+                current_conversation_cache.messages.push_back(new_msg);
+            }
+
 
             rebuild_message_display(true);
 
@@ -674,6 +679,11 @@ namespace zc_app
             {
                 scroll_to_bottom(false);
             }
+        }
+
+        const std::string& get_current_conversation_id() const
+        {
+            return current_conversation_id;
         }
 
         void remove_conversation(const std::string &id)
@@ -689,10 +699,11 @@ namespace zc_app
 
         void send_current_message()
         {
-            if (const std::string &message = input_button.get_current_text(); !message.empty())
+            const std::string& message = input_button.get_current_text();
+            if (!message.empty())
             {
                 add_message(message, true);
-
+                zc_kit::bridge::client_message(message);
                 input_button.clear_text();
             }
         }
@@ -716,106 +727,103 @@ namespace zc_app
             {
                 const float delta_time = time_util::get_delta_time();
 
-                for (auto &[bubble, message_text, message_timestamp, is_sent, animation_state, animation_timer,
-                         animation_duration, original_bubble_container, original_bubble_fill_color, original_text_x,
-                         original_text_y, original_text_color, original_timestamp_x, original_timestamp_y,
-                         original_timestamp_color] : animated_messages)
+                for (auto & am : animated_messages)
                 {
                     const float offset_y = -messages_scroll_y;
 
-                    if (animation_state == message_animation_state::ANIMATING_IN)
+                    if (am.animation_state == message_animation_state::ANIMATING_IN)
                     {
-                        animation_timer += delta_time;
+                        am.animation_timer += delta_time;
 
-                        const float progress = std::min(1.0f, animation_timer / animation_duration);
+                        const float progress = std::min(1.0f, am.animation_timer / am.animation_duration);
                         const float eased_progress = 1.0F - static_cast<float>(std::pow(1.0f - progress, 2));
 
-                        const float alpha_bubble = static_cast<float>(original_bubble_fill_color.get_alpha_u8()) *
+                        const float alpha_bubble = static_cast<float>(am.original_bubble_fill_color.get_alpha_u8()) *
                             eased_progress;
-                        const float alpha_text = static_cast<float>(original_text_color.get_alpha_u8()) *
+                        const float alpha_text = static_cast<float>(am.original_text_color.get_alpha_u8()) *
                             eased_progress;
-                        const float alpha_timestamp = static_cast<float>(original_timestamp_color.get_alpha_u8()) *
+                        const float alpha_timestamp = static_cast<float>(am.original_timestamp_color.get_alpha_u8()) *
                             eased_progress;
 
-                        colour current_bubble_color = original_bubble_fill_color;
-                        colour current_timestamp_color = original_timestamp_color;
-                        colour current_text_color = original_text_color;
+                        colour current_bubble_color = am.original_bubble_fill_color;
+                        colour current_timestamp_color = am.original_timestamp_color;
+                        colour current_text_color = am.original_text_color;
 
                         current_timestamp_color.set_alpha_u8(static_cast<uint8_t>(alpha_timestamp));
                         current_bubble_color.set_alpha_u8(static_cast<uint8_t>(alpha_bubble));
                         current_text_color.set_alpha_u8(static_cast<uint8_t>(alpha_text));
 
-                        bubble->set_colour(current_bubble_color);
-                        message_text->set_color(current_text_color);
-                        message_timestamp->set_color(current_timestamp_color);
+                        am.bubble->set_colour(current_bubble_color);
+                        am.message_text->set_color(current_text_color);
+                        am.message_timestamp->set_color(current_timestamp_color);
 
                         constexpr float slide_distance = 100.0f;
                         const float current_slide_offset = slide_distance * (1.0f - eased_progress);
 
                         float bubble_x_animated;
 
-                        if (is_sent)
+                        if (am.is_sent)
                         {
-                            bubble_x_animated = original_bubble_container.get_x() + current_slide_offset;
+                            bubble_x_animated = am.original_bubble_container.get_x() + current_slide_offset;
                         }
                         else
                         {
-                            bubble_x_animated = original_bubble_container.get_x() - current_slide_offset;
+                            bubble_x_animated = am.original_bubble_container.get_x() - current_slide_offset;
                         }
 
-                        bubble->set_container(container(
+                        am.bubble->set_container(container(
                             bubble_x_animated,
-                            original_bubble_container.get_y() + offset_y,
-                            original_bubble_container.get_width(),
-                            original_bubble_container.get_height()
+                            am.original_bubble_container.get_y() + offset_y,
+                            am.original_bubble_container.get_width(),
+                            am.original_bubble_container.get_height()
                         ));
 
-                        message_text->set_properties_position(
-                            original_text_x + (is_sent ? current_slide_offset : -current_slide_offset),
-                            original_text_y + offset_y);
+                        am.message_text->set_properties_position(
+                            am.original_text_x + (am.is_sent ? current_slide_offset : -current_slide_offset),
+                            am.original_text_y + offset_y);
 
-                        message_timestamp->set_properties_position(original_timestamp_x +
-                                                                   (is_sent
+                        am.message_timestamp->set_properties_position(am.original_timestamp_x +
+                                                                   (am.is_sent
                                                                         ? current_slide_offset
                                                                         : -current_slide_offset),
-                                                                   original_timestamp_y + offset_y);
+                                                                   am.original_timestamp_y + offset_y);
 
                         if (progress >= 1.0f)
                         {
-                            animation_state = message_animation_state::IDLE;
+                            am.animation_state = message_animation_state::IDLE;
                         }
                     }
                     else
                     {
-                        bubble->set_colour(original_bubble_fill_color);
-                        message_text->set_color(original_text_color);
-                        message_timestamp->set_color(original_timestamp_color);
+                        am.bubble->set_colour(am.original_bubble_fill_color);
+                        am.message_text->set_color(am.original_text_color);
+                        am.message_timestamp->set_color(am.original_timestamp_color);
 
-                        bubble->set_container(container(
-                            original_bubble_container.get_x(),
-                            original_bubble_container.get_y() + offset_y,
-                            original_bubble_container.get_width(),
-                            original_bubble_container.get_height()
+                        am.bubble->set_container(container(
+                            am.original_bubble_container.get_x(),
+                            am.original_bubble_container.get_y() + offset_y,
+                            am.original_bubble_container.get_width(),
+                            am.original_bubble_container.get_height()
                         ));
 
-                        message_text->set_properties_position(
-                            original_text_x,
-                            original_text_y + offset_y
+                        am.message_text->set_properties_position(
+                            am.original_text_x,
+                            am.original_text_y + offset_y
                         );
 
-                        message_timestamp->set_properties_position(
-                            original_timestamp_x,
-                            original_timestamp_y + offset_y
+                        am.message_timestamp->set_properties_position(
+                            am.original_timestamp_x,
+                            am.original_timestamp_y + offset_y
                         );
                     }
 
-                    if (bubble->get_container().get_y() + bubble->get_container().get_height() >=
+                    if (am.bubble->get_container().get_y() + am.bubble->get_container().get_height() >=
                         messages_content_start_y
-                        && bubble->get_container().get_y() <= messages_content_start_y + visible_messages_height)
+                        && am.bubble->get_container().get_y() <= messages_content_start_y + visible_messages_height)
                     {
-                        bubble->draw();
-                        message_text->render();
-                        message_timestamp->render();
+                        am.bubble->draw();
+                        am.message_text->render();
+                        am.message_timestamp->render();
                     }
                 }
             }, container(chat_area_glass.get_container().get_x(), messages_content_start_y,

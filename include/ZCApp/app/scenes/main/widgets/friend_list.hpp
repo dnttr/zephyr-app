@@ -1,7 +1,3 @@
-//
-// Created by Damian Netter on 03/07/2025.
-//
-
 #pragma once
 
 #include <vector>
@@ -14,6 +10,7 @@
 #include "ZCApp/app/scenes/apperance.hpp"
 #include "ZCApp/graphics/utils/math_util.hpp"
 #include "ZCApp/graphics/utils/scissor.hpp"
+#include "ZCKit/bridge.hpp"
 
 namespace zc_app
 {
@@ -24,6 +21,12 @@ namespace zc_app
 
 namespace zc_app
 {
+    struct friend_data
+    {
+        std::string name;
+        int status;
+    };
+
     class friend_list
     {
         std::vector<std::unique_ptr<friend_button>> friends_list;
@@ -47,15 +50,7 @@ namespace zc_app
 
         container friends_container{};
 
-        chat_area *p_chat_area = nullptr;
-
-        void on_friend_button_clicked(const std::string &conversation_id)
-        {
-            if (p_chat_area)
-            {
-                p_chat_area->switch_conversation(conversation_id);
-            }
-        }
+        std::function<void(const std::string&)> on_friend_selected_callback;
 
         void create_friends_list_ui_container(const float begin_y, const float sidebar_width,
                                               const float sidebar_height)
@@ -69,55 +64,53 @@ namespace zc_app
         }
 
     public:
-        void initialize(const float begin_y, const float sidebar_width, const float sidebar_height, chat_area *chat_ptr)
+        void initialize(const float begin_y, const float sidebar_width, const float sidebar_height)
         {
-            p_chat_area = chat_ptr;
             create_friends_list_ui_container(begin_y, sidebar_width, sidebar_height);
-
-            if (p_chat_area)
-            {
-                populate_friends_from_chat_area();
-            }
         }
 
-        void populate_friends_from_chat_area()
+        void set_on_friend_selected_callback(std::function<void(const std::string&)> callback)
         {
-            if (!p_chat_area) return;
+            on_friend_selected_callback = std::move(callback);
+        }
 
+        void populate_friends(const std::vector<friend_data>& new_friends)
+        {
             friends_list.clear();
-
             float current_item_y_relative_to_friends_container_top = 0.0f;
 
-            const auto conversation_ids = p_chat_area->get_conversation_ids();
-
-            for (const std::string &conv_id : conversation_ids)
+            for (const auto& friend_info : new_friends)
             {
-                const conversation_data *conv_data_ptr = p_chat_area->get_conversation(conv_id);
-                if (conv_data_ptr)
-                {
-                    auto new_button = std::make_unique<friend_button>(
-                        conv_id,
-                        conv_data_ptr->contact_name,
-                        conv_data_ptr->is_online ? "Online" : conv_data_ptr->last_seen,
-                        conv_data_ptr->contact_avatar
-                    );
-
-                    container button_container(
-                        friends_container.get_x(),
-                        friends_container.get_y() + current_item_y_relative_to_friends_container_top,
-                        friends_container.get_width(),
-                        default_item_height
-                    );
-
-                    new_button->setup(button_container);
-                    new_button->set_on_click_callback([this]<typename T0>(T0 &&PH1)
-                    {
-                        on_friend_button_clicked(std::forward<T0>(PH1));
-                    });
-
-                    friends_list.push_back(std::move(new_button));
-                    current_item_y_relative_to_friends_container_top += default_item_height + default_item_spacing;
+                std::string status_string = "Offline";
+                switch (friend_info.status) {
+                    case 1: status_string = "Online"; break;
+                    case 2: status_string = "In Chat"; break;
                 }
+
+                auto new_button = std::make_unique<friend_button>(
+                    friend_info.name,
+                    friend_info.name,
+                    status_string,
+                    "avatar.png"
+                );
+
+                container button_container(
+                    friends_container.get_x(),
+                    friends_container.get_y() + current_item_y_relative_to_friends_container_top,
+                    friends_container.get_width(),
+                    default_item_height
+                );
+
+                new_button->setup(button_container);
+                new_button->set_on_click_callback([this](const std::string& id) {
+                    if(on_friend_selected_callback)
+                    {
+                        on_friend_selected_callback(id);
+                    }
+                });
+
+                friends_list.push_back(std::move(new_button));
+                current_item_y_relative_to_friends_container_top += default_item_height + default_item_spacing;
             }
         }
 
@@ -198,7 +191,7 @@ namespace zc_app
                 thumb_height = std::max(thumb_height, min_thumb_height);
 
                 const float max_scroll_y = get_max_scroll_y();
-                const float normalized_scroll = (current_scroll_offset_y - 0) / (max_scroll_y - 0);
+                const float normalized_scroll = (max_scroll_y != 0) ? (current_scroll_offset_y / max_scroll_y) : 0;
 
                 const float thumb_movable_range_in_track = friends_container.get_height() - thumb_height;
                 const float thumb_y_offset_in_track = normalized_scroll * thumb_movable_range_in_track;

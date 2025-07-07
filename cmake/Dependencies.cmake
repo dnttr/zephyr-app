@@ -6,6 +6,14 @@ find_package(Freetype REQUIRED)
 find_package(Catch2 REQUIRED)
 find_package(harfbuzz REQUIRED)
 
+include(FetchContent)
+FetchContent_Declare(
+        nlohmann_json
+        GIT_REPOSITORY https://github.com/nlohmann/json.git
+        GIT_TAG v3.11.3
+)
+FetchContent_MakeAvailable(nlohmann_json)
+
 function(configure_apple_platform)
     if(APPLE)
         set(COREGRAPHICS_LIB_PATH "${CMAKE_SOURCE_DIR}/extern/libcoregraphics.a")
@@ -71,4 +79,5 @@ set(COMMON_LIBS
         Freetype::Freetype
         Catch2::Catch2
         harfbuzz::harfbuzz
+        nlohmann_json::nlohmann_json
 )
