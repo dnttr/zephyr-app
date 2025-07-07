@@ -8,6 +8,7 @@
 
 #include "ZCApp/app/app_runner.hpp"
 #include "ZCApp/app/test/test_runner.hpp"
+#include "ZCKit/bridge.hpp"
 
 #define GL_SILENCE_DEPRECATION
 

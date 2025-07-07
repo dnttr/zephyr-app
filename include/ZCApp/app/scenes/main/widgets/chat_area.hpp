@@ -55,7 +55,7 @@ namespace zc_app
     class chat_area
     {
         rectangle chat_area_glass{glass_tint, glass_border, 1, BORDER_RADIUS};
-        rectangle chat_header{dark_glass, glass_border, 1, BORDER_RADIUS};
+        rectangle chat_header{colour(glass_tint, 60), glass_border, 1, BORDER_RADIUS};
         rectangle send_button{accent_color, colour(255, 255, 255, 100), 1, 20.0F};
         rectangle attach_button{glass_tint, glass_border, 1, 20.0F};
 
@@ -248,9 +248,16 @@ namespace zc_app
             text_style chat_header_style = default_style;
             chat_header_style.text_size_magnification = 0.08F;
 
+            const std::string chat_title_str = "No conversation selected";
+
+            const float chat_title_width = 128.0f * default_style.text_size_magnification * chat_title_str.length() / 2.0f;
+
+            const float chat_title_x = chat_header.get_container().get_x() + chat_title_width - PADDING * 3.5;
+            const float chat_title_y = chat_header.get_container().get_y() + chat_header.get_container().get_height() / 2.0f - PADDING;
+
             chat_title.initialize(
-                "No conversation selected",
-                container(chat_header.get_container().get_x() + 60, chat_header.get_container().get_y() + 10),
+                chat_title_str,
+                container(chat_title_x, chat_title_y),
                 font_manager::get_font("Roboto-Medium"),
                 chat_header_style
             );
@@ -322,7 +329,7 @@ namespace zc_app
                 return;
             }
 
-            float chat_content_width = chat_area_glass.get_container().get_width() - (PADDING * 2) - 20;
+            float chat_content_width = chat_area_glass.get_container().get_width() - PADDING * 2 - 20;
             const auto &conversation = current_conversation_cache;
 
             float current_relative_y = PADDING;

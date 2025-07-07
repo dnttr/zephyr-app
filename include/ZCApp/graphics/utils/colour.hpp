@@ -22,6 +22,16 @@ namespace zc_app
            {
            }
 
+        constexpr colour(const colour &other) noexcept
+            : red(other.red), green(other.green), blue(other.blue), alpha(other.alpha)
+        {
+        }
+
+        constexpr colour(const colour &other, const float alpha)
+            : red(other.red), green(other.green), blue(other.blue), alpha(alpha / 255.0F)
+        {
+        }
+
         void set_red_u8(const uint8_t r)
         {
             red = static_cast<float>(r) / 255.0F;

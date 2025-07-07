@@ -30,9 +30,9 @@ namespace zc_app
         background bg{};
 
         rectangle sidebar_glass{glass_tint, glass_border, 1, BORDER_RADIUS};
-        rectangle profile_section{dark_glass, glass_border, 1, BORDER_RADIUS};
-        rectangle search_bar{colour(255, 255, 255, 20), colour(255, 255, 255, 60), 1, 20.0F};
-        rectangle friends_header{dark_glass, colour(255, 255, 255, 60), 1, 8.0F};
+        rectangle profile_section{glass_tint, glass_border, 1, BORDER_RADIUS};
+        rectangle search_bar{glass_tint, colour(255, 255, 255, 255), 1, 20.0F};
+        rectangle friends_header{glass_tint, colour(255, 255, 255, 255), 1, 12.0F};
 
         fan_texture user_avatar{"avatar.png", 2.0F, 128};
 
@@ -97,6 +97,7 @@ namespace zc_app
                 queue_main_thread_action([this]
                 {
                     username_text.set_text(my_username);
+                    user_status_text.set_text("Online");
                 });
 
                 zc_kit::bridge::client_identify(my_username);
@@ -124,10 +125,6 @@ namespace zc_app
 
             zc_kit::bridge::on_user_list_received = [this](const std::string &json_payload)
             {
-                std::cout << "--- User List Received ---" << std::endl;
-                std::cout << "Raw JSON Payload: " << json_payload << std::endl;
-                std::cout << "My username at this moment: '" << my_username << "'" << std::endl;
-
                 queue_main_thread_action([this, json_payload]
                 {
                     try
@@ -136,10 +133,8 @@ namespace zc_app
                         auto json = nlohmann::json::parse(json_payload);
                         for (const auto &user_obj : json)
                         {
-                            std::cout << "Processing user: " << user_obj.dump() << std::endl;
                             if (user_obj.value("name", "") == my_username)
                             {
-                                std::cout << "--> Skipping myself." << std::endl;
                                 continue;
                             }
 
@@ -148,7 +143,7 @@ namespace zc_app
                                 .status = user_obj.value("status", 0)
                             });
                         }
-                        std::cout << "Populating friends list with " << friends.size() << " user(s)." << std::endl;
+
                         f_list.populate_friends(friends);
                     }
                     catch (const nlohmann::json::parse_error &e)
@@ -216,6 +211,10 @@ namespace zc_app
     public:
         void initialize(const int scene_width, const int scene_height)
         {
+            profile_section.set_colour(colour(glass_tint, 60));
+            friends_header.set_colour(colour(glass_tint, 60));
+            search_bar.set_colour(colour(glass_tint, 60));
+
             auto [width, height] = perspective_util::get_effective_virtual_dimensions();
             blur_background.setup(width, height);
 
@@ -233,24 +232,25 @@ namespace zc_app
             profile_section.set_container(container(
                 PADDING * 2, PADDING * 2,
                 sidebar_width - PADDING * 4,
-                90.0f
+                70.0f
             ));
 
             user_avatar.set_container(container(
-                PADDING * 3, PADDING * 3,
-                50.0f, 50.0f
+                profile_section.get_container().get_x() + PADDING * 2,
+                profile_section.get_container().get_y() + (profile_section.get_container().get_height() - PADDING) / 2.0f,
+                40.0f, 40.0f
             ));
 
             search_bar.set_container(container(
-                PADDING * 2, profile_section.get_container().get_y() + 100,
-                sidebar_width - PADDING * 4,
-                40.0f
+                PADDING * 3, profile_section.get_container().get_y() + 100,
+                sidebar_width - PADDING * 6,
+                1
             ));
 
             friends_header.set_container(container(
-                PADDING * 2, search_bar.get_container().get_y() + 55,
+                PADDING * 2, search_bar.get_container().get_y() + PADDING ,
                 sidebar_width - PADDING * 4,
-                35.0f
+                30.0f
             ));
 
             float chat_x = sidebar_width + PADDING;
@@ -301,46 +301,51 @@ namespace zc_app
         {
             text_style default_style;
             default_style.text_size_magnification = 0.07F;
-            default_style.text_color = colour(255, 255, 255, 240);
+            default_style.text_color = colour(20, 20, 20, 255);
             default_style.outline_enable = false;
             default_style.shadow_enable = true;
+
             default_style.shadow_offset = {2.0F, 2.0F};
             default_style.shadow_color = colour(0, 0, 0, 100);
 
+            const std::string username_text_str = "Not Connected";
+            const float username_text_width = 128.0f * default_style.text_size_magnification * username_text_str.length() / 2.0f;
+            const float username_text_x = profile_section.get_container().get_x() + username_text_width;
+            const float username_text_y = profile_section.get_container().get_y() + profile_section.get_container().get_height() / 2.0f - PADDING;
+
             username_text.initialize(
-                "Not Connected",
-                container(PADDING * 3 + 60, PADDING * 3 + 5),
+                username_text_str,
+                container(username_text_x, username_text_y),
                 font_manager::get_font("Roboto-Medium"),
                 default_style
             );
 
             text_style status_style = default_style;
             status_style.text_size_magnification = 0.05F;
-            status_style.text_color = colour(180, 180, 180, 200);
+            status_style.text_color = colour(20, 20, 20, 200);
 
             user_status_text.initialize(
                 "Offline",
-                container(PADDING * 3 + 60, PADDING * 3 + 25),
+                container(username_text_x, username_text_y + PADDING),
                 font_manager::get_font("Roboto-Regular"),
                 status_style
             );
 
             text_style placeholder_style = status_style;
-            placeholder_style.text_color = colour(160, 160, 160, 180);
-
-            search_placeholder.initialize(
-                "Search conversation...",
-                container(search_bar.get_container().get_x() + 15, search_bar.get_container().get_y() + 12),
-                font_manager::get_font("Roboto-Regular"),
-                placeholder_style
-            );
+            placeholder_style.text_color = colour(20, 20, 20, 180);
 
             text_style header_style = default_style;
-            header_style.text_size_magnification = 0.06F;
-            header_style.text_color = colour(200, 200, 200, 220);
+            header_style.text_size_magnification = 0.09F;
+            header_style.text_color = colour(20, 20, 20, 180);
+
+            const std::string friends_title_str = "Connections";
+
+            float friends_title_width = (friends_title_str.length() * 128.0f * header_style.text_size_magnification) / 2.0f;
+
             friends_title.initialize(
-                "FRIENDS",
-                container(friends_header.get_container().get_x() + 15, friends_header.get_container().get_y() + 8),
+                friends_title_str,
+                container(friends_header.get_container().get_x() + friends_title_width,
+                          friends_header.get_container().get_y() + (friends_header.get_container().get_height() - PADDING) / 2.0f),
                 font_manager::get_font("Roboto-Medium"),
                 header_style
             );
@@ -415,7 +420,7 @@ namespace zc_app
             }
         }
 
-        void render()
+        void render() override
         {
             blur_effect.setup();
 

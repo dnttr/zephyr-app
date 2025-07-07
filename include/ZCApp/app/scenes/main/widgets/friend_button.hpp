@@ -12,8 +12,8 @@
 
 namespace zc_app
 {
-    static colour default_color{40, 40, 40, 70};
-    static colour hovered_colour{40, 40, 40, 100};
+    static colour default_color{glass_tint, 60};
+    static colour hovered_colour{glass_tint, 100};
 
     class friend_button
     {
@@ -50,11 +50,11 @@ namespace zc_app
             button_shape.set_container(c);
 
             name_style.text_size_magnification = 0.099F;
-            name_style.text_color = colour(255, 255, 255, 255);
+            name_style.text_color = colour(20, 20, 20, 255);
             name_style.shadow_enable = true;
 
             status_style.text_size_magnification = 0.06F;
-            status_style.text_color = colour(235, 235, 235, 255);
+            status_style.text_color = colour(20, 20, 20, 255);
             status_style.shadow_enable = false;
 
             avatar_texture.set_container(container(
