@@ -34,6 +34,8 @@ add_executable(zephyr-app
         src/internal/base64.cpp
         src/app/scenes/main/main_scene.cpp
         src/app/data_manager.cpp
+        src/app/scenes/main/widgets/chat_area.cpp
+        src/app/scenes/main/widgets/connection_modal.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE include)

@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "ZCApp/graphics/utils/colour.hpp"
+
 namespace zc_app
 {
 #define PADDING 12

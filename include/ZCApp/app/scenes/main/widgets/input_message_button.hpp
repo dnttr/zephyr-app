@@ -13,6 +13,7 @@
 #include "ZCApp/graphics/objects/text/text_style.hpp"
 #include "ZCApp/graphics/utils/scissor.hpp"
 #include "ZCApp/graphics/utils/time_util.hpp"
+#include "ZCApp/app/scenes/utils.hpp"
 
 namespace zc_app
 {
@@ -33,7 +34,6 @@ namespace zc_app
         float vertical_entry_animation_speed = 300.0f;
 
         int character_total_max = 120;
-        int max_chars_per_visual_line = 25;
 
         float line_height_px = 0.0f;
         float max_lines_visible = 1.0f;
@@ -45,7 +45,7 @@ namespace zc_app
         bool is_hovered = false;
         bool is_typing = false;
 
-        std::string current_text = "";
+        std::string current_text;
 
         float cursor_blink_timer = 0.0f;
         float cursor_blink_speed = 0.06f;
@@ -53,54 +53,6 @@ namespace zc_app
 
         float default_text_pos_x = 0.0f;
         const float ORIGINAL_FONT_SIZE_OFFSET = 128.0f * 0.1f / 2.0f;
-
-        size_t count_display_lines(const std::string &str) const
-        {
-            if (str.empty()) return 1;
-            size_t lines = 1;
-            for (char c : str)
-            {
-                if (c == '\n')
-                {
-                    lines++;
-                }
-            }
-            return lines;
-        }
-
-        std::string get_formatted_display_text(bool include_cursor)
-        {
-            std::string formatted_text = "";
-            size_t chars_on_current_line = 0;
-
-            for (size_t i = 0; i < current_text.length(); ++i)
-            {
-                char c = current_text[i];
-
-                if (c == '\n')
-                {
-                    formatted_text += '\n';
-                    chars_on_current_line = 0;
-                }
-                else
-                {
-                    if (chars_on_current_line >= max_chars_per_visual_line)
-                    {
-                         formatted_text += '\n';
-                         chars_on_current_line = 0;
-                    }
-                    formatted_text += c;
-                    chars_on_current_line++;
-                }
-            }
-
-            if (include_cursor)
-            {
-                formatted_text += "|";
-            }
-            return formatted_text;
-        }
-
 
         void update_text_scroll_target()
         {

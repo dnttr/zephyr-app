@@ -109,7 +109,6 @@ namespace zc_app
 
     void renderer::on_key_up(const zcg_key_event_t &key_event)
     {
-        ms.on_key_up(key_event);
     }
 
     void renderer::on_char_typed(unsigned int character)

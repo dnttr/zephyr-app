@@ -25,6 +25,9 @@ namespace zc_app
 {
     class main_scene final : public scene
     {
+        std::mutex main_thread_action_mutex;
+        std::vector<std::function<void()>> main_thread_actions;
+
         fullscreen_blur blur_background{};
         partial_blur blur_partial{};
 
@@ -41,13 +44,6 @@ namespace zc_app
         text username_text, user_status_text;
         text friends_title;
 
-        int scene_width = 0;
-        int scene_height = 0;
-
-        bool is_identified = false;
-        bool is_awaiting_relay_response = false;
-        bool is_network_connected = false;
-
         std::string my_username;
         std::string active_chat_partner;
 
@@ -58,8 +54,12 @@ namespace zc_app
         connection_modal connection_modal_widget{};
         request_modal request_modal_widget{};
 
-        std::mutex main_thread_action_mutex;
-        std::vector<std::function<void()>> main_thread_actions;
+        int scene_width = 0;
+        int scene_height = 0;
+
+        bool is_identified = false;
+        bool is_awaiting_relay_response = false;
+        bool is_network_connected = false;
 
         void queue_main_thread_action(std::function<void()> action);
 
@@ -82,18 +82,16 @@ namespace zc_app
 
         void destroy() override;
 
-        void scroll(const zcg_scroll_event_t &scroll_event);
+        void scroll(const zcg_scroll_event_t &scroll_event) override;
 
-        void on_mouse_up(zcg_mouse_pos_t mouse_pos, int button);
+        void on_mouse_up(zcg_mouse_pos_t mouse_pos, int button) override;
 
-        void on_mouse_move(const zcg_mouse_pos_t &mouse_pos);
+        void on_mouse_move(const zcg_mouse_pos_t &mouse_pos) override;
 
-        void on_mouse_down(zcg_mouse_pos_t mouse_pos, int button);
+        void on_mouse_down(zcg_mouse_pos_t mouse_pos, int button) override;
 
-        void on_key_up(zcg_key_event_t key_event);
+        void on_key_down(zcg_key_event_t key_event) override;
 
-        void on_key_down(zcg_key_event_t key_event);
-
-        void on_char_typed(unsigned int char_code);
+        void on_char_typed(unsigned int char_code) override;
     };
 }
