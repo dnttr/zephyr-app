@@ -41,9 +41,7 @@ namespace zc_app
     };
 }
 
-namespace zc_app
-{
-namespace data
+namespace zc_app::data
 {
     class data_manager
     {
@@ -55,9 +53,9 @@ namespace data
 
         data_manager() = default;
 
-        bool has_conversation(const std::string& id) const
+        [[nodiscard]] bool has_conversation(const std::string& id) const
         {
-            return all_conversations.count(id);
+            return all_conversations.contains(id);
         }
 
         void create_conversation(const std::string& id, const std::string& name, const std::string& status)
@@ -75,17 +73,6 @@ namespace data
             {
                 it->second.messages.push_back(new_message);
             }
-        }
-
-        bool attempt_connection(const std::string& ip, const std::string& port)
-        {
-            if (ip == "127.0.0.1" && !port.empty()) {
-                is_client_connected = true;
-                return true;
-            }
-
-            is_client_connected = false;
-            return false;
         }
 
         std::vector<std::string> fetch_all_conversation_ids() const
@@ -111,5 +98,4 @@ namespace data
             return it->second;
         }
     };
-}
 }

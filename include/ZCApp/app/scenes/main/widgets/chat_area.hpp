@@ -234,7 +234,7 @@ namespace zc_app
             text_style default_style;
 
             default_style.text_size_magnification = 0.07F;
-            default_style.text_color = colour(255, 255, 255, 240);
+            default_style.text_color = colour(20, 20, 20, 255);
             default_style.outline_enable = false;
             default_style.shadow_enable = true;
             default_style.shadow_offset = {2.0F, 2.0F};
@@ -243,7 +243,7 @@ namespace zc_app
             text_style status_style = default_style;
 
             status_style.text_size_magnification = 0.05F;
-            status_style.text_color = colour(180, 180, 180, 200);
+            status_style.text_color = colour(20, 20, 20, 200);
 
             text_style chat_header_style = default_style;
             chat_header_style.text_size_magnification = 0.08F;
@@ -264,7 +264,7 @@ namespace zc_app
 
             last_seen_text.initialize(
                 "",
-                container(chat_header.get_container().get_x() + 60, chat_header.get_container().get_y() + 35),
+                container(chat_title_x, chat_title_y + PADDING ),
                 font_manager::get_font("Roboto-Regular"),
                 status_style
             );

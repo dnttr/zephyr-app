@@ -46,9 +46,9 @@ namespace zc_app
             modal_panel.set_container(container(modal_x, modal_y, modal_width, modal_height));
 
             text_style main_style;
-            main_style.text_size_magnification = 0.08F;
+            main_style.text_size_magnification = 0.13F;
             main_style.text_color = colour(255, 255, 255, 255);
-            title_text.initialize("", container(modal_x + PADDING, modal_y + PADDING * 2), font_manager::get_font("Roboto-Medium"), main_style);
+            title_text.initialize("", container(modal_x + modal_width / 4 - PADDING, modal_y + modal_height / 2 - PADDING * 2.5F), font_manager::get_font("Roboto-Medium"), main_style);
 
             float button_width = 120.0f;
             float button_height = 40.0f;
@@ -58,7 +58,7 @@ namespace zc_app
             accept_button.set_container(container(modal_x + modal_width - button_width - PADDING * 2, button_y, button_width, button_height));
 
             text_style btn_style;
-            btn_style.text_size_magnification = 0.07F;
+            btn_style.text_size_magnification = 0.09F;
             btn_style.text_color = colour(255, 255, 255, 255);
             accept_text.initialize("Accept", container(0,0), font_manager::get_font("Roboto-Medium"), btn_style);
             decline_text.initialize("Decline", container(0,0), font_manager::get_font("Roboto-Medium"), btn_style);
@@ -87,11 +87,11 @@ namespace zc_app
             title_text.render();
 
             auto& accept_cont = accept_button.get_container();
-            accept_text.set_properties_position(accept_cont.get_x() + 28, accept_cont.get_y() + 10);
+            accept_text.set_properties_position(accept_cont.get_x() + accept_cont.get_width() / 4.0F + PADDING, accept_cont.get_y() + (accept_cont.get_height() - PADDING) / 2.0F);
             accept_text.render();
 
             auto& decline_cont = decline_button.get_container();
-            decline_text.set_properties_position(decline_cont.get_x() + 25, decline_cont.get_y() + 10);
+            decline_text.set_properties_position(decline_cont.get_x() + decline_cont.get_width() / 4.0F + PADDING, decline_cont.get_y() + (accept_cont.get_height() - PADDING) / 2.0F);
             decline_text.render();
         }
 
