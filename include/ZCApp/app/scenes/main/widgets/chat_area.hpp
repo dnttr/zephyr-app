@@ -71,7 +71,7 @@ namespace zc_app
 
         input_message_button input_button;
 
-        data::data_manager *p_data_manager = nullptr;
+        data_manager *p_data_manager = nullptr;
 
         std::string current_conversation_id;
         conversation_data current_conversation_cache;
@@ -552,7 +552,7 @@ namespace zc_app
         }
 
     public:
-        void initialize(const float chat_x_start_pos, data::data_manager *data_mgr)
+        void initialize(const float chat_x_start_pos, data_manager *data_mgr)
         {
             scene_width = 960;
             scene_height = 540;

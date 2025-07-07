@@ -21,7 +21,7 @@ namespace zc_app
 
 namespace zc_app
 {
-    struct friend_data
+    struct connection_data
     {
         std::string name;
         int status;
@@ -74,7 +74,7 @@ namespace zc_app
             on_friend_selected_callback = std::move(callback);
         }
 
-        void populate_friends(const std::vector<friend_data>& new_friends)
+        void populate_friends(const std::vector<connection_data>& new_friends)
         {
             friends_list.clear();
             float current_item_y_relative_to_friends_container_top = 0.0f;
