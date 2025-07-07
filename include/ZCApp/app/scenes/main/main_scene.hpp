@@ -1,25 +1,22 @@
 #pragma once
 
-#include "widgets/friend_button.hpp"
-#include "widgets/friend_list.hpp"
-#include "widgets/input_message_button.hpp"
+#include <functional>
+#include <mutex>
+#include <vector>
+
+#include "nlohmann/json.hpp"
 #include "widgets/chat_area.hpp"
+#include "widgets/connection_list.hpp"
 #include "widgets/connection_modal.hpp"
 #include "widgets/request_modal.hpp"
 #include "ZCApp/app/scenes/apperance.hpp"
+#include "ZCApp/graphics/effects/fullscreen_blur.hpp"
 #include "ZCApp/graphics/effects/partial_blur.hpp"
 #include "ZCApp/graphics/objects/background.hpp"
 #include "ZCApp/graphics/objects/shapes/rectangle.hpp"
 #include "ZCApp/graphics/objects/text/text.hpp"
 #include "ZCApp/graphics/scene/scene.hpp"
 #include "ZCApp/graphics/textures/fan_texture.hpp"
-#include "ZCApp/graphics/textures/texture.hpp"
-#include "ZCApp/graphics/effects/fullscreen_blur.hpp"
-#include "ZCKit/bridge.hpp"
-#include "nlohmann/json.hpp"
-#include <mutex>
-#include <vector>
-#include <functional>
 
 namespace zc_app
 {
@@ -49,7 +46,7 @@ namespace zc_app
 
         data_manager app_data_manager;
 
-        friend_list connections_list;
+        connection_list connections_list;
         chat_area chat_area_widget;
         connection_modal connection_modal_widget{};
         request_modal request_modal_widget{};

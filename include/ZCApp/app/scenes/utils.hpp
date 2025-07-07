@@ -243,6 +243,7 @@ namespace zc_app
                     formatted_text += '\n';
                     chars_on_current_line = 0;
                 }
+
                 formatted_text += c;
                 chars_on_current_line++;
             }

@@ -65,3 +65,8 @@ zc_app::conversation_data zc_app::data_manager::fetch_conversation_by_id(const s
 
     return it->second;
 }
+
+void zc_app::data_manager::reset()
+{
+    all_conversations.clear();
+}

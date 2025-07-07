@@ -4,6 +4,9 @@
 
 #include "ZCApp/app/scenes/main/main_scene.hpp"
 
+#include "ZCApp/graphics/utils/time_util.hpp"
+#include "ZCKit/bridge.hpp"
+
 namespace zc_app
 {
     void main_scene::initialize(const int scene_width, const int scene_height)
@@ -45,7 +48,7 @@ namespace zc_app
             connections_list.initialize(connection_header.get_container().get_y() + 50, sidebar_width, sidebar_glass.get_container().get_height());
         }
 
-        connections_list.set_on_friend_selected_callback([this](const std::string &target_username)
+        connections_list.set_on_connection_selected_callback([this](const std::string &target_username)
         {
             if (is_awaiting_relay_response || active_chat_partner == target_username)
             {
@@ -146,6 +149,30 @@ namespace zc_app
 
     void main_scene::setup_bridge_callbacks()
     {
+        zc_kit::bridge::on_connection_failed = [this](const std::string &reason)
+        {
+            // This is for low-level connection failures (e.g., server not found)
+            // or application-level failures (e.g., bad password).
+            queue_main_thread_action([this, reason]
+            {
+                is_identified = false;
+                connection_modal_widget.on_connection_result(false, reason);
+            });
+        };
+
+        // This callback handles the new DISCONNECTED message
+        zc_kit::bridge::on_disconnected = [this]
+        {
+            queue_main_thread_action([this]
+            {
+                is_identified = false;
+                active_chat_partner.clear();
+                chat_area_widget.clear_chat("You have been disconnected.");
+                connection_modal_widget.set_visible(true);
+                app_data_manager.reset();
+            });
+        };
+
         zc_kit::bridge::on_ready_for_identification = [this]
         {
             my_username = connection_modal_widget.get_username();
@@ -205,7 +232,7 @@ namespace zc_app
                         });
                     }
 
-                    connections_list.populate_friends(connections);
+                    connections_list.populate_connections(connections);
                 }
                 catch (const nlohmann::json::parse_error &e)
                 {
@@ -317,7 +344,7 @@ namespace zc_app
         search_placeholder.render();
         friends_title.render();
 
-        connections_list.draw(sidebar_glass.get_container().get_y());
+        connections_list.draw();
 
         chat_area_widget.draw();
     }

@@ -51,5 +51,7 @@ namespace zc_app
         [[nodiscard]] std::vector<std::string> fetch_all_conversation_ids() const;
 
         [[nodiscard]] conversation_data fetch_conversation_by_id(const std::string &id) const;
+
+        void reset();
     };
 }

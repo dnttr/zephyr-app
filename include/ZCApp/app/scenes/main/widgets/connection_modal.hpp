@@ -1,14 +1,17 @@
+//
+// Created by Damian Netter on 03/07/2025.
+//
+
 #pragma once
 
-#include "ZCApp/graphics/objects/shapes/rectangle.hpp"
-#include "ZCApp/graphics/objects/text/text.hpp"
-#include "ZCApp/app/scenes/apperance.hpp"
-#include "modal_input_field.hpp"
-
-#include <string>
 #include <functional>
 #include <regex>
+#include <string>
 
+#include "modal_input_field.hpp"
+#include "ZCApp/app/scenes/apperance.hpp"
+#include "ZCApp/graphics/objects/shapes/rectangle.hpp"
+#include "ZCApp/graphics/objects/text/text.hpp"
 #include "ZCGKit/zcg_interface.h"
 
 namespace zc_app
@@ -22,6 +25,8 @@ namespace zc_app
         static constexpr float BUTTON_HEIGHT = 45.0f;
         static constexpr float SDF_BASE_SIZE = 128.0f;
         static constexpr float FONT_ASPECT_RATIO = 0.5f;
+
+        float original_button_text_x_{0.0f};
 
         rectangle overlay_background{colour(0, 0, 0, 210), colour(0, 0, 0, 0), 0, 0.0F};
         rectangle modal_panel{colour(30, 30, 30, 230), colour(20, 20, 20), 1, BORDER_RADIUS};
@@ -71,7 +76,6 @@ namespace zc_app
 
         void set_visible(bool visible);
 
-        void set_on_connect_callback(
-            std::function<void(const std::string &, const std::string &, const std::string &)> callback);
+        void set_on_connect_callback(std::function<void(const std::string &, const std::string &, const std::string &)> callback);
     };
 }

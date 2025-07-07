@@ -36,6 +36,11 @@ add_executable(zephyr-app
         src/app/data_manager.cpp
         src/app/scenes/main/widgets/chat_area.cpp
         src/app/scenes/main/widgets/connection_modal.cpp
+        src/app/scenes/main/widgets/input_message_button.cpp
+        src/app/scenes/main/widgets/connection_button.cpp
+        src/app/scenes/main/widgets/connection_list.cpp
+        src/app/scenes/main/widgets/request_modal.cpp
+        src/app/scenes/main/widgets/modal_input_field.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE include)

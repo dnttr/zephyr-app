@@ -32,8 +32,6 @@ namespace zc_app
         }
 
         buffers.emplace(name, std::move(provided_data));
-
-        std::cerr << "Pushed font: " + name + " with size: " + std::to_string(buffers[name].size()) + " bytes" << std::endl;
     }
 
     void font_loader::load_font(const std::string& name, const int pixel_size)

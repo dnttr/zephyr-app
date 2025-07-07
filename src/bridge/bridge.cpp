@@ -42,7 +42,9 @@ namespace zc_kit
         {"INCOMING_CHAT", EV_INCOMING_CHAT},
         {"INCOMING_STATUS", EV_INCOMING_STATUS},
         {"INCOMING_DESCRIPTION", EV_INCOMING_DESCRIPTION},
-        {"PUSH_USER_LIST", EV_PUSH_USER_LIST}
+        {"PUSH_USER_LIST", EV_PUSH_USER_LIST},
+        {"CONNECTION_FAILED", EV_CONNECTION_FAILED},
+        {"DISCONNECTED", EV_DISCONNECTED}
     };
 
     std::unique_ptr<std::thread> bridge::ipc_read_thread = nullptr;
@@ -60,6 +62,8 @@ namespace zc_kit
     std::function<void()> bridge::on_relay_established;
     std::function<void()> bridge::on_relay_refused;
     std::function<void(const std::string &)> bridge::on_user_list_received;
+    std::function<void(const std::string &)> bridge::on_connection_failed;
+    std::function<void()> bridge::on_disconnected;
 
     void bridge::_loop()
     {
@@ -260,6 +264,24 @@ namespace zc_kit
                         if (on_user_list_received)
                         {
                             on_user_list_received(payload);
+                        }
+                        break;
+                    }
+
+                case EV_CONNECTION_FAILED:
+                    {
+                        if (on_connection_failed)
+                        {
+                            on_connection_failed(payload);
+                        }
+                        break;
+                    }
+
+                case EV_DISCONNECTED:
+                    {
+                        if (on_disconnected)
+                        {
+                            on_disconnected();
                         }
                         break;
                     }
